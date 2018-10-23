@@ -1,6 +1,0 @@
-/u/marshe/Desktop/skinner/build/CMakeFiles/edit_cache.dir
-/u/marshe/Desktop/skinner/build/CMakeFiles/rebuild_cache.dir
-/u/marshe/Desktop/skinner/build/CMakeFiles/utgraphicsutil.dir
-/u/marshe/Desktop/skinner/build/src/CMakeFiles/rebuild_cache.dir
-/u/marshe/Desktop/skinner/build/src/CMakeFiles/edit_cache.dir
-/u/marshe/Desktop/skinner/build/src/CMakeFiles/skinning.dir
