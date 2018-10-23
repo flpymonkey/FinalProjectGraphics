@@ -59,24 +59,69 @@ void Mesh::loadpmd(const std::string& fn)
 		printf("parent_id: %d\n", parent_id);
 
 		Bone* bone = new Bone;
+		glm::vec3 tangent;
+		glm::vec3 normal;
+		glm::vec3 binormal;
+		glm::mat4 orientation;
+		glm::mat4 inverse_orientation;
+		glm::mat4 LocalToWorld;
+		float length;
+		Bone* parent = NULL;
 
 		if (parent_id == -1) {
 			glm::vec3 parent_offset = glm::vec3(0.0f, 0.0f, 0.0f);
-			glm::vec3 tangent = glm::normalize(parent_offset - offset);
-			printf("tangent: (%f, %f, %f)\n", tangent.x, tangent.y, tangent.z);
+			tangent = glm::normalize(offset - parent_offset);
+		
 
-			glm::vec3 normal = computeNormal(tangent);
-			printf("normal: (%f, %f, %f)\n", normal.x, normal.y, normal.z);
+			normal = computeNormal(tangent);
+	
 
-			glm::vec3 binormal = glm::cross(tangent, normal);
-			printf("binormal: (%f, %f, %f)\n", binormal.x, binormal.y, binormal.z);
+			binormal = glm::cross(tangent, normal);
 
-			bone->id = bone_id;
-			bone->parent_id = parent_id;
+
+			orientation = computeOrientation(tangent, normal, binormal);
+
+
+
+			inverse_orientation = glm::inverse(orientation);
+
+			LocalToWorld = glm::mat4(1.0f);
+
+			length = glm::length(inverse_orientation * glm::vec4(offset, 0.0f));
+
+
+			skeleton.root = bone;
+
 		} else {
-			bone->id = bone_id;
-			bone->parent_id = parent_id;
+			Bone* parent = skeleton.bones[parent_id];
+			tangent = (glm::vec3) glm::normalize(parent->orientation * glm::vec4(glm::normalize(offset), 1.0f));
+			normal = computeNormal(tangent);
+			binormal = glm::cross(tangent, normal);
+			orientation = computeOrientation(tangent, normal, binormal);
+			inverse_orientation = glm::inverse(orientation);
+			LocalToWorld = (parent->orientation * parent->length) * parent->LocalToWorld; // FIXME: should we flip it?
+			length = glm::length(inverse_orientation * glm::vec4(offset, 0.0f));
+			parent->children.push_back(bone);
 		}
+
+		printf("tangent: (%f, %f, %f)\n", tangent.x, tangent.y, tangent.z);
+		printf("normal: (%f, %f, %f)\n", normal.x, normal.y, normal.z);
+		printf("binormal: (%f, %f, %f)\n", binormal.x, binormal.y, binormal.z);
+		printf("orientation: (%f, %f, %f, %f)\n", orientation[0][0], orientation[0][1], orientation[0][2], orientation[0][3]);
+		printf("orientation: (%f, %f, %f, %f)\n", orientation[1][0], orientation[1][1], orientation[1][2], orientation[1][3]);
+		printf("orientation: (%f, %f, %f, %f)\n", orientation[2][0], orientation[2][1], orientation[2][2], orientation[2][3]);
+		printf("orientation: (%f, %f, %f, %f)\n", orientation[3][0], orientation[3][1], orientation[3][2], orientation[3][3]);
+		printf("length: %f\n", length);
+
+		bone->name = "bone_" + bone_id;
+		bone->id = bone_id;
+		bone->parent_id = parent_id;
+		bone->parent = parent;
+		bone->length = length;
+		bone->orientation = orientation;
+		bone->LocalToWorld = LocalToWorld;
+
+		skeleton.bones.push_back(bone);
 
 	}
 }
@@ -129,4 +174,27 @@ glm::vec3 Mesh::computeNormal(glm::vec3 tangent)
 	float denominator = glm::length(nominator);
 	return nominator / denominator;
 }
+
+glm::mat4 Mesh::computeOrientation(glm::vec3 tangent, glm::vec3 normal, glm::vec3 binormal)
+{
+	glm::mat4 orientation;
+	orientation[0][0] = tangent.x;
+  	orientation[1][0] = tangent.y;
+  	orientation[2][0] = tangent.z;
+  	orientation[3][0] = 0.0f;
+  	orientation[0][1] = normal.x;
+  	orientation[1][1] = normal.y;
+  	orientation[2][1] = normal.z;
+  	orientation[3][1] = 0.0f;
+  	orientation[0][2] = binormal.x;
+  	orientation[1][2] = binormal.y;
+  	orientation[2][2] = binormal.z;
+  	orientation[3][2] = 0.0f;
+  	orientation[0][3] = 0.0f;
+  	orientation[1][3] = 0.0f;
+  	orientation[2][3] = 0.0f;
+  	orientation[3][3] = 1.0f;
+	return orientation;
+}
+
 

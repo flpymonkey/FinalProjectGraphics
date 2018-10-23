@@ -28,6 +28,7 @@ struct Bone {
 	int parent_id;
 	std::vector<Bone*> children;
 	Bone* parent;
+	float length;
 	glm::mat4 orientation;
 	glm::mat4 LocalToWorld;
 };
@@ -62,6 +63,7 @@ struct Mesh {
 private:
 	void computeBounds();
 	glm::vec3 computeNormal(glm::vec3 tangent);
+	glm::mat4 computeOrientation(glm::vec3 tangent, glm::vec3 normal, glm::vec3 binormal);
 };
 
 #endif
