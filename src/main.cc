@@ -235,13 +235,32 @@ int main(int argc, char* argv[])
 		// FIXME: Draw bones first.
 		if (draw_skeleton){
 
-			// Populate vertex buffer data
-			const GLfloat g_vertex_buffer_data[] = mesh.getSkeletonJoints();
-
-
 			GLuint VertexArrayID;
 			glGenVertexArrays(1, &VertexArrayID);
 			glBindVertexArray(VertexArrayID);
+
+			// Populate vertex buffer data
+			const GLfloat* g_vertex_buffer_data = mesh.getSkeletonJoints();
+
+			GLuint vertexBuffer;
+			glGenVertexBuffers(1, &vertexBuffer);
+			glBindVertexBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+			// 1st attribute buffer : vertices
+			glEnableVertexAttribArray(0);
+			glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+			glVertexAttribPointer(
+			   0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+			   sizeof(g_vertex_buffer_data),                  // size
+			   GL_FLOAT,           // type
+			   GL_FALSE,           // normalized?
+			   0,                  // stride
+			   (void*)0            // array buffer offset
+			);
+			// Draw the triangle !
+			glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data)); // Starting from vertex 0; 3 vertices total -> 1 triangle
+			glDisableVertexAttribArray(0);
 		}
 		// Then draw floor.
 		if (draw_floor) {

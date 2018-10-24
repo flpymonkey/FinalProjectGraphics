@@ -54,12 +54,14 @@ struct Mesh {
 
 	void loadpmd(const std::string& fn);
 	void updateAnimation();
-	int getNumberOfBones() const 
-	{ 
-		return 0;
-		// FIXME: return number of bones in skeleton
+	int getNumberOfBones() const
+	{
+		return skeleton.bones.size();
 	}
 	glm::vec3 getCenter() const { return 0.5f * glm::vec3(bounds.min + bounds.max); }
+
+	// Added mesh functions:
+	GLfloat* getSkeletonJoints();
 private:
 	void computeBounds();
 	glm::vec3 computeNormal(glm::vec3 tangent);
