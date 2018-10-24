@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
 	/*
 	 * In the following we are going to define several lambda functions to bind Uniforms.
-	 * 
+	 *
 	 * Introduction about lambda functions:
 	 *      http://en.cppreference.com/w/cpp/language/lambda
 	 *      http://www.stroustrup.com/C++11FAQ.html#lambda
@@ -232,6 +232,16 @@ int main(int argc, char* argv[])
 		draw_cylinder = true;
 #endif
 		// FIXME: Draw bones first.
+		if (draw_skeleton){
+
+			// Populate vertex buffer data
+			const GLfloat g_vertex_buffer_data[] = mesh.getSkeletonJoints();
+
+
+			GLuint VertexArrayID;
+			glGenVertexArrays(1, &VertexArrayID);
+			glBindVertexArray(VertexArrayID);
+		}
 		// Then draw floor.
 		if (draw_floor) {
 			floor_pass.setup();
@@ -256,7 +266,7 @@ int main(int argc, char* argv[])
 			int mid = 0;
 			while (object_pass.renderWithMaterial(mid))
 				mid++;
-#if 0	
+#if 0
 			// For debugging also
 			if (mid == 0) // Fallback
 				CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, mesh.faces.size() * 3, GL_UNSIGNED_INT, 0));
