@@ -241,23 +241,42 @@ int main(int argc, char* argv[])
 
 			//An array of 3 vectors which represents 3 vertices
 			static const GLfloat g_vertex_buffer_data[] = {
-   				0.000000,
+				0.000000,
 				8.577215,
 				0.000000,
+				41.933708,
 				0.000000,
-				29.769129,
-				-2.663598,
-				7.153456,
-				-0.830828,
-				-79.949074
+				3.752026,
+				-158.037903,
+				1.160567,
+				18.343523
 			};
+			// 0.000000
+			// 8.577215
+			// 0.000000
+			// 41.933708
+			// 0.000000
+			// 3.752026
+			// -158.037903
+			// 1.160567
+			// 18.343523
 
-			// std::vector<float> verts;
-			// mesh.getSkeletonJoints(verts);
-			// for (int i = 0; i < 9; i++) {
-			// 	printf("%f\n", verts[i]);
-			// }
-			// printf("AAAAAAAAAAAAAAAAAAA\n");
+			// 0.000000,
+			// 8.577215,
+			// 0.000000,
+			// 0.000000,
+			// 29.769129,
+			// -2.663598,
+			// 7.153456,
+			// -0.830828,
+			// -79.949074
+
+			std::vector<float> verts;
+			mesh.getSkeletonJoints(verts);
+			for (int i = 0; i < 9; i++) {
+				printf("%f\n", verts[i]);
+			}
+			printf("AAAAAAAAAAAAAAAAAAA\n");
 			// const GLfloat* g_vertex_buffer_data = &verts[0];
 
 			// This will identify our vertex buffer

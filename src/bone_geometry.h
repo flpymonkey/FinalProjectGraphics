@@ -31,6 +31,10 @@ struct Bone {
 	float length;
 	glm::mat4 orientation;
 	glm::mat4 LocalToWorld;
+
+	//Trmporary
+	glm::vec3 offset;
+	
 };
 
 

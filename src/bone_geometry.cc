@@ -61,7 +61,6 @@ void Mesh::loadpmd(const std::string& fn)
 		glm::vec3 normal;
 		glm::vec3 binormal;
 		glm::mat4 orientation;
-		glm::mat4 inverse_orientation;
 		glm::mat4 LocalToWorld;
 		float length;
 		Bone* parent = NULL;
@@ -69,37 +68,22 @@ void Mesh::loadpmd(const std::string& fn)
 		if (parent_id == -1) {
 			glm::vec3 parent_offset = glm::vec3(0.0f, 0.0f, 0.0f);
 			tangent = glm::normalize(offset - parent_offset);
-
-
-			normal = computeNormal(tangent);
-
-
-			binormal = glm::cross(tangent, normal);
-
-
+			normal = glm::normalize(computeNormal(tangent));
+			binormal = glm::normalize(glm::cross(tangent, normal));
 			orientation = computeOrientation(tangent, normal, binormal);
-
-
-
-			inverse_orientation = glm::inverse(orientation);
-
 			LocalToWorld = glm::mat4(1.0f);
-
-			length = glm::length(inverse_orientation * glm::vec4(offset, 0.0f));
-
-
+			length = glm::length(offset);
 			skeleton.root = bone;
 
 		} else {
 			Bone* parent = skeleton.bones[parent_id];
-			tangent = (glm::vec3) glm::normalize(parent->orientation * glm::vec4(glm::normalize(offset), 1.0f));
-			normal = computeNormal(tangent);
-			binormal = glm::cross(tangent, normal);
+			tangent = glm::normalize(parent->offset - offset);
+			normal = glm::normalize(computeNormal(tangent));
+			binormal = glm::normalize(glm::cross(tangent, normal));
 			orientation = computeOrientation(tangent, normal, binormal);
-			inverse_orientation = glm::inverse(orientation);
-			LocalToWorld = (parent->orientation * parent->length) * parent->LocalToWorld; // FIXME: should we flip it?
+			LocalToWorld = parent->LocalToWorld * (parent->orientation * parent->length); // FIXME: should we flip it?
 			// FIXME I dont think we are calculating offset correctly? should just be magnitude of offset?
-			length = glm::length(inverse_orientation * glm::vec4(offset, 0.0f));
+			length = glm::length(offset);
 			parent->children.push_back(bone);
 			// TODO: Know this for calculating vert position relative to parent,
 			// position relative to parent is tangent (from orientation * length)
@@ -122,6 +106,7 @@ void Mesh::loadpmd(const std::string& fn)
 		bone->length = length;
 		bone->orientation = orientation;
 		bone->LocalToWorld = LocalToWorld;
+		bone->offset = offset;
 
 		skeleton.bones.push_back(bone);
 
@@ -209,16 +194,18 @@ void Mesh::getSkeletonJoints(std::vector<float>& verts){
 	for (int i = 0; i < getNumberOfBones(); ++i){
 		bone = skeleton.bones[i];
 
-		// FIXME: Make sure we are multiplying the correct orientation times length!
-		// FIXME: Make sure its not supposed to be parent orientation times this bones length
-		// Get tanget from this bones orientation
-		glm::vec4 tangent = glm::vec4(bone->orientation[0][0], bone->orientation[0][1],
-			bone->orientation[0][2], 0);
-		// and multiply by length to get this bones position relative to parent
-		glm::vec4 relativePosition = tangent * bone->length;
-		// multiply this times local to world to get this bones world corrdinates
-		//FIXME: make sure this multiplication is in the correct order!
-		glm::vec4 worldPosition = bone->LocalToWorld * relativePosition;
+		// // FIXME: Make sure we are multiplying the correct orientation times length!
+		// // FIXME: Make sure its not supposed to be parent orientation times this bones length
+		// // Get tanget from this bones orientation
+		// glm::vec4 tangent = glm::vec4(bone->orientation[0][0], bone->orientation[0][1],
+		// 	bone->orientation[0][2], 0);
+		// // and multiply by length to get this bones position relative to parent
+		// glm::vec4 relativePosition = tangent * bone->length;
+		// // multiply this times local to world to get this bones world corrdinates
+		// //FIXME: make sure this multiplication is in the correct order!
+		// glm::vec4 worldPosition = bone->LocalToWorld * relativePosition;
+
+		glm::vec4 worldPosition = bone->LocalToWorld * glm::vec4(bone->offset, 0.0f);
 
 		// add these points to our verts list for opengl
 		verts.push_back(worldPosition.x);
