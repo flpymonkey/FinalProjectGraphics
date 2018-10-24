@@ -202,9 +202,9 @@ glm::mat4 Mesh::computeOrientation(glm::vec3 tangent, glm::vec3 normal, glm::vec
 }
 
 // Create a list of vertices (representing joints) from the bones
-GLfloat* Mesh::getSkeletonJoints(){
+float* Mesh::getSkeletonJoints(){
 	// FIXME: idk if this logic is correct???
-	std::vector<GLfloat> verts;
+	std::vector<float> verts;
 	Bone* bone;
 
 	//FIXME: might want to skip the first bone (bone form origin of world to base)
@@ -214,13 +214,13 @@ GLfloat* Mesh::getSkeletonJoints(){
 		// FIXME: Make sure we are multiplying the correct orientation times length!
 		// FIXME: Make sure its not supposed to be parent orientation times this bones length
 		// Get tanget from this bones orientation
-		glm::vec4 tangent = glm::vec4(bone.orientation[0][0], bone.orientation[0][1],
-			bone.orientation[0][2], 0);
+		glm::vec4 tangent = glm::vec4(bone->orientation[0][0], bone->orientation[0][1],
+			bone->orientation[0][2], 0);
 		// and multiply by length to get this bones position relative to parent
-		glm::vec4 relativePosition = tangent * bone.length;
+		glm::vec4 relativePosition = tangent * bone->length;
 		// multiply this times local to world to get this bones world corrdinates
 		//FIXME: make sure this multiplication is in the correct order!
-		glm::vec4 worldPosition = bone.LocalToWorld * relativePosition;
+		glm::vec4 worldPosition = bone->LocalToWorld * relativePosition;
 
 		// add these points to our verts list for opengl
 		verts.push_back(worldPosition.x);

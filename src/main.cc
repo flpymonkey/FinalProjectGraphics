@@ -243,8 +243,8 @@ int main(int argc, char* argv[])
 			const GLfloat* g_vertex_buffer_data = mesh.getSkeletonJoints();
 
 			GLuint vertexBuffer;
-			glGenVertexBuffers(1, &vertexBuffer);
-			glBindVertexBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+			glGenBuffers(1, &vertexBuffer);
+			glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 			glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
 			// 1st attribute buffer : vertices
