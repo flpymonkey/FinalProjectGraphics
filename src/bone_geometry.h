@@ -61,7 +61,7 @@ struct Mesh {
 	glm::vec3 getCenter() const { return 0.5f * glm::vec3(bounds.min + bounds.max); }
 
 	// Added mesh functions:
-	float* getSkeletonJoints();
+	void getSkeletonJoints(std::vector<float>& verts);
 private:
 	void computeBounds();
 	glm::vec3 computeNormal(glm::vec3 tangent);

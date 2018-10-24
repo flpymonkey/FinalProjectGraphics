@@ -50,10 +50,8 @@ void Mesh::loadpmd(const std::string& fn)
 	int bone_id = 0;
 	int parent_id;
 	glm::vec3 offset;
-	bool useful_bone;
 
-	while (useful_bone) {
-		useful_bone = mr.getJoint(bone_id++, offset, parent_id);
+	while (mr.getJoint(bone_id++, offset, parent_id)) {
 		printf("bone_id: %d\n", bone_id);
 		printf("offset: (%f, %f, %f)\n", offset.x, offset.y, offset.z);
 		printf("parent_id: %d\n", parent_id);
@@ -202,9 +200,9 @@ glm::mat4 Mesh::computeOrientation(glm::vec3 tangent, glm::vec3 normal, glm::vec
 }
 
 // Create a list of vertices (representing joints) from the bones
-float* Mesh::getSkeletonJoints(){
+void Mesh::getSkeletonJoints(std::vector<float>& verts){
 	// FIXME: idk if this logic is correct???
-	std::vector<float> verts;
+	// std::vector<float> verts;
 	Bone* bone;
 
 	//FIXME: might want to skip the first bone (bone form origin of world to base)
@@ -229,5 +227,5 @@ float* Mesh::getSkeletonJoints(){
 	}
 
 	// convert this verts vector to an array and return it
-	return &verts[0];
+	//return &verts[0];
 }

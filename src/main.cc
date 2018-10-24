@@ -239,28 +239,78 @@ int main(int argc, char* argv[])
 			glGenVertexArrays(1, &VertexArrayID);
 			glBindVertexArray(VertexArrayID);
 
-			// Populate vertex buffer data
-			const GLfloat* g_vertex_buffer_data = mesh.getSkeletonJoints();
+			//An array of 3 vectors which represents 3 vertices
+			static const GLfloat g_vertex_buffer_data[] = {
+   				0.000000,
+				8.577215,
+				0.000000,
+				0.000000,
+				29.769129,
+				-2.663598,
+				7.153456,
+				-0.830828,
+				-79.949074
+			};
 
-			GLuint vertexBuffer;
-			glGenBuffers(1, &vertexBuffer);
-			glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+			// std::vector<float> verts;
+			// mesh.getSkeletonJoints(verts);
+			// for (int i = 0; i < 9; i++) {
+			// 	printf("%f\n", verts[i]);
+			// }
+			// printf("AAAAAAAAAAAAAAAAAAA\n");
+			// const GLfloat* g_vertex_buffer_data = &verts[0];
+
+			// This will identify our vertex buffer
+			GLuint vertexbuffer;
+			// Generate 1 buffer, put the resulting identifier in vertexbuffer
+			glGenBuffers(1, &vertexbuffer);
+			// The following commands will talk about our 'vertexbuffer' buffer
+			glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+			// Give our vertices to OpenGL.
 			glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
 			// 1st attribute buffer : vertices
 			glEnableVertexAttribArray(0);
-			glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+			glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 			glVertexAttribPointer(
 			   0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-			   sizeof(g_vertex_buffer_data),                  // size
+			   3,                  // size
 			   GL_FLOAT,           // type
 			   GL_FALSE,           // normalized?
 			   0,                  // stride
 			   (void*)0            // array buffer offset
 			);
 			// Draw the triangle !
-			glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data)); // Starting from vertex 0; 3 vertices total -> 1 triangle
+			glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
 			glDisableVertexAttribArray(0);
+
+			// Populate vertex buffer data
+			//std::vector<float> verts;
+			//mesh.getSkeletonJoints(verts);
+			// for (int i = 0; i < verts.size(); i++) {
+			// 	printf("verts: %f\n", verts[i]);
+			// }
+			//const GLfloat* g_vertex_buffer_data = &verts[0];
+
+			// GLuint vertexBuffer;
+			// glGenBuffers(1, &vertexBuffer);
+			// glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+			// glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+			// // 1st attribute buffer : vertices
+			// glEnableVertexAttribArray(0);
+			// glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+			// glVertexAttribPointer(
+			//    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+			//    verts.size(),                  // size
+			//    GL_FLOAT,           // type
+			//    GL_FALSE,           // normalized?
+			//    0,                  // stride
+			//    (void*)0            // array buffer offset
+			// );
+			// // Draw the triangle !
+			// glDrawArrays(GL_LINES, 0, verts.size()); // Starting from vertex 0; 3 vertices total -> 1 triangle
+			// glDisableVertexAttribArray(0);
 		}
 		// Then draw floor.
 		if (draw_floor) {
