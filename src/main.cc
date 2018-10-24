@@ -84,7 +84,6 @@ int main(int argc, char* argv[])
 	create_floor(floor_vertices, floor_faces);
 
 	// FIXME: add code to create bone and cylinder geometry
-
 	Mesh mesh;
 	mesh.loadpmd(argv[1]);
 	std::cout << "Loaded object  with  " << mesh.vertices.size()
@@ -95,6 +94,8 @@ int main(int argc, char* argv[])
 		mesh_center += mesh.vertices[i];
 	}
 	mesh_center /= mesh.vertices.size();
+
+	//create_skeleton(mesh.skeleton);
 
 	/*
 	 * GUI object needs the mesh object for bone manipulation.

@@ -22,9 +22,21 @@ struct Joint {
 	//       bones to calculate the actual animation.
 };
 
+struct Bone {
+	std::string name;
+	int id;
+	int parent_id;
+	std::vector<Bone*> children;
+	Bone* parent;
+	float length;
+	glm::mat4 orientation;
+	glm::mat4 LocalToWorld;
+};
+
 
 struct Skeleton {
-	// FIXME: create skeleton and bone data structures
+	std::vector<Bone*> bones;
+	Bone* root;
 };
 
 struct Mesh {
@@ -50,7 +62,8 @@ struct Mesh {
 	glm::vec3 getCenter() const { return 0.5f * glm::vec3(bounds.min + bounds.max); }
 private:
 	void computeBounds();
-	void computeNormals();
+	glm::vec3 computeNormal(glm::vec3 tangent);
+	glm::mat4 computeOrientation(glm::vec3 tangent, glm::vec3 normal, glm::vec3 binormal);
 };
 
 #endif
