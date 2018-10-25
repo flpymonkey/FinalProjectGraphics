@@ -77,8 +77,9 @@ void Mesh::loadpmd(const std::string& fn)
 			LocalToWorld = glm::mat4(1.0f);
 			length = glm::length(offset);
 			skeleton.root = bone;
+			printVec3("offset", offset);
 
-			bone->T = glm::translate(offset);
+			bone->T = glm::transpose(glm::translate(offset));
 			//R = glm::rotate()
 
 		} else {
@@ -95,7 +96,7 @@ void Mesh::loadpmd(const std::string& fn)
 			// position relative to parent is tangent (from orientation * length)
 			// get world position using LocalToWorld * (from orientation * length)
 
-			bone->T = glm::translate(offset);
+			bone->T = glm::transpose(glm::translate(offset));
 			//float angle = glm::acos(glm::dot(parent->tangent, tangent));
 			//R = rotate(angle, parent->normal);
 		}
@@ -233,8 +234,12 @@ void Mesh::getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::
 		// //FIXME: make sure this multiplication is in the correct order!
 		// glm::vec4 worldPosition = bone->LocalToWorld * relativePosition;
 
-		glm::vec4 worldPosition = glm::vec4(bone->offset, 1.0f) * (bone->T * bone->orientation) * bone->LocalToWorld;
+		glm::vec4 worldPosition = bone->LocalToWorld * (bone->T * bone->orientation) * glm::vec4(bone->offset, 1.0f);
 
+		printMat4("LocalToWorld", bone->LocalToWorld);
+		printMat4("T", bone->T);
+		printMat4("O", bone->orientation);
+		printVec4("V", glm::vec4(bone->offset, 1.0f));
 		printVec4("worldPosition", worldPosition);
 
 		// add these points to our verts list for opengl
