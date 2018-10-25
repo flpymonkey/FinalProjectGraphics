@@ -67,8 +67,7 @@ struct Mesh {
 	glm::vec3 getCenter() const { return 0.5f * glm::vec3(bounds.min + bounds.max); }
 
 	// Added mesh functions:
-	void getSkeletonJoints(std::vector<float>& verts);
-	void getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2> skeleton_faces);
+	void getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces);
 
 private:
 	void computeBounds();
@@ -78,6 +77,7 @@ private:
 	void printInt(char* name, int data);
 	void printFloat(char* name, float value);
 	void printVec3(char* name, glm::vec3 data);
+	void printVec4(char* name, glm::vec4 data);
 	void printMat4(char* name, glm::mat4 data);
 };
 

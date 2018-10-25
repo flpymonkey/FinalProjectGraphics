@@ -210,13 +210,15 @@ int main(int argc, char* argv[])
 
 	std::vector<glm::vec4> skeleton_vertices;
 	std::vector<glm::uvec2> skeleton_faces;
-	//getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2> skeleton_faces);
+	mesh.getSkeletonJointsVec(skeleton_vertices, skeleton_faces);
 
-	skeleton_vertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-	skeleton_vertices.push_back(glm::vec4(0.0f, 100.0f, 0.0f, 1.0f));
-	//skeleton_vertices.push_back(glm::vec4(0.0f, 0.0f, 100.0f, 1.0f));
+	// skeleton_vertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	// skeleton_vertices.push_back(glm::vec4(0.0f, 10.0f, 0.0f, 1.0f));
+	// skeleton_vertices.push_back(glm::vec4(0.0f, 0.0f, 10.0f, 1.0f));
+	// skeleton_vertices.push_back(glm::vec4(10.0f, 10.0f, 10.0f, 1.0f));
 
-	skeleton_faces.push_back(glm::uvec2(0, 1));
+	// skeleton_faces.push_back(glm::uvec2(0, 1));
+	// skeleton_faces.push_back(glm::uvec2(2, 3));
 
 	RenderDataInput skeleton_pass_input;
 	skeleton_pass_input.assign(0, "vertex_position", skeleton_vertices.data(), skeleton_vertices.size(), 4, GL_FLOAT);
@@ -273,145 +275,6 @@ int main(int argc, char* argv[])
 #endif
 		// FIXME: Draw bones first.
 		if (draw_skeleton){
-
-			// GLuint VertexArrayID;
-			// glGenVertexArrays(1, &VertexArrayID);
-			// glBindVertexArray(VertexArrayID);
-
-			//An array of 3 vectors which represents 3 vertices
-			// static const GLfloat g_vertex_buffer_data[] = {
-			// 	0.000000f,
-			// 	8.577215f,
-			// 	0.000000f,
-			// 	4.888966f,
-			// 	0.000000f,
-			// 	0.437441
-			// };
-			// 0.000000
-			// 8.577215
-			// 0.000000
-			// 41.933708
-			// 0.000000
-			// 3.752026
-			// -158.037903
-			// 1.160567
-			// 18.343523
-
-			// 0.000000,
-			// 8.577215,
-			// 0.000000,
-			// 0.000000,
-			// 29.769129,
-			// -2.663598,
-			// 7.153456,
-			// -0.830828,
-			// -79.949074
-
-
-			// std::vector<float> verts;
-			// mesh.getSkeletonJoints(verts);
-			// for (int i = 0; i < verts.size(); i++) {
-			// 	printf("%f,\n", verts[i]);
-			// }
-			// printf("AAAAAAAAAAAAAAAAAAA\n");
-			// //const GLfloat* g_vertex_buffer_data = &verts[0];
-
-			// std::vector<glm::vec4> verts;
-
-			// verts.push_back(glm::vec4(0.000000f, 8.577215f, 0.000000f, 1.0f));
-			// verts.push_back(glm::vec4(4.888966f, 0.000000f, 0.437441f, 1.0f));
-
-
-			// static const GLfloat g_vertex_buffer_data[] = {
-			// 	0.01,
-			// 	0.0,
-			// 	0.0,
-			// 	0.0,
-			// 	100.0,
-			// 	0.0,
-	
-			// };
-
-
-
-			// // GLuint Vector1_VAObject;
-			// // GLuint Vector1_VBObject;
-			// // glGenVertexArrays(1,&Vector1_VAObject);
-			// // glGenBuffers(1,&Vector1_VBObject);
-
-			// // glBindVertexArray(Vector1_VAObject);
-			// // glBindBuffer(GL_ARRAY_BUFFER, Vector1_VBObject);
-
-			// // glBufferData(GL_ARRAY_BUFFER,verts.size()*sizeof(GLfloat), &verts[0], GL_STATIC_DRAW);
-			// // glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 3*sizeof(GLfloat),(GLvoid*)0);
-			// // //Clean
-			// // glEnableVertexAttribArray(0);
-			// // glBindBuffer(GL_ARRAY_BUFFER,0);
-			// // glBindVertexArray(0);
-
-			// // // glUseProgram(lineShader->getProgram());
-			// // glBindVertexArray(Vector1_VAObject);
-
-			// // glDrawArrays(GL_LINE_STRIP,0,verts.size());
-
-
-			// // glBindVertexArray(0);
-
-
-
-
-			// // // This will identify our vertex buffer
-			// GLuint vertexbuffer;
-			// // Generate 1 buffer, put the resulting identifier in vertexbuffer
-			// glGenBuffers(1, &vertexbuffer);
-			// // The following commands will talk about our 'vertexbuffer' buffer
-			// glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-			// // Give our vertices to OpenGL.
-			// glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-			// // 1st attribute buffer : vertices
-			// glEnableVertexAttribArray(0);
-			// glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-			// glVertexAttribPointer(
-			//    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-			//    3,                  // size
-			//    GL_FLOAT,           // type
-			//    GL_FALSE,           // normalized?
-			//    0,                  // stride
-			//    (void*)0            // array buffer offset
-			// );
-			// // Draw the triangle !
-			// glDrawArrays(GL_LINES, 0, 2); // Starting from vertex 0; 3 vertices total -> 1 triangle
-			// glDisableVertexAttribArray(0);
-
-			// Populate vertex buffer data
-			//std::vector<float> verts;
-			//mesh.getSkeletonJoints(verts);
-			// for (int i = 0; i < verts.size(); i++) {
-			// 	printf("verts: %f\n", verts[i]);
-			// }
-			//const GLfloat* g_vertex_buffer_data = &verts[0];
-
-			// GLuint vertexBuffer;
-			// glGenBuffers(1, &vertexBuffer);
-			// glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-			// glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-			// // 1st attribute buffer : vertices
-			// glEnableVertexAttribArray(0);
-			// glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-			// glVertexAttribPointer(
-			//    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-			//    verts.size(),                  // size
-			//    GL_FLOAT,           // type
-			//    GL_FALSE,           // normalized?
-			//    0,                  // stride
-			//    (void*)0            // array buffer offset
-			// );
-			// // Draw the triangle !
-			// glDrawArrays(GL_LINES, 0, verts.size()); // Starting from vertex 0; 3 vertices total -> 1 triangle
-			// glDisableVertexAttribArray(0);
-
 			skeleton_pass.setup();
 			// Draw our triangles.
 			CHECK_GL_ERROR(glDrawElements(GL_LINES, skeleton_faces.size() * 2, GL_UNSIGNED_INT, 0));
