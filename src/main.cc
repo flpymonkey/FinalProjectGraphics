@@ -38,6 +38,14 @@ const char* floor_fragment_shader =
 #include "shaders/floor.frag"
 ;
 
+const char* red_fragment_shader =
+#include "shaders/red.frag"
+;
+
+const char* skeleton_vertex_shader =
+#include "shaders/skeleton.vert"
+;
+
 // FIXME: Add more shaders here.
 
 void ErrorCallback(int error, const char* description) {
@@ -160,7 +168,7 @@ int main(int argc, char* argv[])
 	// FIXME: add more lambdas for data_source if you want to use RenderPass.
 	//        Otherwise, do whatever you like here
 	ShaderUniform std_model = { "model", matrix_binder, std_model_data };
-	ShaderUniform floor_model = { "model", matrix_binder, floor_model_data };
+	ShaderUniform floor_model = { "model", matrix_binder, floor_model_data};
 	ShaderUniform std_view = { "view", matrix_binder, std_view_data };
 	ShaderUniform std_camera = { "camera_position", vector3_binder, std_camera_data };
 	ShaderUniform std_proj = { "projection", matrix_binder, std_proj_data };
@@ -189,8 +197,39 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
 
+
+
 	// FIXME: Create the RenderPass objects for bones here.
 	//        Otherwise do whatever you like.
+	glm::mat4 skeleton_model_matrix = glm::mat4(1.0f);
+	auto skeleton_model_data = [&skeleton_model_matrix]() -> const void* {
+		return &skeleton_model_matrix[0][0];
+	}; // This return model matrix for the floor.
+
+	ShaderUniform skeleton_model = { "model", matrix_binder, skeleton_model_data};
+
+	std::vector<glm::vec4> skeleton_vertices;
+	std::vector<glm::uvec2> skeleton_faces;
+	//getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2> skeleton_faces);
+
+	skeleton_vertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	skeleton_vertices.push_back(glm::vec4(0.0f, 100.0f, 0.0f, 1.0f));
+	//skeleton_vertices.push_back(glm::vec4(0.0f, 0.0f, 100.0f, 1.0f));
+
+	skeleton_faces.push_back(glm::uvec2(0, 1));
+
+	RenderDataInput skeleton_pass_input;
+	skeleton_pass_input.assign(0, "vertex_position", skeleton_vertices.data(), skeleton_vertices.size(), 4, GL_FLOAT);
+	skeleton_pass_input.assign_index(skeleton_faces.data(), skeleton_faces.size(), 2);
+	RenderPass skeleton_pass(-1,
+			skeleton_pass_input,
+			{ skeleton_vertex_shader, NULL, red_fragment_shader},
+			{ skeleton_model, std_view, std_proj, std_light },
+			{ "fragment_color" }
+			);
+	// Ends
+
+
 
 	RenderDataInput floor_pass_input;
 	floor_pass_input.assign(0, "vertex_position", floor_vertices.data(), floor_vertices.size(), 4, GL_FLOAT);
@@ -235,22 +274,19 @@ int main(int argc, char* argv[])
 		// FIXME: Draw bones first.
 		if (draw_skeleton){
 
-			GLuint VertexArrayID;
-			glGenVertexArrays(1, &VertexArrayID);
-			glBindVertexArray(VertexArrayID);
+			// GLuint VertexArrayID;
+			// glGenVertexArrays(1, &VertexArrayID);
+			// glBindVertexArray(VertexArrayID);
 
 			//An array of 3 vectors which represents 3 vertices
-			static const GLfloat g_vertex_buffer_data[] = {
-				0.000000,
-				8.577215,
-				0.000000,
-				41.933708,
-				0.000000,
-				3.752026,
-				-158.037903,
-				1.160567,
-				18.343523
-			};
+			// static const GLfloat g_vertex_buffer_data[] = {
+			// 	0.000000f,
+			// 	8.577215f,
+			// 	0.000000f,
+			// 	4.888966f,
+			// 	0.000000f,
+			// 	0.437441
+			// };
 			// 0.000000
 			// 8.577215
 			// 0.000000
@@ -271,37 +307,82 @@ int main(int argc, char* argv[])
 			// -0.830828,
 			// -79.949074
 
-			std::vector<float> verts;
-			mesh.getSkeletonJoints(verts);
-			for (int i = 0; i < 9; i++) {
-				//printf("%f\n", verts[i]);
-			}
-			//printf("AAAAAAAAAAAAAAAAAAA\n");
-			// const GLfloat* g_vertex_buffer_data = &verts[0];
 
-			// This will identify our vertex buffer
-			GLuint vertexbuffer;
-			// Generate 1 buffer, put the resulting identifier in vertexbuffer
-			glGenBuffers(1, &vertexbuffer);
-			// The following commands will talk about our 'vertexbuffer' buffer
-			glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-			// Give our vertices to OpenGL.
-			glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+			// std::vector<float> verts;
+			// mesh.getSkeletonJoints(verts);
+			// for (int i = 0; i < verts.size(); i++) {
+			// 	printf("%f,\n", verts[i]);
+			// }
+			// printf("AAAAAAAAAAAAAAAAAAA\n");
+			// //const GLfloat* g_vertex_buffer_data = &verts[0];
 
-			// 1st attribute buffer : vertices
-			glEnableVertexAttribArray(0);
-			glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-			glVertexAttribPointer(
-			   0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-			   3,                  // size
-			   GL_FLOAT,           // type
-			   GL_FALSE,           // normalized?
-			   0,                  // stride
-			   (void*)0            // array buffer offset
-			);
-			// Draw the triangle !
-			glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
-			glDisableVertexAttribArray(0);
+			// std::vector<glm::vec4> verts;
+
+			// verts.push_back(glm::vec4(0.000000f, 8.577215f, 0.000000f, 1.0f));
+			// verts.push_back(glm::vec4(4.888966f, 0.000000f, 0.437441f, 1.0f));
+
+
+			// static const GLfloat g_vertex_buffer_data[] = {
+			// 	0.01,
+			// 	0.0,
+			// 	0.0,
+			// 	0.0,
+			// 	100.0,
+			// 	0.0,
+	
+			// };
+
+
+
+			// // GLuint Vector1_VAObject;
+			// // GLuint Vector1_VBObject;
+			// // glGenVertexArrays(1,&Vector1_VAObject);
+			// // glGenBuffers(1,&Vector1_VBObject);
+
+			// // glBindVertexArray(Vector1_VAObject);
+			// // glBindBuffer(GL_ARRAY_BUFFER, Vector1_VBObject);
+
+			// // glBufferData(GL_ARRAY_BUFFER,verts.size()*sizeof(GLfloat), &verts[0], GL_STATIC_DRAW);
+			// // glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 3*sizeof(GLfloat),(GLvoid*)0);
+			// // //Clean
+			// // glEnableVertexAttribArray(0);
+			// // glBindBuffer(GL_ARRAY_BUFFER,0);
+			// // glBindVertexArray(0);
+
+			// // // glUseProgram(lineShader->getProgram());
+			// // glBindVertexArray(Vector1_VAObject);
+
+			// // glDrawArrays(GL_LINE_STRIP,0,verts.size());
+
+
+			// // glBindVertexArray(0);
+
+
+
+
+			// // // This will identify our vertex buffer
+			// GLuint vertexbuffer;
+			// // Generate 1 buffer, put the resulting identifier in vertexbuffer
+			// glGenBuffers(1, &vertexbuffer);
+			// // The following commands will talk about our 'vertexbuffer' buffer
+			// glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+			// // Give our vertices to OpenGL.
+			// glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+			// // 1st attribute buffer : vertices
+			// glEnableVertexAttribArray(0);
+			// glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+			// glVertexAttribPointer(
+			//    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+			//    3,                  // size
+			//    GL_FLOAT,           // type
+			//    GL_FALSE,           // normalized?
+			//    0,                  // stride
+			//    (void*)0            // array buffer offset
+			// );
+			// // Draw the triangle !
+			// glDrawArrays(GL_LINES, 0, 2); // Starting from vertex 0; 3 vertices total -> 1 triangle
+			// glDisableVertexAttribArray(0);
 
 			// Populate vertex buffer data
 			//std::vector<float> verts;
@@ -330,6 +411,10 @@ int main(int argc, char* argv[])
 			// // Draw the triangle !
 			// glDrawArrays(GL_LINES, 0, verts.size()); // Starting from vertex 0; 3 vertices total -> 1 triangle
 			// glDisableVertexAttribArray(0);
+
+			skeleton_pass.setup();
+			// Draw our triangles.
+			CHECK_GL_ERROR(glDrawElements(GL_LINES, skeleton_faces.size() * 2, GL_UNSIGNED_INT, 0));
 		}
 		// Then draw floor.
 		if (draw_floor) {

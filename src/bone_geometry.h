@@ -34,6 +34,8 @@ struct Bone {
 
 	//Trmporary
 	glm::vec3 offset;
+	glm::mat4 T;
+	glm::mat4 R;
 	
 };
 
@@ -66,6 +68,8 @@ struct Mesh {
 
 	// Added mesh functions:
 	void getSkeletonJoints(std::vector<float>& verts);
+	void getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2> skeleton_faces);
+
 private:
 	void computeBounds();
 	glm::vec3 computeNormal(glm::vec3 tangent);
