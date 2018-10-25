@@ -70,6 +70,11 @@ private:
 	void computeBounds();
 	glm::vec3 computeNormal(glm::vec3 tangent);
 	glm::mat4 computeOrientation(glm::vec3 tangent, glm::vec3 normal, glm::vec3 binormal);
+
+	void printInt(char* name, int data);
+	void printFloat(char* name, float value);
+	void printVec3(char* name, glm::vec3 data);
+	void printMat4(char* name, glm::mat4 data);
 };
 
 #endif

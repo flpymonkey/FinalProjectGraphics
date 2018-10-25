@@ -274,9 +274,9 @@ int main(int argc, char* argv[])
 			std::vector<float> verts;
 			mesh.getSkeletonJoints(verts);
 			for (int i = 0; i < 9; i++) {
-				printf("%f\n", verts[i]);
+				//printf("%f\n", verts[i]);
 			}
-			printf("AAAAAAAAAAAAAAAAAAA\n");
+			//printf("AAAAAAAAAAAAAAAAAAA\n");
 			// const GLfloat* g_vertex_buffer_data = &verts[0];
 
 			// This will identify our vertex buffer

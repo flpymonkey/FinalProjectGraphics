@@ -52,9 +52,9 @@ void Mesh::loadpmd(const std::string& fn)
 	glm::vec3 offset;
 
 	while (mr.getJoint(bone_id++, offset, parent_id)) {
-		printf("bone_id: %d\n", bone_id);
-		printf("offset: (%f, %f, %f)\n", offset.x, offset.y, offset.z);
-		printf("parent_id: %d\n", parent_id);
+		printInt("bone_id", bone_id - 1);
+		printVec3("offset", offset);
+		printInt("parent_id", parent_id);
 
 		Bone* bone = new Bone;
 		glm::vec3 tangent;
@@ -64,6 +64,9 @@ void Mesh::loadpmd(const std::string& fn)
 		glm::mat4 LocalToWorld;
 		float length;
 		Bone* parent = NULL;
+
+		glm::mat4 T;
+		glm::mat4 R;
 
 		if (parent_id == -1) {
 			glm::vec3 parent_offset = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -75,9 +78,12 @@ void Mesh::loadpmd(const std::string& fn)
 			length = glm::length(offset);
 			skeleton.root = bone;
 
+			T = glm::translate(offset);
+			//R = glm::rotate()
+
 		} else {
 			Bone* parent = skeleton.bones[parent_id];
-			tangent = glm::normalize(parent->offset - offset);
+			tangent = glm::normalize(offset - parent->offset);
 			normal = glm::normalize(computeNormal(tangent));
 			binormal = glm::normalize(glm::cross(tangent, normal));
 			orientation = computeOrientation(tangent, normal, binormal);
@@ -88,16 +94,19 @@ void Mesh::loadpmd(const std::string& fn)
 			// TODO: Know this for calculating vert position relative to parent,
 			// position relative to parent is tangent (from orientation * length)
 			// get world position using LocalToWorld * (from orientation * length)
+
+			T = glm::translate(offset);
+			//float angle = glm::acos(glm::dot(parent->tangent, tangent));
+			//R = rotate(angle, parent->normal);
 		}
 
-		printf("tangent: (%f, %f, %f)\n", tangent.x, tangent.y, tangent.z);
-		printf("normal: (%f, %f, %f)\n", normal.x, normal.y, normal.z);
-		printf("binormal: (%f, %f, %f)\n", binormal.x, binormal.y, binormal.z);
-		printf("orientation: (%f, %f, %f, %f)\n", orientation[0][0], orientation[0][1], orientation[0][2], orientation[0][3]);
-		printf("orientation: (%f, %f, %f, %f)\n", orientation[1][0], orientation[1][1], orientation[1][2], orientation[1][3]);
-		printf("orientation: (%f, %f, %f, %f)\n", orientation[2][0], orientation[2][1], orientation[2][2], orientation[2][3]);
-		printf("orientation: (%f, %f, %f, %f)\n", orientation[3][0], orientation[3][1], orientation[3][2], orientation[3][3]);
-		printf("length: %f\n", length);
+		// printVec3("tangent", tangent);
+		// printVec3("normal", normal);
+		// printVec3("binormal", binormal);
+		// printMat4("orientation", orientation);
+		// printMat4("LocalToWorld", LocalToWorld);
+		// printFloat("length", length);
+		printMat4("T", T);
 
 		bone->name = "bone_" + bone_id;
 		bone->id = bone_id;
@@ -215,4 +224,23 @@ void Mesh::getSkeletonJoints(std::vector<float>& verts){
 
 	// convert this verts vector to an array and return it
 	//return &verts[0];
+}
+
+void Mesh::printInt(char* name, int data) {
+	printf("%s: %i\n", name, data);
+}
+
+void Mesh::printFloat(char* name, float data) {
+	printf("%s: %f\n", name, data);
+}
+
+void Mesh::printVec3(char* name, glm::vec3 data) {
+	printf("%s: (%f, %f, %f)\n", name, data.x, data.y, data.z);
+}
+
+void Mesh::printMat4(char* name, glm::mat4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name, data[0][0], data[0][1], data[0][2], data[0][3]);
+	printf("%s: (%f, %f, %f, %f)\n", name, data[1][0], data[1][1], data[1][2], data[1][3]);
+	printf("%s: (%f, %f, %f, %f)\n", name, data[2][0], data[2][1], data[2][2], data[2][3]);
+	printf("%s: (%f, %f, %f, %f)\n", name, data[3][0], data[3][1], data[3][2], data[3][3]);
 }
