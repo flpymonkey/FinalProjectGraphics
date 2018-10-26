@@ -51,76 +51,73 @@ void Mesh::loadpmd(const std::string& fn)
 	int parent_id;
 	glm::vec3 offset;
 
-	while (mr.getJoint(bone_id++, offset, parent_id)) {
-		// printInt("bone_id", bone_id - 1);
-		// printVec3("offset", offset);
-		// printInt("parent_id", parent_id);
+	while (mr.getJoint(bone_id, offset, parent_id)) {
+		printInt("bone_id", bone_id);
+		 printVec3("offset", offset);
+		printInt("parent_id", parent_id);
+
+		if (bone_id == 2){
+			break;
+		}
 
 		Bone* bone = new Bone;
 		glm::vec3 tangent;
 		glm::vec3 normal;
 		glm::vec3 binormal;
-		glm::mat4 orientation;
+		glm::mat4 R;
+		glm::mat4 T;
 		glm::mat4 LocalToWorld;
+		glm::mat4 LocalToWorld_R;
+		glm::vec3 local_offset;
 		float length;
 		Bone* parent = NULL;
 
 		// glm::mat4 T;
 		// glm::mat4 R;
-
 		if (parent_id == -1) {
-			glm::vec3 parent_offset = glm::vec3(0.0f, 0.0f, 0.0f);
-			tangent = glm::normalize(offset - parent_offset);
+			tangent = glm::normalize(offset);
 			normal = glm::normalize(computeNormal(tangent));
 			binormal = glm::normalize(glm::cross(tangent, normal));
-			orientation = computeOrientation(tangent, normal, binormal);
+			// printVec3("TANNNNNNNNNNNNNNNNNNNNNNNNNNNNNV", tangent);
+			// printVec3("TANNNNNNNNNNNNNNNNNNNNNNNNNNNNNV", normal);
+			// printVec3("TANNNNNNNNNNNNNNNNNNNNNNNNNNNNNV", binormal);
+			R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
+			T = glm::translate(offset);
 			LocalToWorld = glm::mat4(1.0f);
+			LocalToWorld_R = glm::mat4(1.0f);
 			length = glm::length(offset);
 			skeleton.root = bone;
-			printVec3("offset", offset);
-
-			bone->T = glm::transpose(glm::translate(offset));
-			//R = glm::rotate()
-
 		} else {
 			Bone* parent = skeleton.bones[parent_id];
-			tangent = glm::normalize(offset - parent->offset);
+			LocalToWorld_R = parent->LocalToWorld_R * parent->R;
+			local_offset = glm::vec3(glm::inverse(parent->LocalToWorld_R) * glm::vec4(offset, 1.0f));
+			T = glm::translate(local_offset);
+			length = glm::length(local_offset);
+			tangent = glm::normalize(local_offset);
 			normal = glm::normalize(computeNormal(tangent));
 			binormal = glm::normalize(glm::cross(tangent, normal));
-			orientation = computeOrientation(tangent, normal, binormal);
-			LocalToWorld = (parent->T * parent->orientation) * parent->LocalToWorld; // FIXME: should we flip it?
-			// FIXME I dont think we are calculating offset correctly? should just be magnitude of offset?
-			length = glm::length(offset);
+			printVec3("tangent", tangent);
+			printVec3("normal", normal);
+			printVec3("binormal", binormal);
+			R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
+			LocalToWorld = parent->LocalToWorld * parent->T * parent->R;
 			parent->children.push_back(bone);
-			// TODO: Know this for calculating vert position relative to parent,
-			// position relative to parent is tangent (from orientation * length)
-			// get world position using LocalToWorld * (from orientation * length)
-
-			bone->T = glm::transpose(glm::translate(offset));
-			//float angle = glm::acos(glm::dot(parent->tangent, tangent));
-			//R = rotate(angle, parent->normal);
 		}
-
-		// printVec3("tangent", tangent);
-		// printVec3("normal", normal);
-		// printVec3("binormal", binormal);
-		// printMat4("orientation", orientation);
-		// printMat4("LocalToWorld", LocalToWorld);
-		// printFloat("length", length);
-		// printMat4("T", bone->T);
-		// printMat4("O", orientation);
 
 		bone->name = "bone_" + bone_id;
 		bone->id = bone_id;
 		bone->parent_id = parent_id;
 		bone->parent = parent;
 		bone->length = length;
-		bone->orientation = orientation;
+		bone->R = R;
+		bone->T = T;
 		bone->LocalToWorld = LocalToWorld;
+		bone->LocalToWorld_R = LocalToWorld_R;
 		bone->offset = offset;
+		bone->local_offset = local_offset;
 
 		skeleton.bones.push_back(bone);
-
+		bone_id++;
 	}
 }
 
@@ -154,12 +151,12 @@ glm::vec3 Mesh::computeNormal(glm::vec3 tangent)
 		v.x = 1.0f;
 		v.y = 0.0f;
 		v.z = 0.0f;
-	}
+	} else
 	if (min == v.y) {
 		v.x = 0.0f;
 		v.y = 1.0f;
 		v.z = 0.0f;
-	}
+	} else
 	if (min == v.z) {
 		v.x = 0.0f;
 		v.y = 0.0f;
@@ -168,49 +165,9 @@ glm::vec3 Mesh::computeNormal(glm::vec3 tangent)
 
 	//printf("v: (%f, %f, %f)\n", v.x, v.y, v.z);
 
-	glm::vec3 nominator = glm::cross(tangent, v);
+	glm::vec3 nominator = glm::cross(v, tangent);
 	float denominator = glm::length(nominator);
 	return nominator / denominator;
-}
-
-glm::mat4 Mesh::computeOrientation(glm::vec3 tangent, glm::vec3 normal, glm::vec3 binormal)
-{
-	glm::mat4 orientation;
-	orientation[0][0] = tangent.x;
-	orientation[1][0] = tangent.y;
-	orientation[2][0] = tangent.z;
-	orientation[3][0] = 0.0f;
-	orientation[0][1] = normal.x;
-	orientation[1][1] = normal.y;
-	orientation[2][1] = normal.z;
-	orientation[3][1] = 0.0f;
-	orientation[0][2] = binormal.x;
-	orientation[1][2] = binormal.y;
-	orientation[2][2] = binormal.z;
-	orientation[3][2] = 0.0f;
-	orientation[0][3] = 0.0f;
-	orientation[1][3] = 0.0f;
-	orientation[2][3] = 0.0f;
-	orientation[3][3] = 1.0f;
-
-
-	// orientation[0][0] = tangent.x;
-	// orientation[1][0] = normal.x;
-	// orientation[2][0] = binormal.x;
-	// orientation[3][0] = 0.0f;
-	// orientation[0][1] = tangent.y;
-	// orientation[1][1] = normal.y;
-	// orientation[2][1] = binormal.y;
-	// orientation[3][1] = 0.0f;
-	// orientation[0][2] = tangent.z;
-	// orientation[1][2] = normal.z;
-	// orientation[2][2] = binormal.z;
-	// orientation[3][2] = 0.0f;
-	// orientation[0][3] = 0.0f;
-	// orientation[1][3] = 0.0f;
-	// orientation[2][3] = 0.0f;
-	// orientation[3][3] = 1.0f;
-	return orientation;
 }
 
 // Create a list of vertices (representing joints) from the bones
@@ -220,32 +177,32 @@ void Mesh::getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::
 	Bone* bone;
 
 	//FIXME: might want to skip the first bone (bone form origin of world to base)
-	for (int i = 0; i < getNumberOfBones(); ++i){
+	for (int i = 0; i < 2; ++i){
 		bone = skeleton.bones[i];
 
-		// // FIXME: Make sure we are multiplying the correct orientation times length!
-		// // FIXME: Make sure its not supposed to be parent orientation times this bones length
-		// // Get tanget from this bones orientation
-		// glm::vec4 tangent = glm::vec4(bone->orientation[0][0], bone->orientation[0][1],
-		// 	bone->orientation[0][2], 0);
+		// // FIXME: Make sure we are multiplying the correct R times length!
+		// // FIXME: Make sure its not supposed to be parent R times this bones length
+		// // Get tanget from this bones R
+		// glm::vec4 tangent = glm::vec4(bone->R[0][0], bone->R[0][1],
+		// 	bone->R[0][2], 0);
 		// // and multiply by length to get this bones position relative to parent
 		// glm::vec4 relativePosition = tangent * bone->length;
 		// // multiply this times local to world to get this bones world corrdinates
 		// //FIXME: make sure this multiplication is in the correct order!
 		// glm::vec4 worldPosition = bone->LocalToWorld * relativePosition;
 
-		glm::vec4 worldPosition = bone->LocalToWorld * (bone->T * bone->orientation) * glm::vec4(bone->offset, 1.0f);
-
+		glm::vec4 worldPosition = glm::vec4(0, 0, bone->length, 1.0f) * (bone->T * bone->R) * bone->LocalToWorld;
+		worldPosition.w = 1.0f;
 		printMat4("LocalToWorld", bone->LocalToWorld);
 		printMat4("T", bone->T);
-		printMat4("O", bone->orientation);
-		printVec4("V", glm::vec4(bone->offset, 1.0f));
+		printMat4("R", bone->R);
+		printVec4("V", glm::vec4(0, 0, bone->length, 1.0f));
 		printVec4("worldPosition", worldPosition);
 
 		// add these points to our verts list for opengl
 		skeleton_vertices.push_back(worldPosition);
 
-		if ((i + 1) % 2 == 0) {
+		if (i != 0) {
 			skeleton_faces.push_back(glm::uvec2(i - 1, i));
 		}
 	}
@@ -256,25 +213,25 @@ void Mesh::getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::
 	//return &verts[0];
 }
 
-void Mesh::printInt(char* name, int data) {
-	printf("%s: %i\n", name, data);
+void Mesh::printInt(std::string name, int data) {
+	printf("%s: %i\n", name.c_str(), data);
 }
 
-void Mesh::printFloat(char* name, float data) {
-	printf("%s: %f\n", name, data);
+void Mesh::printFloat(std::string name, float data) {
+	printf("%s: %f\n", name.c_str(), data);
 }
 
-void Mesh::printVec3(char* name, glm::vec3 data) {
-	printf("%s: (%f, %f, %f)\n", name, data.x, data.y, data.z);
+void Mesh::printVec3(std::string name, glm::vec3 data) {
+	printf("%s: (%f, %f, %f)\n", name.c_str(), data.x, data.y, data.z);
 }
 
-void Mesh::printVec4(char* name, glm::vec4 data) {
-	printf("%s: (%f, %f, %f, %f)\n", name, data.x, data.y, data.z, data.w);
+void Mesh::printVec4(std::string name, glm::vec4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data.x, data.y, data.z, data.w);
 }
 
-void Mesh::printMat4(char* name, glm::mat4 data) {
-	printf("%s: (%f, %f, %f, %f)\n", name, data[0][0], data[0][1], data[0][2], data[0][3]);
-	printf("%s: (%f, %f, %f, %f)\n", name, data[1][0], data[1][1], data[1][2], data[1][3]);
-	printf("%s: (%f, %f, %f, %f)\n", name, data[2][0], data[2][1], data[2][2], data[2][3]);
-	printf("%s: (%f, %f, %f, %f)\n", name, data[3][0], data[3][1], data[3][2], data[3][3]);
+void Mesh::printMat4(std::string name, glm::mat4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][0], data[1][0], data[2][0], data[3][0]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][1], data[1][1], data[2][1], data[3][1]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][2], data[1][2], data[2][2], data[3][2]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][3], data[1][3], data[2][3], data[3][3]);
 }

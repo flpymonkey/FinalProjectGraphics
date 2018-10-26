@@ -29,14 +29,15 @@ struct Bone {
 	std::vector<Bone*> children;
 	Bone* parent;
 	float length;
-	glm::mat4 orientation;
 	glm::mat4 LocalToWorld;
+	glm::mat4 LocalToWorld_R;
 
 	//Trmporary
 	glm::vec3 offset;
+	glm::vec3 local_offset;
 	glm::mat4 T;
 	glm::mat4 R;
-	
+
 };
 
 
@@ -72,13 +73,12 @@ struct Mesh {
 private:
 	void computeBounds();
 	glm::vec3 computeNormal(glm::vec3 tangent);
-	glm::mat4 computeOrientation(glm::vec3 tangent, glm::vec3 normal, glm::vec3 binormal);
 
-	void printInt(char* name, int data);
-	void printFloat(char* name, float value);
-	void printVec3(char* name, glm::vec3 data);
-	void printVec4(char* name, glm::vec4 data);
-	void printMat4(char* name, glm::mat4 data);
+	void printInt(std::string name, int data);
+	void printFloat(std::string name, float value);
+	void printVec3(std::string name, glm::vec3 data);
+	void printVec4(std::string name, glm::vec4 data);
+	void printMat4(std::string name, glm::mat4 data);
 };
 
 #endif
