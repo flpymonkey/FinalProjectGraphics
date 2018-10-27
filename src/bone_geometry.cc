@@ -44,7 +44,7 @@ void Mesh::loadpmd(const std::string& fn)
 	computeBounds();
 	mr.getMaterial(materials);
 
-	// FIXME: load skeleton and blend weights from PMD file
+	// TODO: load skeleton and blend weights from PMD file
 	//        also initialize the skeleton as needed
 
 	int bone_id = 0;
@@ -59,35 +59,43 @@ void Mesh::loadpmd(const std::string& fn)
 		glm::vec3 tangent;
 		glm::vec3 normal;
 		glm::vec3 binormal;
-	
+
 		// TODO: Get rid of offset, local_offset, make sure ordering is good in struct and in here. Get rid of dup code.
 		if (parent_id == -1) {
+			// This is the root of the skeleton_faces
+			skeleton.root = bone;
+
 			bone->parent = NULL;
-			bone->offset = offset;
-			bone->local_offset = offset;
+			bone->LocalToWorld = glm::mat4(1.0f);
+			bone->LocalToWorld_R = glm::mat4(1.0f);
 			bone->length = glm::length(offset);
+			bone->T = glm::translate(offset);
+
+			//Calculate rotation matrix
 			tangent = glm::normalize(offset);
 			normal = glm::normalize(computeNormal(tangent));
 			binormal = glm::normalize(glm::cross(tangent, normal));
-			bone->T = glm::translate(offset);
 			bone->R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
-			bone->LocalToWorld = glm::mat4(1.0f);
-			bone->LocalToWorld_R = glm::mat4(1.0f);
-			skeleton.root = bone;
 		} else {
 			Bone* parent = skeleton.bones[parent_id];
 			bone->parent = parent;
 			bone->LocalToWorld_R = parent->LocalToWorld_R * parent->R;
 			bone->LocalToWorld = parent->LocalToWorld * parent->T * parent->R;
-			bone->local_offset = glm::vec3(glm::inverse(bone->LocalToWorld_R) * glm::vec4(offset, 1.0f));
-			bone->T = glm::translate(bone->local_offset);
-			bone->length = glm::length(bone->local_offset);
+
+			// Calculate local translation relative to parent
+			glm::vec3 local_offset = glm::vec3(glm::inverse(bone->LocalToWorld_R) * glm::vec4(offset, 1.0f));
+			bone->T = glm::translate(local_offset);
+			bone->length = glm::length(local_offset);
+
+			//Calculate rotation matrix relative to parent
 			glm::vec4 parent_position = parent->LocalToWorld * parent->T * parent->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 			glm::vec4 position = bone->LocalToWorld * bone->T * glm::vec4(0.0f, 0.0f, bone->length, 1.0f);
 			tangent = glm::vec3(glm::normalize(position - parent_position));
 			normal = glm::normalize(computeNormal(tangent));
 			binormal = glm::normalize(glm::cross(tangent, normal));
 			bone->R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
+
+			// Assign to parent bone
 			parent->children.push_back(bone);
 		}
 
@@ -126,13 +134,11 @@ glm::vec3 Mesh::computeNormal(glm::vec3 tangent)
 		v.x = 1.0f;
 		v.y = 0.0f;
 		v.z = 0.0f;
-	} else
-	if (min == v.y) {
+	} else if (min == v.y) {
 		v.x = 0.0f;
 		v.y = 1.0f;
 		v.z = 0.0f;
-	} else
-	if (min == v.z) {
+	} else if (min == v.z) {
 		v.x = 0.0f;
 		v.y = 0.0f;
 		v.z = 1.0f;
@@ -144,7 +150,7 @@ glm::vec3 Mesh::computeNormal(glm::vec3 tangent)
 }
 
 // Create a list of vertices (representing joints) from the bones
-void Mesh::getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces) {
+void Mesh::generateSkeleton(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces) {
 	int face_counter = 0;
 	generateVertices(skeleton_vertices, skeleton_faces, skeleton.root, face_counter);
 }

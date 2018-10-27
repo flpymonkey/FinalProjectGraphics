@@ -197,8 +197,6 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
 
-
-
 	// FIXME: Create the RenderPass objects for bones here.
 	//        Otherwise do whatever you like.
 	glm::mat4 skeleton_model_matrix = glm::mat4(1.0f);
@@ -210,15 +208,7 @@ int main(int argc, char* argv[])
 
 	std::vector<glm::vec4> skeleton_vertices;
 	std::vector<glm::uvec2> skeleton_faces;
-	mesh.getSkeletonJointsVec(skeleton_vertices, skeleton_faces);
-
-	// skeleton_vertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-	// skeleton_vertices.push_back(glm::vec4(0.0f, 10.0f, 0.0f, 1.0f));
-	// skeleton_vertices.push_back(glm::vec4(0.0f, 0.0f, 10.0f, 1.0f));
-	// skeleton_vertices.push_back(glm::vec4(10.0f, 10.0f, 10.0f, 1.0f));
-
-	// skeleton_faces.push_back(glm::uvec2(0, 1));
-	// skeleton_faces.push_back(glm::uvec2(2, 3));
+	mesh.generateSkeleton(skeleton_vertices, skeleton_faces);
 
 	RenderDataInput skeleton_pass_input;
 	skeleton_pass_input.assign(0, "vertex_position", skeleton_vertices.data(), skeleton_vertices.size(), 4, GL_FLOAT);
@@ -229,9 +219,7 @@ int main(int argc, char* argv[])
 			{ skeleton_model, std_view, std_proj, std_light },
 			{ "fragment_color" }
 			);
-	// Ends
-
-
+	// End of skeleton creation
 
 	RenderDataInput floor_pass_input;
 	floor_pass_input.assign(0, "vertex_position", floor_vertices.data(), floor_vertices.size(), 4, GL_FLOAT);
@@ -273,7 +261,6 @@ int main(int argc, char* argv[])
 #else
 		draw_cylinder = true;
 #endif
-		// FIXME: Draw bones first.
 		if (draw_skeleton){
 			skeleton_pass.setup();
 			// Draw our triangles.

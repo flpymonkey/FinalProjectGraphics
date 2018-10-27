@@ -16,12 +16,6 @@ struct BoundingBox {
 	glm::vec3 max;
 };
 
-struct Joint {
-	// FIXME: Implement your Joint data structure.
-	// Note: PMD represents weights on joints, but you need weights on
-	//       bones to calculate the actual animation.
-};
-
 struct Bone {
 	int id;
 	int parent_id;
@@ -30,13 +24,8 @@ struct Bone {
 	float length;
 	glm::mat4 LocalToWorld;
 	glm::mat4 LocalToWorld_R;
-
-	//Trmporary
-	glm::vec3 offset;
-	glm::vec3 local_offset;
 	glm::mat4 T;
 	glm::mat4 R;
-
 };
 
 
@@ -67,7 +56,7 @@ struct Mesh {
 	glm::vec3 getCenter() const { return 0.5f * glm::vec3(bounds.min + bounds.max); }
 
 	// Added mesh functions:
-	void getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces);
+	void generateSkeleton(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces);
 	void generateVertices(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces, Bone* bone, int& face_counter);
 
 private:
