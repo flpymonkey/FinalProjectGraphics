@@ -56,9 +56,9 @@ void Mesh::loadpmd(const std::string& fn)
 		printVec3("offset", offset);
 		printInt("parent_id", parent_id);
 
-		if (bone_id == 2){
-			break;
-		}
+		// if (bone_id == 2){
+		// 	break;
+		// }
 
 		Bone* bone = new Bone;
 		bone->id = bone_id;
@@ -163,7 +163,7 @@ void Mesh::getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::
 	Bone* bone;
 
 	//FIXME: might want to skip the first bone (bone form origin of world to base)
-	for (int i = 0; i < 2; ++i){
+	for (int i = 0; i < getNumberOfBones(); ++i){
 		bone = skeleton.bones[i];
 
 		// // FIXME: Make sure we are multiplying the correct R times length!
