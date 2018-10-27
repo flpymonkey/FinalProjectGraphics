@@ -53,7 +53,7 @@ void Mesh::loadpmd(const std::string& fn)
 
 	while (mr.getJoint(bone_id, offset, parent_id)) {
 		printInt("bone_id", bone_id);
-		 printVec3("offset", offset);
+		printVec3("offset", offset);
 		printInt("parent_id", parent_id);
 
 		if (bone_id == 2){
@@ -61,60 +61,46 @@ void Mesh::loadpmd(const std::string& fn)
 		}
 
 		Bone* bone = new Bone;
+		bone->id = bone_id;
+		bone->parent_id = parent_id;
+
 		glm::vec3 tangent;
 		glm::vec3 normal;
 		glm::vec3 binormal;
-		glm::mat4 R;
-		glm::mat4 T;
-		glm::mat4 LocalToWorld;
-		glm::mat4 LocalToWorld_R;
-		glm::vec3 local_offset;
-		float length;
-		Bone* parent = NULL;
-
-		// glm::mat4 T;
-		// glm::mat4 R;
+	
 		if (parent_id == -1) {
+			bone->parent = NULL;
+			bone->offset = offset;
+			bone->local_offset = offset;
+			bone->length = glm::length(offset);
 			tangent = glm::normalize(offset);
 			normal = glm::normalize(computeNormal(tangent));
 			binormal = glm::normalize(glm::cross(tangent, normal));
-			// printVec3("TANNNNNNNNNNNNNNNNNNNNNNNNNNNNNV", tangent);
-			// printVec3("TANNNNNNNNNNNNNNNNNNNNNNNNNNNNNV", normal);
-			// printVec3("TANNNNNNNNNNNNNNNNNNNNNNNNNNNNNV", binormal);
-			R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
-			T = glm::translate(offset);
-			LocalToWorld = glm::mat4(1.0f);
-			LocalToWorld_R = glm::mat4(1.0f);
-			length = glm::length(offset);
+			bone->T = glm::translate(offset);
+			bone->R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
+			bone->LocalToWorld = glm::mat4(1.0f);
+			bone->LocalToWorld_R = glm::mat4(1.0f);
 			skeleton.root = bone;
 		} else {
 			Bone* parent = skeleton.bones[parent_id];
-			LocalToWorld_R = parent->LocalToWorld_R * parent->R;
-			local_offset = glm::vec3(glm::inverse(parent->LocalToWorld_R) * glm::vec4(offset, 1.0f));
-			T = glm::translate(local_offset);
-			length = glm::length(local_offset);
-			tangent = glm::normalize(local_offset);
+			bone->parent = parent;
+			bone->LocalToWorld_R = parent->LocalToWorld_R * parent->R;
+			bone->LocalToWorld = parent->LocalToWorld * parent->T * parent->R;
+			bone->local_offset = glm::vec3(glm::inverse(bone->LocalToWorld_R) * glm::vec4(offset, 1.0f));
+			bone->T = glm::translate(bone->local_offset);
+			bone->length = glm::length(bone->local_offset);
+			glm::vec4 parent_position = parent->LocalToWorld * parent->T * parent->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+			//parent_position.w = 1.0f;
+			glm::vec4 position = bone->LocalToWorld * bone->T * glm::vec4(0.0f, 0.0f, bone->length, 1.0f);
+			printMat4("LTW", bone->LocalToWorld);
+			printVec4("parent_position", parent_position);
+			printVec4("position", position);
+			tangent = glm::vec3(glm::normalize(position - parent_position));
 			normal = glm::normalize(computeNormal(tangent));
 			binormal = glm::normalize(glm::cross(tangent, normal));
-			printVec3("tangent", tangent);
-			printVec3("normal", normal);
-			printVec3("binormal", binormal);
-			R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
-			LocalToWorld = parent->LocalToWorld * parent->T * parent->R;
+			bone->R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
 			parent->children.push_back(bone);
 		}
-
-		bone->name = "bone_" + bone_id;
-		bone->id = bone_id;
-		bone->parent_id = parent_id;
-		bone->parent = parent;
-		bone->length = length;
-		bone->R = R;
-		bone->T = T;
-		bone->LocalToWorld = LocalToWorld;
-		bone->LocalToWorld_R = LocalToWorld_R;
-		bone->offset = offset;
-		bone->local_offset = local_offset;
 
 		skeleton.bones.push_back(bone);
 		bone_id++;
@@ -191,8 +177,9 @@ void Mesh::getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::
 		// //FIXME: make sure this multiplication is in the correct order!
 		// glm::vec4 worldPosition = bone->LocalToWorld * relativePosition;
 
-		glm::vec4 worldPosition = glm::vec4(0, 0, bone->length, 1.0f) * (bone->T * bone->R) * bone->LocalToWorld;
-		worldPosition.w = 1.0f;
+		//glm::vec4 worldPosition = glm::vec4(0, 0, bone->length, 1.0f) * bone->R * bone->T * bone->LocalToWorld;
+		glm::vec4 worldPosition = bone->LocalToWorld * bone->T * bone->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		//worldPosition.w = 1.0f;
 		printMat4("LocalToWorld", bone->LocalToWorld);
 		printMat4("T", bone->T);
 		printMat4("R", bone->R);

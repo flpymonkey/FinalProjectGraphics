@@ -23,7 +23,6 @@ struct Joint {
 };
 
 struct Bone {
-	std::string name;
 	int id;
 	int parent_id;
 	std::vector<Bone*> children;
