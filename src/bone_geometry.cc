@@ -52,14 +52,6 @@ void Mesh::loadpmd(const std::string& fn)
 	glm::vec3 offset;
 
 	while (mr.getJoint(bone_id, offset, parent_id)) {
-		printInt("bone_id", bone_id);
-		printVec3("offset", offset);
-		printInt("parent_id", parent_id);
-
-		// if (bone_id == 2){
-		// 	break;
-		// }
-
 		Bone* bone = new Bone;
 		bone->id = bone_id;
 		bone->parent_id = parent_id;
@@ -68,6 +60,7 @@ void Mesh::loadpmd(const std::string& fn)
 		glm::vec3 normal;
 		glm::vec3 binormal;
 	
+		// TODO: Get rid of offset, local_offset, make sure ordering is good in struct and in here. Get rid of dup code.
 		if (parent_id == -1) {
 			bone->parent = NULL;
 			bone->offset = offset;
@@ -90,11 +83,7 @@ void Mesh::loadpmd(const std::string& fn)
 			bone->T = glm::translate(bone->local_offset);
 			bone->length = glm::length(bone->local_offset);
 			glm::vec4 parent_position = parent->LocalToWorld * parent->T * parent->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-			//parent_position.w = 1.0f;
 			glm::vec4 position = bone->LocalToWorld * bone->T * glm::vec4(0.0f, 0.0f, bone->length, 1.0f);
-			printMat4("LTW", bone->LocalToWorld);
-			printVec4("parent_position", parent_position);
-			printVec4("position", position);
 			tangent = glm::vec3(glm::normalize(position - parent_position));
 			normal = glm::normalize(computeNormal(tangent));
 			binormal = glm::normalize(glm::cross(tangent, normal));
@@ -149,55 +138,13 @@ glm::vec3 Mesh::computeNormal(glm::vec3 tangent)
 		v.z = 1.0f;
 	}
 
-	//printf("v: (%f, %f, %f)\n", v.x, v.y, v.z);
-
 	glm::vec3 nominator = glm::cross(v, tangent);
 	float denominator = glm::length(nominator);
 	return nominator / denominator;
 }
 
 // Create a list of vertices (representing joints) from the bones
-void Mesh::getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces){
-	// FIXME: idk if this logic is correct???
-	// std::vector<float> verts;
-	// Bone* bone;
-
-	// //FIXME: might want to skip the first bone (bone form origin of world to base)
-	// for (int i = 0; i < getNumberOfBones(); ++i){
-	// 	bone = skeleton.bones[i];
-
-	// 	// // FIXME: Make sure we are multiplying the correct R times length!
-	// 	// // FIXME: Make sure its not supposed to be parent R times this bones length
-	// 	// // Get tanget from this bones R
-	// 	// glm::vec4 tangent = glm::vec4(bone->R[0][0], bone->R[0][1],
-	// 	// 	bone->R[0][2], 0);
-	// 	// // and multiply by length to get this bones position relative to parent
-	// 	// glm::vec4 relativePosition = tangent * bone->length;
-	// 	// // multiply this times local to world to get this bones world corrdinates
-	// 	// //FIXME: make sure this multiplication is in the correct order!
-	// 	// glm::vec4 worldPosition = bone->LocalToWorld * relativePosition;
-
-	// 	//glm::vec4 worldPosition = glm::vec4(0, 0, bone->length, 1.0f) * bone->R * bone->T * bone->LocalToWorld;
-	// 	glm::vec4 worldPosition = bone->LocalToWorld * bone->T * bone->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	// 	//worldPosition.w = 1.0f;
-	// 	printMat4("LocalToWorld", bone->LocalToWorld);
-	// 	printMat4("T", bone->T);
-	// 	printMat4("R", bone->R);
-	// 	printVec4("V", glm::vec4(0, 0, bone->length, 1.0f));
-	// 	printVec4("worldPosition", worldPosition);
-
-	// 	// add these points to our verts list for opengl
-	// 	skeleton_vertices.push_back(worldPosition);
-
-	// 	if (i != 0) {
-	// 		skeleton_faces.push_back(glm::uvec2(i - 1, i));
-	// 	}
-	// }
-
-
-
-	// convert this verts vector to an array and return it
-	//return &verts[0];
+void Mesh::getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces) {
 	int face_counter = 0;
 	generateVertices(skeleton_vertices, skeleton_faces, skeleton.root, face_counter);
 }
@@ -206,7 +153,6 @@ void Mesh::generateVertices(std::vector<glm::vec4>& skeleton_vertices, std::vect
 	if (bone->children.size() == 0) {
 		return;
 	}
-
 
 	for (uint i = 0; i < bone->children.size(); ++i) {
 		Bone* child = bone->children[i];
