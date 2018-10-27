@@ -160,44 +160,65 @@ glm::vec3 Mesh::computeNormal(glm::vec3 tangent)
 void Mesh::getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces){
 	// FIXME: idk if this logic is correct???
 	// std::vector<float> verts;
-	Bone* bone;
+	// Bone* bone;
 
-	//FIXME: might want to skip the first bone (bone form origin of world to base)
-	for (int i = 0; i < getNumberOfBones(); ++i){
-		bone = skeleton.bones[i];
+	// //FIXME: might want to skip the first bone (bone form origin of world to base)
+	// for (int i = 0; i < getNumberOfBones(); ++i){
+	// 	bone = skeleton.bones[i];
 
-		// // FIXME: Make sure we are multiplying the correct R times length!
-		// // FIXME: Make sure its not supposed to be parent R times this bones length
-		// // Get tanget from this bones R
-		// glm::vec4 tangent = glm::vec4(bone->R[0][0], bone->R[0][1],
-		// 	bone->R[0][2], 0);
-		// // and multiply by length to get this bones position relative to parent
-		// glm::vec4 relativePosition = tangent * bone->length;
-		// // multiply this times local to world to get this bones world corrdinates
-		// //FIXME: make sure this multiplication is in the correct order!
-		// glm::vec4 worldPosition = bone->LocalToWorld * relativePosition;
+	// 	// // FIXME: Make sure we are multiplying the correct R times length!
+	// 	// // FIXME: Make sure its not supposed to be parent R times this bones length
+	// 	// // Get tanget from this bones R
+	// 	// glm::vec4 tangent = glm::vec4(bone->R[0][0], bone->R[0][1],
+	// 	// 	bone->R[0][2], 0);
+	// 	// // and multiply by length to get this bones position relative to parent
+	// 	// glm::vec4 relativePosition = tangent * bone->length;
+	// 	// // multiply this times local to world to get this bones world corrdinates
+	// 	// //FIXME: make sure this multiplication is in the correct order!
+	// 	// glm::vec4 worldPosition = bone->LocalToWorld * relativePosition;
 
-		//glm::vec4 worldPosition = glm::vec4(0, 0, bone->length, 1.0f) * bone->R * bone->T * bone->LocalToWorld;
-		glm::vec4 worldPosition = bone->LocalToWorld * bone->T * bone->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		//worldPosition.w = 1.0f;
-		printMat4("LocalToWorld", bone->LocalToWorld);
-		printMat4("T", bone->T);
-		printMat4("R", bone->R);
-		printVec4("V", glm::vec4(0, 0, bone->length, 1.0f));
-		printVec4("worldPosition", worldPosition);
+	// 	//glm::vec4 worldPosition = glm::vec4(0, 0, bone->length, 1.0f) * bone->R * bone->T * bone->LocalToWorld;
+	// 	glm::vec4 worldPosition = bone->LocalToWorld * bone->T * bone->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	// 	//worldPosition.w = 1.0f;
+	// 	printMat4("LocalToWorld", bone->LocalToWorld);
+	// 	printMat4("T", bone->T);
+	// 	printMat4("R", bone->R);
+	// 	printVec4("V", glm::vec4(0, 0, bone->length, 1.0f));
+	// 	printVec4("worldPosition", worldPosition);
 
-		// add these points to our verts list for opengl
-		skeleton_vertices.push_back(worldPosition);
+	// 	// add these points to our verts list for opengl
+	// 	skeleton_vertices.push_back(worldPosition);
 
-		if (i != 0) {
-			skeleton_faces.push_back(glm::uvec2(i - 1, i));
-		}
-	}
+	// 	if (i != 0) {
+	// 		skeleton_faces.push_back(glm::uvec2(i - 1, i));
+	// 	}
+	// }
 
 
 
 	// convert this verts vector to an array and return it
 	//return &verts[0];
+	int face_counter = 0;
+	generateVertices(skeleton_vertices, skeleton_faces, skeleton.root, face_counter);
+}
+
+void Mesh::generateVertices(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces, Bone* bone, int& face_counter) {
+	if (bone->children.size() == 0) {
+		return;
+	}
+
+
+	for (uint i = 0; i < bone->children.size(); ++i) {
+		Bone* child = bone->children[i];
+		glm::vec4 worldPosition = bone->LocalToWorld * bone->T * bone->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		skeleton_vertices.push_back(worldPosition);
+		face_counter++;
+		glm::vec4 child_worldPosition = child->LocalToWorld * child->T * child->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		skeleton_vertices.push_back(child_worldPosition);
+		skeleton_faces.push_back(glm::uvec2(face_counter - 1, face_counter));
+		face_counter++;
+		generateVertices(skeleton_vertices, skeleton_faces, child, face_counter);
+	}
 }
 
 void Mesh::printInt(std::string name, int data) {

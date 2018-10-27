@@ -68,6 +68,7 @@ struct Mesh {
 
 	// Added mesh functions:
 	void getSkeletonJointsVec(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces);
+	void generateVertices(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces, Bone* bone, int& face_counter);
 
 private:
 	void computeBounds();
