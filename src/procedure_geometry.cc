@@ -19,7 +19,7 @@ void create_floor(std::vector<glm::vec4>& floor_vertices, std::vector<glm::uvec3
 // need to send a small number of points.  Controlling the grid size gives a
 // nice wireframe.
 
-void create_circle(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces)
+void create_circle(glm::vec3 position, std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, int& face_count)
 {
 	 int num_verts = 360;
    for (int i=0; i < num_verts; i++)
@@ -27,13 +27,24 @@ void create_circle(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& fa
       //float degInRad = i*DEG2RAD;
 
 			float theta = 2.0f * 3.1414926f * float(i) / (num_verts / 4);
-      glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius, sinf(theta)*kCylinderRadius, 0, 1.0f);
-			printf("pointx%f\n", cosf(theta)*kCylinderRadius);
-			printf("pointy%f\n", sinf(theta)*kCylinderRadius);
+      glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius + position.x, sinf(theta)*kCylinderRadius + position.y, position.z, 1.0f);
+			printf("pointx%f\n", v.x);
+			printf("pointy%f\n", v.y);
 			vertices.push_back(v);
 
-			if (i != 0){
-				faces.push_back(glm::uvec2(i - 1, i));
+			if (i != 0 || face_count != 0){
+				faces.push_back(glm::uvec2(face_count - 1, face_count));
 			}
+			face_count++;
    }
+}
+
+void create_cylinder(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces)
+{
+	int face_count = 0;
+	create_circle(glm::vec3(0.0f, 1.0f, 0.0f), vertices, faces, face_count);
+	printf("%d\n", face_count);
+	create_circle(glm::vec3(0.0f, 0.0f, 0.0f), vertices, faces, face_count);
+	printf("%d\n", face_count);
+	printf("%d\n", vertices.size());
 }

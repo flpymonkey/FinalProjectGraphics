@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
 
 	std::vector<glm::vec4> cylinder_vertices;
 	std::vector<glm::uvec2> cylinder_faces;
-	create_circle(cylinder_vertices, cylinder_faces);
+	create_cylinder(cylinder_vertices, cylinder_faces);
 
 	RenderDataInput cylinder_pass_input;
 	cylinder_pass_input.assign(0, "vertex_position", cylinder_vertices.data(), cylinder_vertices.size(), 4, GL_FLOAT);
@@ -290,7 +290,7 @@ int main(int argc, char* argv[])
 #endif
 
 		cylinder_pass.setup();
-		CHECK_GL_ERROR(glDrawElements(GL_LINES, skeleton_faces.size() * 2, GL_UNSIGNED_INT, 0));
+		CHECK_GL_ERROR(glDrawElements(GL_LINES, cylinder_faces.size() * 2, GL_UNSIGNED_INT, 0));
 
 		if (draw_skeleton){
 			skeleton_pass.setup();
