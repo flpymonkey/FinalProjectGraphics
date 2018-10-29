@@ -19,45 +19,52 @@ void create_floor(std::vector<glm::vec4>& floor_vertices, std::vector<glm::uvec3
 // need to send a small number of points.  Controlling the grid size gives a
 // nice wireframe.
 
-void create_cylinder_circle(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::vec3 position, int face_i)
+void create_cylinder_circle(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::vec3 position, int& face_i)
 {
 	int num_verts = 360;
 	int initial_face_i = face_i;
 
    	for (int i=0; i < num_verts; i++) {
-		float theta = 2.0f * 3.141593f * float(i) / (num_verts / 4);
-      	glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius + position.x, position.y, sinf(theta)*kCylinderRadius + position.z, 1.0f);
-		vertices.push_back(v);
+			float theta = 2.0f * 3.141593f * float(i) / (num_verts / 4);
+	      	glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius + position.x, position.y, sinf(theta)*kCylinderRadius + position.z, 1.0f);
+			vertices.push_back(v);
 
-		if (face_i != initial_face_i){
-			faces.push_back(glm::uvec2(face_i - 1, face_i));
-		}
-		face_i++;
+			if (face_i != initial_face_i){
+				faces.push_back(glm::uvec2(face_i - 1, face_i));
+			}
+			face_i++;
    	}
 }
 
-void create_cylinder_line(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::vec3 position, float length, float i, int face_i)
+void create_cylinder_lines(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::vec3 position, float length, int interval, int& face_i)
 {
-	float theta = 2.0f * 3.141593f * i / (360 / 4);
-	glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius + position.x, position.y, sinf(theta)*kCylinderRadius + position.z, 1.0f);
-	vertices.push_back(v);
-	v.y += length;
-	vertices.push_back(v);
-	faces.push_back(glm::uvec2(face_i, face_i + 1));
+		int num_verts = 360;
+		int initial_face_i = face_i;
+
+   	for (int i=0; i < num_verts; i += interval) {
+			float theta = 2.0f * 3.141593f * float(i) / (num_verts / 4);
+	    glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius + position.x, position.y, sinf(theta)*kCylinderRadius + position.z, 1.0f);
+			glm::vec4 v2 = glm::vec4(cosf(theta)*kCylinderRadius + position.x, position.y + length, sinf(theta)*kCylinderRadius + position.z, 1.0f);
+
+			vertices.push_back(v);
+			vertices.push_back(v2);
+
+			faces.push_back(glm::uvec2(face_i - 1, face_i));
+			face_i+=2;
+   	}
 }
 
 void create_cylinder(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces)
 {
 	float length = 2.0f; // Get from bone.
 
-	create_cylinder_circle(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), 0);
-	create_cylinder_circle(vertices, faces, glm::vec3(0.0f, length * 0.5f, 0.0f), 360);
-	create_cylinder_circle(vertices, faces, glm::vec3(0.0f, length, 0.0f), 720);
+	int face_counter = 0;
 
-	create_cylinder_line(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), length, 0.0f, 1080);
-	create_cylinder_line(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), length, 90.0f, 1082);
-	create_cylinder_line(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), length, 180.0f, 1084);
-	create_cylinder_line(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), length, 270.0f, 1086);
+	create_cylinder_circle(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), face_counter);
+	create_cylinder_circle(vertices, faces, glm::vec3(0.0f, length * 0.5f, 0.0f), face_counter);
+	create_cylinder_circle(vertices, faces, glm::vec3(0.0f, length, 0.0f), face_counter);
 
+	int line_interval = 10;
 
+	create_cylinder_lines(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), length, line_interval, face_counter);
 }
