@@ -19,32 +19,45 @@ void create_floor(std::vector<glm::vec4>& floor_vertices, std::vector<glm::uvec3
 // need to send a small number of points.  Controlling the grid size gives a
 // nice wireframe.
 
-void create_circle(glm::vec3 position, std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, int& face_count)
+void create_cylinder_circle(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::vec3 position, int face_i)
 {
-	 int num_verts = 360;
-   for (int i=0; i < num_verts; i++)
-   {
-      //float degInRad = i*DEG2RAD;
+	int num_verts = 360;
+	int initial_face_i = face_i;
 
-			float theta = 2.0f * 3.1414926f * float(i) / (num_verts / 4);
-      glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius + position.x, sinf(theta)*kCylinderRadius + position.y, position.z, 1.0f);
-			printf("pointx%f\n", v.x);
-			printf("pointy%f\n", v.y);
-			vertices.push_back(v);
+   	for (int i=0; i < num_verts; i++) {
+		float theta = 2.0f * 3.141593f * float(i) / (num_verts / 4);
+      	glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius + position.x, position.y, sinf(theta)*kCylinderRadius + position.z, 1.0f);
+		vertices.push_back(v);
 
-			if (i != 0 || face_count != 0){
-				faces.push_back(glm::uvec2(face_count - 1, face_count));
-			}
-			face_count++;
-   }
+		if (face_i != initial_face_i){
+			faces.push_back(glm::uvec2(face_i - 1, face_i));
+		}
+		face_i++;
+   	}
+}
+
+void create_cylinder_line(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::vec3 position, float length, float i, int face_i)
+{
+	float theta = 2.0f * 3.141593f * i / (360 / 4);
+	glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius + position.x, position.y, sinf(theta)*kCylinderRadius + position.z, 1.0f);
+	vertices.push_back(v);
+	v.y += length;
+	vertices.push_back(v);
+	faces.push_back(glm::uvec2(face_i, face_i + 1));
 }
 
 void create_cylinder(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces)
 {
-	int face_count = 0;
-	create_circle(glm::vec3(0.0f, 1.0f, 0.0f), vertices, faces, face_count);
-	printf("%d\n", face_count);
-	create_circle(glm::vec3(0.0f, 0.0f, 0.0f), vertices, faces, face_count);
-	printf("%d\n", face_count);
-	printf("%d\n", vertices.size());
+	float length = 2.0f; // Get from bone.
+
+	create_cylinder_circle(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), 0);
+	create_cylinder_circle(vertices, faces, glm::vec3(0.0f, length * 0.5f, 0.0f), 360);
+	create_cylinder_circle(vertices, faces, glm::vec3(0.0f, length, 0.0f), 720);
+
+	create_cylinder_line(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), length, 0.0f, 1080);
+	create_cylinder_line(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), length, 90.0f, 1082);
+	create_cylinder_line(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), length, 180.0f, 1084);
+	create_cylinder_line(vertices, faces, glm::vec3(0.0f, 0.0f, 0.0f), length, 270.0f, 1086);
+
+
 }
