@@ -85,6 +85,18 @@ void create_cylinder_lines(std::vector<glm::vec4>& vertices, std::vector<glm::uv
    	}
 }
 
+void create_axis(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::mat4 LocalToWorld, int& face_i)
+{
+	vertices.push_back(LocalToWorld * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	vertices.push_back(LocalToWorld * glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+	vertices.push_back(LocalToWorld * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	vertices.push_back(LocalToWorld * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+	faces.push_back(glm::uvec2(face_i, face_i + 1));
+	face_i += 2;
+	faces.push_back(glm::uvec2(face_i, face_i + 1));
+	face_i += 2;
+}
+
 void create_cylinder(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::mat4 LocalToWorld, float length)
 {
 	// float length = 2.0f; // Get from bone.
@@ -94,6 +106,7 @@ void create_cylinder(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& 
 	// printMat4("LTW:", LocalToWorld);
 
 	int face_counter = 0;
+	create_axis(vertices, faces, LocalToWorld, face_counter);
 
 	create_cylinder_circle(vertices, faces, LocalToWorld, 0.0f, face_counter);
 	create_cylinder_circle(vertices, faces, LocalToWorld, length * 0.5f, face_counter);

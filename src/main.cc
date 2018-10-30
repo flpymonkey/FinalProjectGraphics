@@ -50,6 +50,11 @@ const char* skeleton_vertex_shader =
 #include "shaders/skeleton.vert"
 ;
 
+
+const char* cylinder_vertex_shader =
+#include "shaders/cylinder.vert"
+;
+
 // FIXME: Add more shaders here.
 
 void ErrorCallback(int error, const char* description) {
@@ -283,12 +288,18 @@ int main(int argc, char* argv[])
 			std::vector<glm::uvec2> cylinder_faces;
 			create_cylinder(cylinder_vertices, cylinder_faces, bone->LocalToWorld * bone->R, bone->length);
 
+			std::vector<int> vertex_i;
+			for (int i = 0; i < cylinder_vertices.size(); i++) {
+				vertex_i.push_back(i);
+			}
+
 			RenderDataInput cylinder_pass_input;
 			cylinder_pass_input.assign(0, "vertex_position", cylinder_vertices.data(), cylinder_vertices.size(), 4, GL_FLOAT);
+			cylinder_pass_input.assign(1, "vertex_i", vertex_i.data(), vertex_i.size(), 1, GL_FLOAT);
 			cylinder_pass_input.assign_index(cylinder_faces.data(), cylinder_faces.size(), 2);
 			RenderPass cylinder_pass(-1,
 					cylinder_pass_input,
-					{ skeleton_vertex_shader, NULL, blue_fragment_shader},
+					{ cylinder_vertex_shader, NULL, blue_fragment_shader},
 					{ cylinder_model, std_view, std_proj, std_light },
 					{ "fragment_color" }
 					);
