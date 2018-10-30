@@ -87,10 +87,8 @@ void Mesh::loadpmd(const std::string& fn)
 			bone->T = glm::translate(local_offset);
 			bone->length = glm::length(local_offset);
 
-			//Calculate rotation matrix relative to parent
-			glm::vec4 parent_position = parent->LocalToWorld * parent->T * parent->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-			glm::vec4 position = bone->LocalToWorld * bone->T * glm::vec4(0.0f, 0.0f, bone->length, 1.0f);
-			tangent = glm::vec3(glm::normalize(position - parent_position));
+			// Create R
+			tangent = glm::vec3(glm::normalize(local_offset));
 			normal = glm::normalize(computeNormal(tangent));
 			binormal = glm::normalize(glm::cross(tangent, normal));
 			bone->R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
@@ -171,27 +169,4 @@ void Mesh::generateVertices(std::vector<glm::vec4>& skeleton_vertices, std::vect
 		face_counter++;
 		generateVertices(skeleton_vertices, skeleton_faces, child, face_counter);
 	}
-}
-
-void Mesh::printInt(std::string name, int data) {
-	printf("%s: %i\n", name.c_str(), data);
-}
-
-void Mesh::printFloat(std::string name, float data) {
-	printf("%s: %f\n", name.c_str(), data);
-}
-
-void Mesh::printVec3(std::string name, glm::vec3 data) {
-	printf("%s: (%f, %f, %f)\n", name.c_str(), data.x, data.y, data.z);
-}
-
-void Mesh::printVec4(std::string name, glm::vec4 data) {
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data.x, data.y, data.z, data.w);
-}
-
-void Mesh::printMat4(std::string name, glm::mat4 data) {
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][0], data[1][0], data[2][0], data[3][0]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][1], data[1][1], data[2][1], data[3][1]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][2], data[1][2], data[2][2], data[3][2]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][3], data[1][3], data[2][3], data[3][3]);
 }

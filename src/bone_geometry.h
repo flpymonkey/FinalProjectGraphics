@@ -62,12 +62,6 @@ struct Mesh {
 private:
 	void computeBounds();
 	glm::vec3 computeNormal(glm::vec3 tangent);
-
-	void printInt(std::string name, int data);
-	void printFloat(std::string name, float value);
-	void printVec3(std::string name, glm::vec3 data);
-	void printVec4(std::string name, glm::vec4 data);
-	void printMat4(std::string name, glm::mat4 data);
 };
 
 #endif

@@ -3,6 +3,29 @@
 #include "config.h"
 // #include <GL/glew.h>
 
+void printInt(std::string name, int data) {
+	printf("%s: %i\n", name.c_str(), data);
+}
+
+void printFloat(std::string name, float data) {
+	printf("%s: %f\n", name.c_str(), data);
+}
+
+void printVec3(std::string name, glm::vec3 data) {
+	printf("%s: (%f, %f, %f)\n", name.c_str(), data.x, data.y, data.z);
+}
+
+void printVec4(std::string name, glm::vec4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data.x, data.y, data.z, data.w);
+}
+
+void printMat4(std::string name, glm::mat4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][0], data[1][0], data[2][0], data[3][0]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][1], data[1][1], data[2][1], data[3][1]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][2], data[1][2], data[2][2], data[3][2]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][3], data[1][3], data[2][3], data[3][3]);
+}
+
 void create_floor(std::vector<glm::vec4>& floor_vertices, std::vector<glm::uvec3>& floor_faces)
 {
 	floor_vertices.push_back(glm::vec4(kFloorXMin, kFloorY, kFloorZMax, 1.0f));
@@ -19,14 +42,14 @@ void create_floor(std::vector<glm::vec4>& floor_vertices, std::vector<glm::uvec3
 // need to send a small number of points.  Controlling the grid size gives a
 // nice wireframe.
 
-void create_cylinder_circle(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::mat4 LtW, glm::vec3 position, int& face_i)
+void create_cylinder_circle(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::mat4 LtW, float length, int& face_i)
 {
 	int num_verts = 360;
 	int initial_face_i = face_i;
 
    	for (int i=0; i < num_verts; i++) {
 			float theta = 2.0f * 3.141593f * float(i) / (num_verts / 4);
-	    glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius + position.x, position.y, sinf(theta)*kCylinderRadius + position.z, 1.0f);
+	    glm::vec4 v = glm::vec4(length, cosf(theta)*kCylinderRadius, sinf(theta)*kCylinderRadius, 1.0f);
 
 			// Account for local to world trnaslation
 			v = LtW * v;
@@ -40,15 +63,15 @@ void create_cylinder_circle(std::vector<glm::vec4>& vertices, std::vector<glm::u
    	}
 }
 
-void create_cylinder_lines(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::mat4 LtW, glm::vec3 position, float length, int interval, int& face_i)
+void create_cylinder_lines(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::mat4 LtW, float length, int interval, int& face_i)
 {
 		int num_verts = 360;
 		int initial_face_i = face_i;
 
    	for (int i=0; i < num_verts; i += interval) {
 			float theta = 2.0f * 3.141593f * float(i) / (num_verts / 4);
-	    glm::vec4 v = glm::vec4(cosf(theta)*kCylinderRadius + position.x, position.y, sinf(theta)*kCylinderRadius + position.z, 1.0f);
-			glm::vec4 v2 = glm::vec4(cosf(theta)*kCylinderRadius + position.x, position.y + length, sinf(theta)*kCylinderRadius + position.z, 1.0f);
+	    glm::vec4 v = glm::vec4(0.0f, cosf(theta)*kCylinderRadius, sinf(theta)*kCylinderRadius, 1.0f);
+			glm::vec4 v2 = glm::vec4(length, cosf(theta)*kCylinderRadius, sinf(theta)*kCylinderRadius, 1.0f);
 
 			// Account for local to world trnaslation
 			v = LtW * v;
@@ -67,13 +90,16 @@ void create_cylinder(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& 
 	// float length = 2.0f; // Get from bone.
 	// glm::mat4 LocalToWorld = glm::mat4(1.0f); // Get from bone
 
+	// printf("%s\n", "==========================");
+	// printMat4("LTW:", LocalToWorld);
+
 	int face_counter = 0;
 
-	create_cylinder_circle(vertices, faces, LocalToWorld, glm::vec3(0.0f, 0.0f, 0.0f), face_counter);
-	create_cylinder_circle(vertices, faces, LocalToWorld, glm::vec3(0.0f, length * 0.5f, 0.0f), face_counter);
-	create_cylinder_circle(vertices, faces, LocalToWorld, glm::vec3(0.0f, length, 0.0f), face_counter);
+	create_cylinder_circle(vertices, faces, LocalToWorld, 0.0f, face_counter);
+	create_cylinder_circle(vertices, faces, LocalToWorld, length * 0.5f, face_counter);
+	create_cylinder_circle(vertices, faces, LocalToWorld, length, face_counter);
 
 	int line_interval = 10;
 
-	create_cylinder_lines(vertices, faces, LocalToWorld, glm::vec3(0.0f, 0.0f, 0.0f), length, line_interval, face_counter);
+	create_cylinder_lines(vertices, faces, LocalToWorld, length, line_interval, face_counter);
 }

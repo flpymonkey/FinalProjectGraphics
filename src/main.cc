@@ -276,12 +276,12 @@ int main(int argc, char* argv[])
 #endif
 
 		// Run cylinder pass over all bones
-		for (int i = 0; i < mesh.getNumberOfBones(); ++i){
+		for (int i = 1; i < mesh.getNumberOfBones(); ++i){
 			Bone* bone = mesh.skeleton.bones[i];
 
 			std::vector<glm::vec4> cylinder_vertices;
 			std::vector<glm::uvec2> cylinder_faces;
-			create_cylinder(cylinder_vertices, cylinder_faces, bone->LocalToWorld, bone->length);
+			create_cylinder(cylinder_vertices, cylinder_faces, bone->LocalToWorld * bone->R, bone->length);
 
 			RenderDataInput cylinder_pass_input;
 			cylinder_pass_input.assign(0, "vertex_position", cylinder_vertices.data(), cylinder_vertices.size(), 4, GL_FLOAT);
