@@ -162,7 +162,7 @@ int signOfFloat(float i){
 }
 
 void GUI::identifyBoneIntersect(Ray& r){
-	for (int i = 0; i < mesh_->getNumberOfBones(); ++i){
+	for (int i = 0; i < 1; ++i){
 		Bone* bone = mesh_->skeleton.bones[i];
 		glm::mat4 WtL = glm::inverse(bone->LocalToWorld);
 		glm::mat4 WtL_R = glm::inverse(bone->LocalToWorld_R);
@@ -170,14 +170,27 @@ void GUI::identifyBoneIntersect(Ray& r){
 		glm::vec4 bone_local_rdir = WtL_R * r.direction;
 		glm::vec4 bone_local_rpos = WtL * r.origin;
 
+		printVec4("Ray World Position: ", r.origin);
+		printVec4("Ray Local Position: ", bone_local_rpos);
+		// printVec3("eye", eye_);
+		// printVec4("Bone World Position: ", r.origin);
+		// printVec4("Bone Local Position: ", bone_local_rpos);
+
 		cylinderIntersection(r, bone, bone_local_rdir, bone_local_rpos);
 	}
 }
 
 void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::vec4 local_rpos) {
 	float t = circleIntersection(local_rdir, local_rpos);
+
+	if (t <= 0){
+		return;
+	}
 	// Check that it is in the cylinder on the (X axis)
 	glm::vec4 bone_local_ipos = local_rpos + local_rdir * t;
+
+	printVec4("bone_local_ipos", bone_local_ipos);
+	printf("t%f\n", t);
 
 	if (bone_local_ipos.x >= 0 && bone_local_ipos.x <= bone->length){
 		// We have an intersection with a cylinder!!!
@@ -193,9 +206,13 @@ float GUI::circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos) {
 	// Projects ray direction onto yz plane of circle
 	glm::vec4 projection_dir = glm::proj(local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
 
+	printVec4("proj_dir", projection_dir);
+
 	// FIXME: Make sure the asre the correct axis!!!!!
 	glm::vec2 zy_plane_rdir(projection_dir.z, projection_dir.y);
 	glm::vec2 zy_plane_rpos(local_rpos.z, local_rpos.y);
+
+	printVec3("zy_plane", glm::vec3(zy_plane_rdir, 0.0f));
 
 	// Check for intersection with circle
 	glm::vec2 max_ray_point = zy_plane_rdir * kFar;
