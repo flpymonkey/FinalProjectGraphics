@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
+#include "bone_geometry.h"
 
 class Mesh;
 
@@ -37,6 +38,8 @@ public:
 	int checkRayBoneIntersect(double mouse_x, double mouse_y);
 	glm::vec4 getCameraRayDirection(double mouse_x, double mouse_y);
 	void identifyBoneIntersect(Ray& r);
+	void cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::vec4 local_rpos);
+	float circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos);
 
 	static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void MousePosCallback(GLFWwindow* window, double mouse_x, double mouse_y);

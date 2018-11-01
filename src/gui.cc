@@ -1,7 +1,6 @@
 #include "gui.h"
 #include "config.h"
 #include <jpegio.h>
-#include "bone_geometry.h"
 #include <iostream>
 #include <debuggl.h>
 #include <glm/gtc/matrix_access.hpp>
@@ -171,51 +170,60 @@ void GUI::identifyBoneIntersect(Ray& r){
 		glm::vec4 bone_local_rdir = WtL_R * r.direction;
 		glm::vec4 bone_local_rpos = WtL * r.origin;
 
-		// Projects ray direction onto yz plane of circle
-		glm::vec4 projection_dir = glm::proj(bone_local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+		cylinderIntersection(r, bone, bone_local_rdir, bone_local_rpos);
+	}
+}
 
-		// FIXME: Make sure the asre the correct axis!!!!!
-		glm::vec2 zy_plane_rdir(projection_dir.z, projection_dir.y);
-		glm::vec2 zy_plane_rpos(bone_local_rpos.z, bone_local_rpos.y);
+void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::vec4 local_rpos) {
+	float t = circleIntersection(local_rdir, local_rpos);
+	// Check that it is in the cylinder on the (X axis)
+	glm::vec4 bone_local_ipos = local_rpos + local_rdir * t;
 
-		// Check for intersection with circle
-		glm::vec2 max_ray_point = zy_plane_rdir * kFar;
-
-		float dx = max_ray_point.x - zy_plane_rpos.x;
-		float dy = max_ray_point.y - zy_plane_rpos.y;
-
-		float dr = glm::length(glm::vec2(dx, dy));
-		assert(dr != 0); // No radius doesnt make sense
-
-		float D = zy_plane_rpos.x*max_ray_point.y - max_ray_point.x*zy_plane_rpos.y;
-
-		// Calculate discriminant
-		float discriminant = (kCylinderRadius * kCylinderRadius) * (dr * dr) - (D * D);
-
-		if (discriminant >= 0){
-			// We have an intersection with a circle
-			float sqrt_factor = sqrt((kCylinderRadius * kCylinderRadius) * (dr * dr) - (D * D));
-			float nominator = D * dy - signOfFloat(dy) * dx * sqrt_factor;
-			float intersection_min_x = nominator / (dr * dr);
-
-			nominator = -D * dx - abs(dy) * sqrt_factor;
-			float intersection_min_y = nominator / (dr * dr);
-
-			float t = glm::length(glm::vec2(intersection_min_x, intersection_min_y) - zy_plane_rpos);
-
-			// Check that it is in the cylinder on the (X axis)
-			glm::vec4 bone_local_ipos = bone_local_rpos + bone_local_rdir * t;
-
-			if (bone_local_ipos.x >= 0 && bone_local_ipos.x <= bone->length){
-				// We have an intersection with a cylinder!!!
-				// Check if this intersection is the minimum of all bones
-				if (r.minimum_t > t) {
-					r.minimum_t = t;
-					r.intersect_id = i;
-				}
-			}
+	if (bone_local_ipos.x >= 0 && bone_local_ipos.x <= bone->length){
+		// We have an intersection with a cylinder!!!
+		// Check if this intersection is the minimum of all bones
+		if (r.minimum_t > t) {
+			r.minimum_t = t;
+			r.intersect_id = bone->id;
 		}
 	}
+}
+
+float GUI::circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos) {
+	// Projects ray direction onto yz plane of circle
+	glm::vec4 projection_dir = glm::proj(local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+
+	// FIXME: Make sure the asre the correct axis!!!!!
+	glm::vec2 zy_plane_rdir(projection_dir.z, projection_dir.y);
+	glm::vec2 zy_plane_rpos(local_rpos.z, local_rpos.y);
+
+	// Check for intersection with circle
+	glm::vec2 max_ray_point = zy_plane_rdir * kFar;
+
+	float dx = max_ray_point.x - zy_plane_rpos.x;
+	float dy = max_ray_point.y - zy_plane_rpos.y;
+
+	float dr = glm::length(glm::vec2(dx, dy));
+	assert(dr != 0); // No radius doesnt make sense
+
+	float D = zy_plane_rpos.x*max_ray_point.y - max_ray_point.x*zy_plane_rpos.y;
+
+	// Calculate discriminant
+	float discriminant = (kCylinderRadius * kCylinderRadius) * (dr * dr) - (D * D);
+
+	if (discriminant >= 0){
+		// We have an intersection with a circle
+		float sqrt_factor = sqrt((kCylinderRadius * kCylinderRadius) * (dr * dr) - (D * D));
+		float nominator = D * dy - signOfFloat(dy) * dx * sqrt_factor;
+		float intersection_min_x = nominator / (dr * dr);
+
+		nominator = -D * dx - abs(dy) * sqrt_factor;
+		float intersection_min_y = nominator / (dr * dr);
+
+		return glm::length(glm::vec2(intersection_min_x, intersection_min_y) - zy_plane_rpos);
+	}
+
+	return -1;
 }
 
 glm::vec4 GUI::getCameraRayDirection(double mouse_x, double mouse_y){
