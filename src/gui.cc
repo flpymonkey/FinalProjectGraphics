@@ -142,12 +142,12 @@ int GUI::checkRayBoneIntersect(double mouse_x, double mouse_y){
 	r.direction = getCameraRayDirection(mouse_x, mouse_y);
 	printVec4("r.d", r.direction);
 	r.origin = glm::vec4(eye_, 1.0f);
-	r.intersect_id = -2; // No intersection found
+	r.intersect_id = -1; // No intersection found
 	r.minimum_t = kFar; // No t has been found if this is farthest t
 
 	identifyBoneIntersect(r);
 
-	if (r.intersect_id != -2) {
+	if (r.intersect_id != -1) {
 		printf("cid: %i\n", r.intersect_id);
 	}
 
