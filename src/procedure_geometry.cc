@@ -3,29 +3,6 @@
 #include "config.h"
 // #include <GL/glew.h>
 
-void printInt(std::string name, int data) {
-	printf("%s: %i\n", name.c_str(), data);
-}
-
-void printFloat(std::string name, float data) {
-	printf("%s: %f\n", name.c_str(), data);
-}
-
-void printVec3(std::string name, glm::vec3 data) {
-	printf("%s: (%f, %f, %f)\n", name.c_str(), data.x, data.y, data.z);
-}
-
-void printVec4(std::string name, glm::vec4 data) {
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data.x, data.y, data.z, data.w);
-}
-
-void printMat4(std::string name, glm::mat4 data) {
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][0], data[1][0], data[2][0], data[3][0]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][1], data[1][1], data[2][1], data[3][1]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][2], data[1][2], data[2][2], data[3][2]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][3], data[1][3], data[2][3], data[3][3]);
-}
-
 void create_floor(std::vector<glm::vec4>& floor_vertices, std::vector<glm::uvec3>& floor_faces)
 {
 	floor_vertices.push_back(glm::vec4(kFloorXMin, kFloorY, kFloorZMax, 1.0f));
@@ -99,12 +76,6 @@ void create_axis(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& face
 
 void create_cylinder(std::vector<glm::vec4>& vertices, std::vector<glm::uvec2>& faces, glm::mat4 LocalToWorld, float length)
 {
-	// float length = 2.0f; // Get from bone.
-	// glm::mat4 LocalToWorld = glm::mat4(1.0f); // Get from bone
-
-	// printf("%s\n", "==========================");
-	// printMat4("LTW:", LocalToWorld);
-
 	int face_counter = 0;
 	create_axis(vertices, faces, LocalToWorld, face_counter);
 

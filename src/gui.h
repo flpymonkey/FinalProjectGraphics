@@ -14,6 +14,13 @@ struct MatrixPointers {
 	const float *projection, *model, *view;
 };
 
+struct Ray {
+	int intersect_id; // The bone id that corresponds to minimum t
+	double minimum_t;
+	glm::vec4 origin;
+	glm::vec4 direction;
+};
+
 class GUI {
 public:
 	GUI(GLFWwindow*);
@@ -26,6 +33,11 @@ public:
 	void updateMatrices();
 	MatrixPointers getMatrixPointers() const;
 
+	// Used for intersection testing
+	int checkRayBoneIntersect(double mouse_x, double mouse_y);
+	glm::vec4 getCameraRayDirection(double mouse_x, double mouse_y);
+	void identifyBoneIntersect(Ray& r);
+
 	static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void MousePosCallback(GLFWwindow* window, double mouse_x, double mouse_y);
 	static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
@@ -35,7 +47,7 @@ public:
 	bool isPoseDirty() const { return pose_changed_; }
 	void clearPose() { pose_changed_ = false; }
 	const float* getLightPositionPtr() const { return &light_position_[0]; }
-	
+
 	int getCurrentBone() const { return current_bone_; }
 	bool setCurrentBone(int i);
 

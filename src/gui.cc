@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/projection.hpp>
 
 namespace {
 	// Intersect a cylinder with radius 1/2, height 1, with base centered at
@@ -110,7 +111,124 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	}
 
 	// FIXME: highlight bones that have been moused over
-	current_bone_ = -1;
+	current_bone_ = checkRayBoneIntersect(mouse_x, mouse_y);
+}
+
+void printInt(std::string name, int data) {
+	printf("%s: %i\n", name.c_str(), data);
+}
+
+void printFloat(std::string name, float data) {
+	printf("%s: %f\n", name.c_str(), data);
+}
+
+void printVec3(std::string name, glm::vec3 data) {
+	printf("%s: (%f, %f, %f)\n", name.c_str(), data.x, data.y, data.z);
+}
+
+void printVec4(std::string name, glm::vec4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data.x, data.y, data.z, data.w);
+}
+
+void printMat4(std::string name, glm::mat4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][0], data[1][0], data[2][0], data[3][0]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][1], data[1][1], data[2][1], data[3][1]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][2], data[1][2], data[2][2], data[3][2]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][3], data[1][3], data[2][3], data[3][3]);
+}
+
+int GUI::checkRayBoneIntersect(double mouse_x, double mouse_y){
+	Ray r;
+	r.direction = getCameraRayDirection(mouse_x, mouse_y);
+	printVec4("r.d", r.direction);
+	r.origin = glm::vec4(eye_, 1.0f);
+	r.intersect_id = -2; // No intersection found
+	r.minimum_t = kFar; // No t has been found if this is farthest t
+
+	identifyBoneIntersect(r);
+
+	if (r.intersect_id != -2) {
+		printf("cid: %i\n", r.intersect_id);
+	}
+
+	return r.intersect_id;
+}
+
+// FIXME THIS SUCKS, FIND A MATH WAY TO DO THIS
+int signOfFloat(float i){
+	if (i < 0){
+		return -1;
+	}
+	return 1;
+}
+
+void GUI::identifyBoneIntersect(Ray& r){
+	for (int i = 0; i < mesh_->getNumberOfBones(); ++i){
+		Bone* bone = mesh_->skeleton.bones[i];
+		glm::mat4 WtL = glm::inverse(bone->LocalToWorld);
+		glm::mat4 WtL_R = glm::inverse(bone->LocalToWorld_R);
+
+		glm::vec4 bone_local_rdir = WtL_R * r.direction;
+		glm::vec4 bone_local_rpos = WtL * r.origin;
+
+		// Projects ray direction onto yz plane of circle
+		glm::vec4 projection_dir = glm::proj(bone_local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+
+		// FIXME: Make sure the asre the correct axis!!!!!
+		glm::vec2 zy_plane_rdir(projection_dir.z, projection_dir.y);
+		glm::vec2 zy_plane_rpos(bone_local_rpos.z, bone_local_rpos.y);
+
+		// Check for intersection with circle
+		glm::vec2 max_ray_point = zy_plane_rdir * kFar;
+
+		float dx = max_ray_point.x - zy_plane_rpos.x;
+		float dy = max_ray_point.y - zy_plane_rpos.y;
+
+		float dr = glm::length(glm::vec2(dx, dy));
+		assert(dr != 0); // No radius doesnt make sense
+
+		float D = zy_plane_rpos.x*max_ray_point.y - max_ray_point.x*zy_plane_rpos.y;
+
+		// Calculate discriminant
+		float discriminant = (kCylinderRadius * kCylinderRadius) * (dr * dr) - (D * D);
+
+		if (discriminant >= 0){
+			// We have an intersection with a circle
+			float sqrt_factor = sqrt((kCylinderRadius * kCylinderRadius) * (dr * dr) - (D * D));
+			float nominator = D * dy - signOfFloat(dy) * dx * sqrt_factor;
+			float intersection_min_x = nominator / (dr * dr);
+
+			nominator = -D * dx - abs(dy) * sqrt_factor;
+			float intersection_min_y = nominator / (dr * dr);
+
+			float t = glm::length(glm::vec2(intersection_min_x, intersection_min_y) - zy_plane_rpos);
+
+			// Check that it is in the cylinder on the (X axis)
+			glm::vec4 bone_local_ipos = bone_local_rpos + bone_local_rdir * t;
+
+			if (bone_local_ipos.x >= 0 && bone_local_ipos.x <= bone->length){
+				// We have an intersection with a cylinder!!!
+				// Check if this intersection is the minimum of all bones
+				if (r.minimum_t > t) {
+					r.minimum_t = t;
+					r.intersect_id = i;
+				}
+			}
+		}
+	}
+}
+
+glm::vec4 GUI::getCameraRayDirection(double mouse_x, double mouse_y){
+	glm::vec3 win((float) mouse_x, (float)mouse_y, 0.0f); // What is this third value supposed to be?
+	glm::mat4 model = view_matrix_ * model_matrix_;
+	glm::mat4 proj = projection_matrix_;
+	glm::vec4 viewport(0.0f, 0.0f, (float)window_width_, (float)window_height_);
+
+	glm::vec3 unprojectedPoint = glm::unProject(win, model, proj, viewport);
+	glm::vec3 direction = glm::normalize(eye_ - unprojectedPoint);
+
+	return glm::vec4(direction, 0.0f);
+
 }
 
 void GUI::mouseButtonCallback(int button, int action, int mods)

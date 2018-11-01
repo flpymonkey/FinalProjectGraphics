@@ -280,32 +280,34 @@ int main(int argc, char* argv[])
 		draw_cylinder = true;
 #endif
 
-		// Run cylinder pass over all bones
-		for (int i = 1; i < mesh.getNumberOfBones(); ++i){
-			Bone* bone = mesh.skeleton.bones[i];
+		if (draw_cylinder){
+			// Run cylinder pass over all bones
+			for (int i = 1; i < mesh.getNumberOfBones(); ++i){
+				Bone* bone = mesh.skeleton.bones[i];
 
-			std::vector<glm::vec4> cylinder_vertices;
-			std::vector<glm::uvec2> cylinder_faces;
-			create_cylinder(cylinder_vertices, cylinder_faces, bone->LocalToWorld * bone->R, bone->length);
+				std::vector<glm::vec4> cylinder_vertices;
+				std::vector<glm::uvec2> cylinder_faces;
+				create_cylinder(cylinder_vertices, cylinder_faces, bone->LocalToWorld * bone->R, bone->length);
 
-			std::vector<int> vertex_i;
-			for (int i = 0; i < cylinder_vertices.size(); i++) {
-				vertex_i.push_back(i);
+				std::vector<int> vertex_i;
+				for (int i = 0; i < cylinder_vertices.size(); i++) {
+					vertex_i.push_back(i);
+				}
+
+				RenderDataInput cylinder_pass_input;
+				cylinder_pass_input.assign(0, "vertex_position", cylinder_vertices.data(), cylinder_vertices.size(), 4, GL_FLOAT);
+				cylinder_pass_input.assign(1, "vertex_i", vertex_i.data(), vertex_i.size(), 1, GL_FLOAT);
+				cylinder_pass_input.assign_index(cylinder_faces.data(), cylinder_faces.size(), 2);
+				RenderPass cylinder_pass(-1,
+						cylinder_pass_input,
+						{ cylinder_vertex_shader, NULL, blue_fragment_shader},
+						{ cylinder_model, std_view, std_proj, std_light },
+						{ "fragment_color" }
+						);
+
+				cylinder_pass.setup();
+				CHECK_GL_ERROR(glDrawElements(GL_LINES, cylinder_faces.size() * 2, GL_UNSIGNED_INT, 0));
 			}
-
-			RenderDataInput cylinder_pass_input;
-			cylinder_pass_input.assign(0, "vertex_position", cylinder_vertices.data(), cylinder_vertices.size(), 4, GL_FLOAT);
-			cylinder_pass_input.assign(1, "vertex_i", vertex_i.data(), vertex_i.size(), 1, GL_FLOAT);
-			cylinder_pass_input.assign_index(cylinder_faces.data(), cylinder_faces.size(), 2);
-			RenderPass cylinder_pass(-1,
-					cylinder_pass_input,
-					{ cylinder_vertex_shader, NULL, blue_fragment_shader},
-					{ cylinder_model, std_view, std_proj, std_light },
-					{ "fragment_color" }
-					);
-
-			cylinder_pass.setup();
-			CHECK_GL_ERROR(glDrawElements(GL_LINES, cylinder_faces.size() * 2, GL_UNSIGNED_INT, 0));
 		}
 
 		if (draw_skeleton){
