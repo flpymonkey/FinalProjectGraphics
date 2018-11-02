@@ -188,9 +188,19 @@ void GUI::identifyBoneIntersect(Ray& r){
 }
 
 void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::vec4 local_rpos) {
-	float t = circleIntersection(local_rdir, local_rpos);
+	// Projects ray direction onto yz plane of circle
+	glm::vec4 yz_dir = project(local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+	glm::vec2 zy_plane_rdir(yz_dir.z, yz_dir.y);
+	glm::vec2 zy_plane_rpos(local_rpos.z, local_rpos.y);
+
+	float t = circleIntersection(zy_plane_rdir, zy_plane_rpos);
 
 	if (t <= 0){
+		// TODO: Handle the case of looking down the cylinder 
+		// if (abs((zy_plane_rpos + zy_plane_rdir*kFar).x) < kCylinderRadius &&
+		// 		abs((zy_plane_rpos + zy_plane_rdir*kFar).y) < kCylinderRadius){
+		// 	t =
+		// }
 		return;
 	}
 	// Check that it is in the cylinder on the (X axis)
@@ -209,22 +219,7 @@ void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::ve
 	}
 }
 
-float GUI::circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos) {
-	// Projects ray direction onto yz plane of circle
-	//glm::vec4 projection_dir = glm::proj(local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-    
-    // TEST ME
-    glm::vec4 projection_dir = project(local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-
-	//printVec4("proj_dir", projection_dir);
-
-	// FIXME: Make sure the asre the correct axis!!!!!
-	glm::vec2 zy_plane_rdir(projection_dir.z, projection_dir.y);
-	glm::vec2 zy_plane_rpos(local_rpos.z, local_rpos.y);
-
-	//printVec3("zy_plane_rdir", glm::vec3(zy_plane_rdir, 0.0f));
-	//printVec3("zy_plane_rpos", glm::vec3(zy_plane_rpos, 0.0f));
-
+float GUI::circleIntersection(glm::vec2 zy_plane_rdir, glm::vec2 zy_plane_rpos) {
 	// Check for intersection with circle
 	glm::vec2 max_ray_point = zy_plane_rdir * kFar;
 
@@ -247,9 +242,6 @@ float GUI::circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos) {
 
 		nominator = -D * dx - abs(dy) * sqrt_factor;
 		float intersection_min_y = nominator / (dr * dr);
-
-		//printf("min_x: %f\n", intersection_min_x);
-		//printf("min_y: %f\n", intersection_min_y);
 
 		return glm::length(glm::vec2(intersection_min_x, intersection_min_y) - zy_plane_rpos);
 	}
