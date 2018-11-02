@@ -204,7 +204,10 @@ void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::ve
 
 float GUI::circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos) {
 	// Projects ray direction onto yz plane of circle
-	glm::vec4 projection_dir = glm::proj(local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+	//glm::vec4 projection_dir = glm::proj(local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+    
+    // TEST ME
+    glm::vec4 projection_dir = project(local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
 
 	printVec4("proj_dir", projection_dir);
 
@@ -241,6 +244,16 @@ float GUI::circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos) {
 	}
 
 	return -1;
+}
+
+// Plane projection.
+glm::vec4 GUI::project(glm::vec4 u, glm::vec4 v) {
+    glm::vec4 un = glm::normalize(u);
+    glm::vec4 uv = glm::normalize(v);
+    float nominator = glm::dot(un, vn);
+    float denominator = glm::length(vn);
+    assert(denominator != 0.0f);
+    return glm::normalize(u - (nominator / denominator) * v);
 }
 
 glm::vec4 GUI::getCameraRayDirection(double mouse_x, double mouse_y){

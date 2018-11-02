@@ -40,6 +40,7 @@ public:
 	void identifyBoneIntersect(Ray& r);
 	void cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::vec4 local_rpos);
 	float circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos);
+    glm::vec4 project(glm::vec4 u, glm::vec4 v);
 
 	static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void MousePosCallback(GLFWwindow* window, double mouse_x, double mouse_y);
