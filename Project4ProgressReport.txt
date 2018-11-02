@@ -1,0 +1,15 @@
+Project 4
+Mitchell Marshe, rmm3946
+Ben Johnson, bcj524
+
+We worked together on everything as pair programmers.
+
+Completed: 
+Parsing the Joints
+Drawing the Bones
+Drawing the Cylinders
+
+Todo:
+Ray-Cylinder intersection
+Bone Picking
+Bone Manipulation

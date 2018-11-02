@@ -110,7 +110,7 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	}
 
 	// FIXME: highlight bones that have been moused over
-	current_bone_ = checkRayBoneIntersect(mouse_x, mouse_y);
+	current_bone_ = checkRayBoneIntersect(current_x_, current_y_);
 }
 
 void printInt(std::string name, int data) {
@@ -139,15 +139,22 @@ void printMat4(std::string name, glm::mat4 data) {
 int GUI::checkRayBoneIntersect(double mouse_x, double mouse_y){
 	Ray r;
 	r.direction = getCameraRayDirection(mouse_x, mouse_y);
-	printVec4("r.d", r.direction);
+	//printVec4("r.d", r.direction);
 	r.origin = glm::vec4(eye_, 1.0f);
+	//printVec4("r.o", r.origin);
+	//printVec4("r.approx", r.origin + r.direction * 30.0f);
 	r.intersect_id = -1; // No intersection found
 	r.minimum_t = kFar; // No t has been found if this is farthest t
 
 	identifyBoneIntersect(r);
 
 	if (r.intersect_id != -1) {
-		printf("cid: %i\n", r.intersect_id);
+		//printf("cid: %i\n", r.intersect_id);
+		Bone* bone = mesh_->skeleton.bones[r.intersect_id];
+		glm::vec4 start = bone->LocalToWorld * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		glm::vec4 end = bone->LocalToWorld * bone->T * bone->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		//printVec4("start", start);
+		//printVec4("end", end);
 	}
 
 	return r.intersect_id;
@@ -162,16 +169,16 @@ int signOfFloat(float i){
 }
 
 void GUI::identifyBoneIntersect(Ray& r){
-	for (int i = 0; i < 1; ++i){
+	for (int i = 0; i < mesh_->getNumberOfBones(); ++i){
 		Bone* bone = mesh_->skeleton.bones[i];
-		glm::mat4 WtL = glm::inverse(bone->LocalToWorld);
-		glm::mat4 WtL_R = glm::inverse(bone->LocalToWorld_R);
+		glm::mat4 WtL = glm::inverse(bone->LocalToWorld * bone->R);
+		glm::mat4 WtL_R = glm::inverse(bone->LocalToWorld_R * bone->R);
 
 		glm::vec4 bone_local_rdir = WtL_R * r.direction;
 		glm::vec4 bone_local_rpos = WtL * r.origin;
 
-		printVec4("Ray World Position: ", r.origin);
-		printVec4("Ray Local Position: ", bone_local_rpos);
+		//printVec4("Ray Local End-Position: ", bone_local_rpos + bone_local_rdir * 30.0f);
+		//printVec4("Ray Local Position: ", bone_local_rpos);
 		// printVec3("eye", eye_);
 		// printVec4("Bone World Position: ", r.origin);
 		// printVec4("Bone Local Position: ", bone_local_rpos);
@@ -189,8 +196,8 @@ void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::ve
 	// Check that it is in the cylinder on the (X axis)
 	glm::vec4 bone_local_ipos = local_rpos + local_rdir * t;
 
-	printVec4("bone_local_ipos", bone_local_ipos);
-	printf("t%f\n", t);
+	//printVec4("bone_local_ipos", bone_local_ipos);
+	//printf("t%f\n", t);
 
 	if (bone_local_ipos.x >= 0 && bone_local_ipos.x <= bone->length){
 		// We have an intersection with a cylinder!!!
@@ -209,13 +216,14 @@ float GUI::circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos) {
     // TEST ME
     glm::vec4 projection_dir = project(local_rdir, glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
 
-	printVec4("proj_dir", projection_dir);
+	//printVec4("proj_dir", projection_dir);
 
 	// FIXME: Make sure the asre the correct axis!!!!!
 	glm::vec2 zy_plane_rdir(projection_dir.z, projection_dir.y);
 	glm::vec2 zy_plane_rpos(local_rpos.z, local_rpos.y);
 
-	printVec3("zy_plane", glm::vec3(zy_plane_rdir, 0.0f));
+	//printVec3("zy_plane_rdir", glm::vec3(zy_plane_rdir, 0.0f));
+	//printVec3("zy_plane_rpos", glm::vec3(zy_plane_rpos, 0.0f));
 
 	// Check for intersection with circle
 	glm::vec2 max_ray_point = zy_plane_rdir * kFar;
@@ -240,6 +248,9 @@ float GUI::circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos) {
 		nominator = -D * dx - abs(dy) * sqrt_factor;
 		float intersection_min_y = nominator / (dr * dr);
 
+		//printf("min_x: %f\n", intersection_min_x);
+		//printf("min_y: %f\n", intersection_min_y);
+
 		return glm::length(glm::vec2(intersection_min_x, intersection_min_y) - zy_plane_rpos);
 	}
 
@@ -249,7 +260,7 @@ float GUI::circleIntersection(glm::vec4 local_rdir, glm::vec4 local_rpos) {
 // Plane projection.
 glm::vec4 GUI::project(glm::vec4 u, glm::vec4 v) {
     glm::vec4 un = glm::normalize(u);
-    glm::vec4 uv = glm::normalize(v);
+    glm::vec4 vn = glm::normalize(v);
     float nominator = glm::dot(un, vn);
     float denominator = glm::length(vn);
     assert(denominator != 0.0f);
@@ -263,7 +274,7 @@ glm::vec4 GUI::getCameraRayDirection(double mouse_x, double mouse_y){
 	glm::vec4 viewport(0.0f, 0.0f, (float)window_width_, (float)window_height_);
 
 	glm::vec3 unprojectedPoint = glm::unProject(win, model, proj, viewport);
-	glm::vec3 direction = glm::normalize(eye_ - unprojectedPoint);
+	glm::vec3 direction = glm::normalize(unprojectedPoint - eye_);
 
 	return glm::vec4(direction, 0.0f);
 
