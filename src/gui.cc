@@ -193,7 +193,17 @@ void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::ve
 	glm::vec2 zy_plane_rdir(yz_dir.z, yz_dir.y);
 	glm::vec2 zy_plane_rpos(local_rpos.z, local_rpos.y);
 
-	float t = circleIntersection(zy_plane_rdir, zy_plane_rpos);
+	glm::vec2 circle_intersect = circleIntersection(zy_plane_rdir, zy_plane_rpos);
+
+	float t = 0.0f;
+	if (circle_intersect.x != kFar && circle_intersect.y != kFar) {
+		glm::vec3 cylinder_intersect = lineIntersection(glm::vec3(local_rpos), 
+			glm::vec3(local_rpos + local_rdir * kFar), 
+			glm::vec3(0.0f, circle_intersect.y, circle_intersect.x), 
+			glm::vec3(bone->length, circle_intersect.y, circle_intersect.x));
+
+		t = glm::length(cylinder_intersect - glm::vec3(local_rpos));
+	}
 
 	if (t <= 0){
 		// TODO: Handle the case of looking down the cylinder 
@@ -219,7 +229,7 @@ void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::ve
 	}
 }
 
-float GUI::circleIntersection(glm::vec2 zy_plane_rdir, glm::vec2 zy_plane_rpos) {
+glm::vec2 GUI::circleIntersection(glm::vec2 zy_plane_rdir, glm::vec2 zy_plane_rpos) {
 	// Check for intersection with circle
 	glm::vec2 max_ray_point = zy_plane_rdir * kFar;
 
@@ -243,10 +253,20 @@ float GUI::circleIntersection(glm::vec2 zy_plane_rdir, glm::vec2 zy_plane_rpos) 
 		nominator = -D * dx - abs(dy) * sqrt_factor;
 		float intersection_min_y = nominator / (dr * dr);
 
-		return glm::length(glm::vec2(intersection_min_x, intersection_min_y) - zy_plane_rpos);
+		return glm::vec2(intersection_min_x, intersection_min_y);
 	}
 
-	return -1;
+	return glm::vec2(kFar, kFar);
+}
+
+glm::vec3 GUI::lineIntersection(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4) {
+	glm::vec3 d21 = p2 - p1;
+	glm::vec3 d43 = p4 - p3;
+	glm::vec3 blue = glm::cross(d21, d43);
+	glm::vec3 orange = glm::cross(d21, blue);
+	float u = glm::dot(orange, p2);
+	float t = (u - glm::dot(orange, p4)) / glm::dot(orange, d43);
+	return d43 * t + p4;
 }
 
 // Plane projection.
