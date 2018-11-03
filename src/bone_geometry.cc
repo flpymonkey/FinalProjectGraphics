@@ -23,8 +23,6 @@ std::ostream& operator<<(std::ostream& os, const BoundingBox& bounds)
 	return os;
 }
 
-
-
 // FIXME: Implement bone animation.
 
 
@@ -56,10 +54,6 @@ void Mesh::loadpmd(const std::string& fn)
 		bone->id = bone_id;
 		bone->parent_id = parent_id;
 
-		glm::vec3 tangent;
-		glm::vec3 normal;
-		glm::vec3 binormal;
-
 		// TODO: Get rid of offset, local_offset, make sure ordering is good in struct and in here. Get rid of dup code.
 		if (parent_id == -1) {
 			// This is the root of the skeleton_faces
@@ -72,10 +66,8 @@ void Mesh::loadpmd(const std::string& fn)
 			bone->T = glm::translate(offset);
 
 			//Calculate rotation matrix
-			tangent = glm::normalize(offset);
-			normal = glm::normalize(computeNormal(tangent));
-			binormal = glm::normalize(glm::cross(tangent, normal));
-			bone->R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
+			bone->R = calculateRotationMatrix(offset);
+			bone->C = bone->R;
 		} else {
 			Bone* parent = skeleton.bones[parent_id];
 			bone->parent = parent;
@@ -88,10 +80,8 @@ void Mesh::loadpmd(const std::string& fn)
 			bone->length = glm::length(local_offset);
 
 			// Create R
-			tangent = glm::vec3(glm::normalize(local_offset));
-			normal = glm::normalize(computeNormal(tangent));
-			binormal = glm::normalize(glm::cross(tangent, normal));
-			bone->R = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
+			bone->R = calculateRotationMatrix(local_offset);
+			bone->C = bone->R;
 
 			// Assign to parent bone
 			parent->children.push_back(bone);
@@ -100,6 +90,13 @@ void Mesh::loadpmd(const std::string& fn)
 		skeleton.bones.push_back(bone);
 		bone_id++;
 	}
+}
+
+glm::mat4 Mesh::calculateRotationMatrix(glm::vec3 offset){
+	glm::vec3 tangent = glm::vec3(glm::normalize(offset));
+	glm::vec3 normal = glm::normalize(computeNormal(tangent));
+	glm::vec3 binormal = glm::normalize(glm::cross(tangent, normal));
+	return glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
 }
 
 void Mesh::updateAnimation()
@@ -160,10 +157,10 @@ void Mesh::generateVertices(std::vector<glm::vec4>& skeleton_vertices, std::vect
 
 	for (uint i = 0; i < bone->children.size(); ++i) {
 		Bone* child = bone->children[i];
-		glm::vec4 worldPosition = bone->LocalToWorld * bone->T * bone->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		glm::vec4 worldPosition = bone->LocalToWorld * bone->T * bone->C * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		skeleton_vertices.push_back(worldPosition);
 		face_counter++;
-		glm::vec4 child_worldPosition = child->LocalToWorld * child->T * child->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		glm::vec4 child_worldPosition = child->LocalToWorld * child->T * child->C * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		skeleton_vertices.push_back(child_worldPosition);
 		skeleton_faces.push_back(glm::uvec2(face_counter - 1, face_counter));
 		face_counter++;

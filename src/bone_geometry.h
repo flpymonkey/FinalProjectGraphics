@@ -16,6 +16,9 @@ struct BoundingBox {
 	glm::vec3 max;
 };
 
+//TODO: get weights
+// TODO fix ghost bone
+
 struct Bone {
 	int id;
 	int parent_id;
@@ -26,6 +29,7 @@ struct Bone {
 	glm::mat4 LocalToWorld_R;
 	glm::mat4 T;
 	glm::mat4 R;
+	glm::mat4 C;
 };
 
 
@@ -58,6 +62,7 @@ struct Mesh {
 	// Added mesh functions:
 	void generateSkeleton(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces);
 	void generateVertices(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces, Bone* bone, int& face_counter);
+	glm::mat4 calculateRotationMatrix(glm::vec3 offset);
 
 private:
 	void computeBounds();

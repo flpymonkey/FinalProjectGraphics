@@ -214,21 +214,7 @@ int main(int argc, char* argv[])
 	}; // This return model matrix for the floor.
 
 	ShaderUniform skeleton_model = { "model", matrix_binder, skeleton_model_data};
-
-	std::vector<glm::vec4> skeleton_vertices;
-	std::vector<glm::uvec2> skeleton_faces;
-	mesh.generateSkeleton(skeleton_vertices, skeleton_faces);
-
-	RenderDataInput skeleton_pass_input;
-	skeleton_pass_input.assign(0, "vertex_position", skeleton_vertices.data(), skeleton_vertices.size(), 4, GL_FLOAT);
-	skeleton_pass_input.assign_index(skeleton_faces.data(), skeleton_faces.size(), 2);
-	RenderPass skeleton_pass(-1,
-			skeleton_pass_input,
-			{ skeleton_vertex_shader, NULL, red_fragment_shader},
-			{ skeleton_model, std_view, std_proj, std_light },
-			{ "fragment_color" }
-			);
-	// End of skeleton creation
+	// Skeleton is create in the loop
 
 	// Basic cylinder setup for RenderPass
 	glm::mat4 cylinder_model_matrix = glm::mat4(1.0f);
@@ -280,6 +266,26 @@ int main(int argc, char* argv[])
 		draw_cylinder = true;
 #endif
 
+		if (draw_skeleton){
+			std::vector<glm::vec4> skeleton_vertices;
+			std::vector<glm::uvec2> skeleton_faces;
+			mesh.generateSkeleton(skeleton_vertices, skeleton_faces);
+
+			RenderDataInput skeleton_pass_input;
+			skeleton_pass_input.assign(0, "vertex_position", skeleton_vertices.data(), skeleton_vertices.size(), 4, GL_FLOAT);
+			skeleton_pass_input.assign_index(skeleton_faces.data(), skeleton_faces.size(), 2);
+			RenderPass skeleton_pass(-1,
+					skeleton_pass_input,
+					{ skeleton_vertex_shader, NULL, red_fragment_shader},
+					{ skeleton_model, std_view, std_proj, std_light },
+					{ "fragment_color" }
+					);
+			// End of skeleton creation
+
+			skeleton_pass.setup();
+			CHECK_GL_ERROR(glDrawElements(GL_LINES, skeleton_faces.size() * 2, GL_UNSIGNED_INT, 0));
+		}
+
 		if (draw_cylinder){
 			// Run cylinder pass over all bones
 			Bone* bone = mesh.skeleton.bones[current_bone];
@@ -308,10 +314,6 @@ int main(int argc, char* argv[])
 			CHECK_GL_ERROR(glDrawElements(GL_LINES, cylinder_faces.size() * 2, GL_UNSIGNED_INT, 0));
 		}
 
-		if (draw_skeleton){
-			skeleton_pass.setup();
-			CHECK_GL_ERROR(glDrawElements(GL_LINES, skeleton_faces.size() * 2, GL_UNSIGNED_INT, 0));
-		}
 		// Then draw floor.
 		if (draw_floor) {
 			floor_pass.setup();

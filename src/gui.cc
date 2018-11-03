@@ -5,6 +5,7 @@
 #include <debuggl.h>
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/projection.hpp>
 
@@ -17,6 +18,29 @@ namespace {
 		//FIXME perform proper ray-cylinder collision detection
 		return true;
 	}
+}
+
+void printInt(std::string name, int data) {
+	printf("%s: %i\n", name.c_str(), data);
+}
+
+void printFloat(std::string name, float data) {
+	printf("%s: %f\n", name.c_str(), data);
+}
+
+void printVec3(std::string name, glm::vec3 data) {
+	printf("%s: (%f, %f, %f)\n", name.c_str(), data.x, data.y, data.z);
+}
+
+void printVec4(std::string name, glm::vec4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data.x, data.y, data.z, data.w);
+}
+
+void printMat4(std::string name, glm::mat4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][0], data[1][0], data[2][0], data[3][0]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][1], data[1][1], data[2][1], data[3][1]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][2], data[1][2], data[2][2], data[3][2]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][3], data[1][3], data[2][3], data[3][3]);
 }
 
 GUI::GUI(GLFWwindow* window)
@@ -106,34 +130,22 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		look_ = glm::column(orientation_, 2);
 	} else if (drag_bone && current_bone_ != -1) {
 		// FIXME: Handle bone rotation
+		// TODO ???convert the drag direction into a vector in world coordinates,
+
+		// take its cross product with the look direction,
+		glm::vec3 rotation_axis = glm::cross(mouse_direction, look_);
+		// and rotate all basis vectors of the bone about this axis by rotation_speed radians.
+		glm::vec3 tangent = glm::vec3(mesh_->skeleton.bones[current_bone_]->C[0]);
+
+		glm::vec3 new_offset = glm::rotate(tangent, rotation_speed_, rotation_axis);
+
+		printf("bone_id: %i\n", current_bone_);
+		printMat4("Cbefore", mesh_->skeleton.bones[current_bone_]->C);
+		mesh_->skeleton.bones[current_bone_]->C = mesh_->calculateRotationMatrix(new_offset);
+		printMat4("Cafter", mesh_->skeleton.bones[current_bone_]->C);
 		return ;
 	}
-
-	// FIXME: highlight bones that have been moused over
 	current_bone_ = checkRayBoneIntersect(current_x_, current_y_);
-}
-
-void printInt(std::string name, int data) {
-	printf("%s: %i\n", name.c_str(), data);
-}
-
-void printFloat(std::string name, float data) {
-	printf("%s: %f\n", name.c_str(), data);
-}
-
-void printVec3(std::string name, glm::vec3 data) {
-	printf("%s: (%f, %f, %f)\n", name.c_str(), data.x, data.y, data.z);
-}
-
-void printVec4(std::string name, glm::vec4 data) {
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data.x, data.y, data.z, data.w);
-}
-
-void printMat4(std::string name, glm::mat4 data) {
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][0], data[1][0], data[2][0], data[3][0]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][1], data[1][1], data[2][1], data[3][1]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][2], data[1][2], data[2][2], data[3][2]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][3], data[1][3], data[2][3], data[3][3]);
 }
 
 int GUI::checkRayBoneIntersect(double mouse_x, double mouse_y){
@@ -197,16 +209,16 @@ void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::ve
 
 	float t = 0.0f;
 	if (circle_intersect.x != kFar && circle_intersect.y != kFar) {
-		glm::vec3 cylinder_intersect = lineIntersection(glm::vec3(local_rpos), 
-			glm::vec3(local_rpos + local_rdir * kFar), 
-			glm::vec3(0.0f, circle_intersect.y, circle_intersect.x), 
+		glm::vec3 cylinder_intersect = lineIntersection(glm::vec3(local_rpos),
+			glm::vec3(local_rpos + local_rdir * kFar),
+			glm::vec3(0.0f, circle_intersect.y, circle_intersect.x),
 			glm::vec3(bone->length, circle_intersect.y, circle_intersect.x));
 
 		t = glm::length(cylinder_intersect - glm::vec3(local_rpos));
 	}
 
 	if (t <= 0){
-		// TODO: Handle the case of looking down the cylinder 
+		// TODO: Handle the case of looking down the cylinder
 		// if (abs((zy_plane_rpos + zy_plane_rdir*kFar).x) < kCylinderRadius &&
 		// 		abs((zy_plane_rpos + zy_plane_rdir*kFar).y) < kCylinderRadius){
 		// 	t =
