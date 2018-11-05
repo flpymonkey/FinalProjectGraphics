@@ -20,29 +20,6 @@ namespace {
 	}
 }
 
-void printInt(std::string name, int data) {
-	printf("%s: %i\n", name.c_str(), data);
-}
-
-void printFloat(std::string name, float data) {
-	printf("%s: %f\n", name.c_str(), data);
-}
-
-void printVec3(std::string name, glm::vec3 data) {
-	printf("%s: (%f, %f, %f)\n", name.c_str(), data.x, data.y, data.z);
-}
-
-void printVec4(std::string name, glm::vec4 data) {
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data.x, data.y, data.z, data.w);
-}
-
-void printMat4(std::string name, glm::mat4 data) {
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][0], data[1][0], data[2][0], data[3][0]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][1], data[1][1], data[2][1], data[3][1]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][2], data[1][2], data[2][2], data[3][2]);
-	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][3], data[1][3], data[2][3], data[3][3]);
-}
-
 GUI::GUI(GLFWwindow* window)
 	:window_(window)
 {
@@ -139,10 +116,7 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 
 		glm::vec3 new_offset = glm::rotate(tangent, rotation_speed_, rotation_axis);
 
-		printf("bone_id: %i\n", current_bone_);
-		printMat4("Cbefore", mesh_->skeleton.bones[current_bone_]->C);
 		mesh_->skeleton.bones[current_bone_]->C = mesh_->calculateRotationMatrix(new_offset);
-		printMat4("Cafter", mesh_->skeleton.bones[current_bone_]->C);
 		return ;
 	}
 	current_bone_ = checkRayBoneIntersect(current_x_, current_y_);
@@ -151,22 +125,16 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 int GUI::checkRayBoneIntersect(double mouse_x, double mouse_y){
 	Ray r;
 	r.direction = getCameraRayDirection(mouse_x, mouse_y);
-	//printVec4("r.d", r.direction);
 	r.origin = glm::vec4(eye_, 1.0f);
-	//printVec4("r.o", r.origin);
-	//printVec4("r.approx", r.origin + r.direction * 30.0f);
 	r.intersect_id = -1; // No intersection found
 	r.minimum_t = kFar; // No t has been found if this is farthest t
 
 	identifyBoneIntersect(r);
 
 	if (r.intersect_id != -1) {
-		//printf("cid: %i\n", r.intersect_id);
 		Bone* bone = mesh_->skeleton.bones[r.intersect_id];
 		glm::vec4 start = bone->LocalToWorld * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		glm::vec4 end = bone->LocalToWorld * bone->T * bone->R * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		//printVec4("start", start);
-		//printVec4("end", end);
+		glm::vec4 end = bone->LocalToWorld * bone->T * bone->C * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	}
 
 	return r.intersect_id;
@@ -183,8 +151,8 @@ int signOfFloat(float i){
 void GUI::identifyBoneIntersect(Ray& r){
 	for (int i = 0; i < mesh_->getNumberOfBones(); ++i){
 		Bone* bone = mesh_->skeleton.bones[i];
-		glm::mat4 WtL = glm::inverse(bone->LocalToWorld * bone->R);
-		glm::mat4 WtL_R = glm::inverse(bone->LocalToWorld_R * bone->R);
+		glm::mat4 WtL = glm::inverse(bone->LocalToWorld * bone->C);
+		glm::mat4 WtL_R = glm::inverse(bone->LocalToWorld_R * bone->C);
 
 		glm::vec4 bone_local_rdir = WtL_R * r.direction;
 		glm::vec4 bone_local_rpos = WtL * r.origin;

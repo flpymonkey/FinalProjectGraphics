@@ -292,7 +292,7 @@ int main(int argc, char* argv[])
 
 			std::vector<glm::vec4> cylinder_vertices;
 			std::vector<glm::uvec2> cylinder_faces;
-			create_cylinder(cylinder_vertices, cylinder_faces, bone->LocalToWorld * bone->R, bone->length);
+			create_cylinder(cylinder_vertices, cylinder_faces, bone->LocalToWorld * bone->C, bone->length);
 
 			std::vector<int> vertex_i;
 			for (int i = 0; i < cylinder_vertices.size(); i++) {

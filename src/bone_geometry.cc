@@ -144,6 +144,30 @@ glm::vec3 Mesh::computeNormal(glm::vec3 tangent)
 	return nominator / denominator;
 }
 
+void printInt(std::string name, int data) {
+	printf("%s: %i\n", name.c_str(), data);
+}
+
+void printFloat(std::string name, float data) {
+	printf("%s: %f\n", name.c_str(), data);
+}
+
+void printVec3(std::string name, glm::vec3 data) {
+	printf("%s: (%f, %f, %f)\n", name.c_str(), data.x, data.y, data.z);
+}
+
+void printVec4(std::string name, glm::vec4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data.x, data.y, data.z, data.w);
+}
+
+void printMat4(std::string name, glm::mat4 data) {
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][0], data[1][0], data[2][0], data[3][0]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][1], data[1][1], data[2][1], data[3][1]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][2], data[1][2], data[2][2], data[3][2]);
+	printf("%s: (%f, %f, %f, %f)\n", name.c_str(), data[0][3], data[1][3], data[2][3], data[3][3]);
+}
+
+
 // Create a list of vertices (representing joints) from the bones
 void Mesh::generateSkeleton(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces) {
 	int face_counter = 0;
@@ -151,19 +175,16 @@ void Mesh::generateSkeleton(std::vector<glm::vec4>& skeleton_vertices, std::vect
 }
 
 void Mesh::generateVertices(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces, Bone* bone, int& face_counter) {
-	if (bone->children.size() == 0) {
-		return;
-	}
+	glm::vec4 worldPosition = bone->LocalToWorld * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	skeleton_vertices.push_back(worldPosition);
+	face_counter++;
+	glm::vec4 end_worldPosition = bone->LocalToWorld * bone->C * glm::vec4(bone->length, 0.0f, 0.0f, 1.0f);
+	skeleton_vertices.push_back(end_worldPosition);
+	skeleton_faces.push_back(glm::uvec2(face_counter - 1, face_counter));
+	face_counter++;
 
 	for (uint i = 0; i < bone->children.size(); ++i) {
 		Bone* child = bone->children[i];
-		glm::vec4 worldPosition = bone->LocalToWorld * bone->T * bone->C * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		skeleton_vertices.push_back(worldPosition);
-		face_counter++;
-		glm::vec4 child_worldPosition = child->LocalToWorld * child->T * child->C * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		skeleton_vertices.push_back(child_worldPosition);
-		skeleton_faces.push_back(glm::uvec2(face_counter - 1, face_counter));
-		face_counter++;
 		generateVertices(skeleton_vertices, skeleton_faces, child, face_counter);
 	}
 }
