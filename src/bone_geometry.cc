@@ -99,6 +99,32 @@ glm::mat4 Mesh::calculateRotationMatrix(glm::vec3 offset){
 	return glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
 }
 
+void Mesh::rotateBone(int bone_id, glm::vec3 mouse_direction, glm::vec3 look, float rotation_speed){
+	// take its cross product with the look direction,
+	glm::vec3 rotation_axis = glm::cross(mouse_direction, look);
+	// and rotate all basis vectors of the bone about this axis by rotation_speed radians.
+	glm::vec3 tangent = glm::vec3(skeleton.bones[bone_id]->C[0]);
+
+	glm::vec3 new_offset = glm::rotate(tangent, rotation_speed, rotation_axis);
+
+	Bone* bone = skeleton.bones[bone_id];
+	bone->C = calculateRotationMatrix(new_offset);
+	bone->T = glm::translate(new_offset * bone->length);
+	for (uint i = 0; i < bone->children.size(); ++i) {
+		updateLocalToWorld(bone->children[i]);
+	}
+}
+
+void Mesh::updateLocalToWorld(Bone* bone){
+	Bone* parent = skeleton.bones[bone->parent_id];
+	bone->LocalToWorld_R = parent->LocalToWorld_R * parent->C;
+	bone->LocalToWorld = parent->LocalToWorld * parent->T * parent->C;
+
+	for (uint i = 0; i < bone->children.size(); ++i) {
+		updateLocalToWorld(bone->children[i]);
+	}
+}
+
 void Mesh::updateAnimation()
 {
 	animated_vertices = vertices;

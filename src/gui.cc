@@ -5,7 +5,6 @@
 #include <debuggl.h>
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/projection.hpp>
 
@@ -106,17 +105,9 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		up_ = glm::column(orientation_, 1);
 		look_ = glm::column(orientation_, 2);
 	} else if (drag_bone && current_bone_ != -1) {
-		// FIXME: Handle bone rotation
 		// TODO ???convert the drag direction into a vector in world coordinates,
 
-		// take its cross product with the look direction,
-		glm::vec3 rotation_axis = glm::cross(mouse_direction, look_);
-		// and rotate all basis vectors of the bone about this axis by rotation_speed radians.
-		glm::vec3 tangent = glm::vec3(mesh_->skeleton.bones[current_bone_]->C[0]);
-
-		glm::vec3 new_offset = glm::rotate(tangent, rotation_speed_, rotation_axis);
-
-		mesh_->skeleton.bones[current_bone_]->C = mesh_->calculateRotationMatrix(new_offset);
+		mesh_->rotateBone(current_bone_, mouse_direction, look_, rotation_speed_);
 		return ;
 	}
 	current_bone_ = checkRayBoneIntersect(current_x_, current_y_);
@@ -140,7 +131,6 @@ int GUI::checkRayBoneIntersect(double mouse_x, double mouse_y){
 	return r.intersect_id;
 }
 
-// FIXME THIS SUCKS, FIND A MATH WAY TO DO THIS
 int signOfFloat(float i){
 	if (i < 0){
 		return -1;
@@ -156,12 +146,6 @@ void GUI::identifyBoneIntersect(Ray& r){
 
 		glm::vec4 bone_local_rdir = WtL_R * r.direction;
 		glm::vec4 bone_local_rpos = WtL * r.origin;
-
-		//printVec4("Ray Local End-Position: ", bone_local_rpos + bone_local_rdir * 30.0f);
-		//printVec4("Ray Local Position: ", bone_local_rpos);
-		// printVec3("eye", eye_);
-		// printVec4("Bone World Position: ", r.origin);
-		// printVec4("Bone Local Position: ", bone_local_rpos);
 
 		cylinderIntersection(r, bone, bone_local_rdir, bone_local_rpos);
 	}
@@ -195,9 +179,6 @@ void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::ve
 	}
 	// Check that it is in the cylinder on the (X axis)
 	glm::vec4 bone_local_ipos = local_rpos + local_rdir * t;
-
-	//printVec4("bone_local_ipos", bone_local_ipos);
-	//printf("t%f\n", t);
 
 	if (bone_local_ipos.x >= 0 && bone_local_ipos.x <= bone->length){
 		// We have an intersection with a cylinder!!!
@@ -242,10 +223,10 @@ glm::vec2 GUI::circleIntersection(glm::vec2 zy_plane_rdir, glm::vec2 zy_plane_rp
 glm::vec3 GUI::lineIntersection(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4) {
 	glm::vec3 d21 = p2 - p1;
 	glm::vec3 d43 = p4 - p3;
-	glm::vec3 blue = glm::cross(d21, d43);
-	glm::vec3 orange = glm::cross(d21, blue);
-	float u = glm::dot(orange, p2);
-	float t = (u - glm::dot(orange, p4)) / glm::dot(orange, d43);
+	glm::vec3 d21xd43 = glm::cross(d21, d43);
+	glm::vec3 d21xd21xd43 = glm::cross(d21, d21xd43);
+	float u = glm::dot(d21xd21xd43, p2);
+	float t = (u - glm::dot(d21xd21xd43, p4)) / glm::dot(d21xd21xd43, d43);
 	return d43 * t + p4;
 }
 

@@ -7,6 +7,7 @@
 #include <limits>
 #include <glm/glm.hpp>
 #include <mmdadapter.h>
+#include <glm/gtx/rotate_vector.hpp>
 
 struct BoundingBox {
 	BoundingBox()
@@ -63,6 +64,8 @@ struct Mesh {
 	void generateSkeleton(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces);
 	void generateVertices(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces, Bone* bone, int& face_counter);
 	glm::mat4 calculateRotationMatrix(glm::vec3 offset);
+	void rotateBone(int bone_id, glm::vec3 mouse_direction, glm::vec3 look_, float rotation_speed);
+	void updateLocalToWorld(Bone* bone);
 
 private:
 	void computeBounds();
