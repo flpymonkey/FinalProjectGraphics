@@ -118,7 +118,10 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		look_ = glm::column(orientation_, 2);
 	} else if (drag_bone && current_bone_ != -1) {
 		pose_changed_ = true;
-		mesh_->rotateBone(current_bone_, mouse_direction, look_, rotation_speed_);
+		printf("mdir %f %f %f\n", mouse_direction.x, mouse_direction.x, mouse_direction.x);
+		glm::vec3 world_mouse_direction = glm::vec3(glm::inverse(projection_matrix_ * view_matrix_) * glm::vec4(mouse_direction, 0.0f));
+		printf("wmdir %f %f %f\n", world_mouse_direction.x, world_mouse_direction.x, world_mouse_direction.x);
+		mesh_->rotateBone(current_bone_, world_mouse_direction, look_, rotation_speed_);
 		return ;
 	}
 	current_bone_ = checkRayBoneIntersect(current_x_, current_y_);

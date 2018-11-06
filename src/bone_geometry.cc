@@ -126,14 +126,18 @@ glm::mat4 Mesh::calculateRotationMatrix(glm::vec3 offset){
 void Mesh::rotateBone(int bone_id, glm::vec3 mouse_direction, glm::vec3 look, float rotation_speed){
 	// take its cross product with the look direction,
 	glm::vec3 rotation_axis = glm::cross(mouse_direction, look);
+	//printf("rot %f %f %f\n", rotation_axis.x, rotation_axis.y, rotation_axis.z);
 	// and rotate all basis vectors of the bone about this axis by rotation_speed radians.
-	glm::vec3 tangent = glm::vec3(skeleton.bones[bone_id]->C[0]);
+	//glm::vec3 tangent = glm::vec3(skeleton.bones[bone_id]->C[0]);
 
-	glm::vec3 new_offset = glm::rotate(tangent, rotation_speed, rotation_axis);
+	//glm::vec3 new_offset = glm::rotate(tangent, rotation_speed, rotation_axis);
+
+	glm::mat4 new_C = glm::rotate(rotation_speed, rotation_axis);
 
 	Bone* bone = skeleton.bones[bone_id];
-	bone->C = calculateRotationMatrix(new_offset);
-	bone->T = glm::translate(new_offset * bone->length);
+	bone->C *= new_C; //= calculateRotationMatrix(new_offset);
+	glm::vec4 new_offset = bone->C[0];
+	bone->T = glm::translate(glm::vec3(new_offset) * bone->length);//new_offset * bone->length);
 	bone->DUi = precalculateWeights(bone);
 
 	if (bone->parent != NULL) {
