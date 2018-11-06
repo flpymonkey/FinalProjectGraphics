@@ -54,7 +54,6 @@ void Mesh::loadpmd(const std::string& fn)
 		bone->id = bone_id;
 		bone->parent_id = parent_id;
 
-		// TODO: Get rid of offset, local_offset, make sure ordering is good in struct and in here. Get rid of dup code.
 		if (parent_id == -1) {
 			// This is the root of the skeleton_faces
 			skeleton.root = bone;

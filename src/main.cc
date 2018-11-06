@@ -266,7 +266,7 @@ int main(int argc, char* argv[])
 		draw_cylinder = true;
 #endif
 
-		if (draw_skeleton){
+		if (draw_skeleton && gui.isTransparent()){
 			std::vector<glm::vec4> skeleton_vertices;
 			std::vector<glm::uvec2> skeleton_faces;
 			mesh.generateSkeleton(skeleton_vertices, skeleton_faces);

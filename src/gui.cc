@@ -61,14 +61,16 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 		else
 			roll_speed = roll_speed_;
 		// FIXME: actually roll the bone here
-		Bone* bone = mesh_->skeleton.bones[current_bone_];
-		glm::vec3 tangent = glm::vec3(bone->C[0]);
-		glm::vec3 normal = glm::vec3(bone->C[1]);
-		glm::vec3 new_normal = glm::rotate(normal, roll_speed, tangent);
-		glm::vec3 new_binormal = glm::normalize(glm::cross(tangent, new_normal));
-		bone->C = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(new_normal, 0.0f), glm::vec4(new_binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
-		for (uint i = 0; i < bone->children.size(); ++i) {
-			mesh_->updateLocalToWorld(bone->children[i]);
+		if (current_bone_ != -1){
+			Bone* bone = mesh_->skeleton.bones[current_bone_];
+			glm::vec3 tangent = glm::vec3(bone->C[0]);
+			glm::vec3 normal = glm::vec3(bone->C[1]);
+			glm::vec3 new_normal = glm::rotate(normal, roll_speed, tangent);
+			glm::vec3 new_binormal = glm::normalize(glm::cross(tangent, new_normal));
+			bone->C = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(new_normal, 0.0f), glm::vec4(new_binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
+			for (uint i = 0; i < bone->children.size(); ++i) {
+				mesh_->updateLocalToWorld(bone->children[i]);
+			}
 		}
 	} else if (key == GLFW_KEY_C && action != GLFW_RELEASE) {
 		fps_mode_ = !fps_mode_;

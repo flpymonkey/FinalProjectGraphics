@@ -18,7 +18,6 @@ struct BoundingBox {
 };
 
 //TODO: get weights
-// TODO fix ghost bone
 
 struct Bone {
 	int id;
