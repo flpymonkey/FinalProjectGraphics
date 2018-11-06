@@ -36,6 +36,7 @@ struct Bone {
 struct Skeleton {
 	std::vector<Bone*> bones;
 	Bone* root;
+	std::map<int, std::map<int, float>> weights;
 };
 
 struct Mesh {

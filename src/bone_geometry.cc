@@ -89,6 +89,30 @@ void Mesh::loadpmd(const std::string& fn)
 		skeleton.bones.push_back(bone);
 		bone_id++;
 	}
+
+	std::vector<SparseTuple> tup;
+	mr.getJointWeights(tup);
+	for (SparseTuple t : tup) {
+		// printf("jid: %i\n", t.jid);
+		// printf("vid: %i\n", t.vid);
+		// printf("weight: %f\n", t.weight);
+
+		if (skeleton.weights.find(t.vid) == skeleton.weights.end()) {
+			std::map<int, float> jid_weights;
+			jid_weights[t.jid] = t.weight;
+			skeleton.weights[t.vid] = jid_weights;
+		} else {
+			skeleton.weights[t.vid][t.jid] = t.weight;
+		}
+	}
+
+	std::map<int, std::map<int, float>>::iterator it;
+	for (it = skeleton.weights.begin(); it != skeleton.weights.end(); it++) {
+		std::map<int, float>::iterator it2;
+		for (it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+			printf("vid: %i jid %i weights %f\n", it->first, it2->first, it2->second);
+		}
+	}
 }
 
 glm::mat4 Mesh::calculateRotationMatrix(glm::vec3 offset){
