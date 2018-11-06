@@ -62,6 +62,7 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 			roll_speed = roll_speed_;
 		// FIXME: actually roll the bone here
 		if (current_bone_ != -1){
+			pose_changed_ = true;
 			Bone* bone = mesh_->skeleton.bones[current_bone_];
 			glm::vec3 tangent = glm::vec3(bone->C[0]);
 			glm::vec3 normal = glm::vec3(bone->C[1]);
@@ -116,6 +117,7 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		up_ = glm::column(orientation_, 1);
 		look_ = glm::column(orientation_, 2);
 	} else if (drag_bone && current_bone_ != -1) {
+		pose_changed_ = true;
 		mesh_->rotateBone(current_bone_, mouse_direction, look_, rotation_speed_);
 		return ;
 	}

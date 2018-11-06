@@ -67,6 +67,10 @@ void Mesh::loadpmd(const std::string& fn)
 			//Calculate rotation matrix
 			bone->R = calculateRotationMatrix(offset);
 			bone->C = bone->R;
+
+			//Precalculate weights
+			bone->Ui = glm::inverse(bone->LocalToWorld * bone->T * bone->R);
+			bone->DUi = precalculateWeights(bone);
 		} else {
 			Bone* parent = skeleton.bones[parent_id];
 			bone->parent = parent;
@@ -82,6 +86,10 @@ void Mesh::loadpmd(const std::string& fn)
 			bone->R = calculateRotationMatrix(local_offset);
 			bone->C = bone->R;
 
+			//Precalculate weights
+			bone->Ui = glm::inverse(bone->LocalToWorld * bone->T * bone->R);
+			bone->DUi = precalculateWeights(bone);
+
 			// Assign to parent bone
 			parent->children.push_back(bone);
 		}
@@ -93,26 +101,19 @@ void Mesh::loadpmd(const std::string& fn)
 	std::vector<SparseTuple> tup;
 	mr.getJointWeights(tup);
 	for (SparseTuple t : tup) {
-		// printf("jid: %i\n", t.jid);
-		// printf("vid: %i\n", t.vid);
-		// printf("weight: %f\n", t.weight);
-
 		if (skeleton.weights.find(t.vid) == skeleton.weights.end()) {
-			std::map<int, float> jid_weights;
-			jid_weights[t.jid] = t.weight;
-			skeleton.weights[t.vid] = jid_weights;
+			std::map<int, float> joint_weights;
+			joint_weights[t.jid] = t.weight;
+			skeleton.weights[t.vid] = joint_weights;
 		} else {
 			skeleton.weights[t.vid][t.jid] = t.weight;
 		}
 	}
+}
 
-	std::map<int, std::map<int, float>>::iterator it;
-	for (it = skeleton.weights.begin(); it != skeleton.weights.end(); it++) {
-		std::map<int, float>::iterator it2;
-		for (it2 = it->second.begin(); it2 != it->second.end(); it2++) {
-			printf("vid: %i jid %i weights %f\n", it->first, it2->first, it2->second);
-		}
-	}
+glm::mat4 Mesh::precalculateWeights(Bone* bone) {
+	glm::mat4 D = bone->LocalToWorld * bone->T * bone->C;
+	return D * bone->Ui;
 }
 
 glm::mat4 Mesh::calculateRotationMatrix(glm::vec3 offset){
@@ -133,6 +134,12 @@ void Mesh::rotateBone(int bone_id, glm::vec3 mouse_direction, glm::vec3 look, fl
 	Bone* bone = skeleton.bones[bone_id];
 	bone->C = calculateRotationMatrix(new_offset);
 	bone->T = glm::translate(new_offset * bone->length);
+	bone->DUi = precalculateWeights(bone);
+
+	if (bone->parent != NULL) {
+		bone->parent->DUi = precalculateWeights(bone);
+	}
+
 	for (uint i = 0; i < bone->children.size(); ++i) {
 		updateLocalToWorld(bone->children[i]);
 	}
@@ -142,6 +149,11 @@ void Mesh::updateLocalToWorld(Bone* bone){
 	Bone* parent = skeleton.bones[bone->parent_id];
 	bone->LocalToWorld_R = parent->LocalToWorld_R * parent->C;
 	bone->LocalToWorld = parent->LocalToWorld * parent->T * parent->C;
+	bone->DUi = precalculateWeights(bone);
+
+	if (parent != NULL) {
+		parent->DUi = precalculateWeights(bone);
+	}
 
 	for (uint i = 0; i < bone->children.size(); ++i) {
 		updateLocalToWorld(bone->children[i]);
@@ -150,9 +162,27 @@ void Mesh::updateLocalToWorld(Bone* bone){
 
 void Mesh::updateAnimation()
 {
-	animated_vertices = vertices;
+	//animated_vertices = vertices;
 	// FIXME: blend the vertices to animated_vertices, rather than copy
 	//        the data directly.
+	std::vector<glm::vec4> new_vertices;
+	for (uint i = 0; i < vertices.size(); i++) {
+		glm::vec4 v = vertices[i];
+
+		std::map<int, float> joint_weights = skeleton.weights[i];
+
+		glm::vec4 new_v;
+		std::map<int, float>::iterator it;
+		for (it = joint_weights.begin(); it != joint_weights.end(); it++) {
+			int jid = it->first;
+			float weight = it->second;
+			new_v += weight * skeleton.bones[jid]->DUi * v;
+		}
+
+		new_vertices.push_back(new_v);
+	}
+
+	animated_vertices = new_vertices;
 }
 
 

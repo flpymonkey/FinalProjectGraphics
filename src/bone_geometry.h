@@ -30,6 +30,8 @@ struct Bone {
 	glm::mat4 T;
 	glm::mat4 R;
 	glm::mat4 C;
+	glm::mat4 Ui;
+	glm::mat4 DUi;
 };
 
 
@@ -63,6 +65,7 @@ struct Mesh {
 	// Added mesh functions:
 	void generateSkeleton(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces);
 	void generateVertices(std::vector<glm::vec4>& skeleton_vertices, std::vector<glm::uvec2>& skeleton_faces, Bone* bone, int& face_counter);
+	glm::mat4 precalculateWeights(Bone* bone);
 	glm::mat4 calculateRotationMatrix(glm::vec3 offset);
 	void rotateBone(int bone_id, glm::vec3 mouse_direction, glm::vec3 look_, float rotation_speed);
 	void updateLocalToWorld(Bone* bone);
