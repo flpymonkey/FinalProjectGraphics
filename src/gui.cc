@@ -61,6 +61,15 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 		else
 			roll_speed = roll_speed_;
 		// FIXME: actually roll the bone here
+		Bone* bone = mesh_->skeleton.bones[current_bone_];
+		glm::vec3 tangent = glm::vec3(bone->C[0]);
+		glm::vec3 normal = glm::vec3(bone->C[1]);
+		glm::vec3 new_normal = glm::rotate(normal, roll_speed, tangent);
+		glm::vec3 new_binormal = glm::normalize(glm::cross(tangent, new_normal));
+		bone->C = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(new_normal, 0.0f), glm::vec4(new_binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
+		for (uint i = 0; i < bone->children.size(); ++i) {
+			mesh_->updateLocalToWorld(bone->children[i]);
+		}
 	} else if (key == GLFW_KEY_C && action != GLFW_RELEASE) {
 		fps_mode_ = !fps_mode_;
 	} else if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_RELEASE) {
@@ -105,8 +114,6 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		up_ = glm::column(orientation_, 1);
 		look_ = glm::column(orientation_, 2);
 	} else if (drag_bone && current_bone_ != -1) {
-		// TODO ???convert the drag direction into a vector in world coordinates,
-
 		mesh_->rotateBone(current_bone_, mouse_direction, look_, rotation_speed_);
 		return ;
 	}
@@ -170,11 +177,6 @@ void GUI::cylinderIntersection(Ray& r, Bone* bone, glm::vec4 local_rdir, glm::ve
 	}
 
 	if (t <= 0){
-		// TODO: Handle the case of looking down the cylinder
-		// if (abs((zy_plane_rpos + zy_plane_rdir*kFar).x) < kCylinderRadius &&
-		// 		abs((zy_plane_rpos + zy_plane_rdir*kFar).y) < kCylinderRadius){
-		// 	t =
-		// }
 		return;
 	}
 	// Check that it is in the cylinder on the (X axis)
