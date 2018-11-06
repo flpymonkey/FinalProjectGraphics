@@ -1,3 +1,5 @@
+See Project4ProgressReport.txt for project information 
+
 # Getting Started
 
 ## Build
@@ -47,7 +49,7 @@ WARNING: THIS SCRIPT RUNS ``rm -rf skinning`` AS THE LAST STEP FOR CLEAN UP.
 BACKUP YOUR CODE AND RUN IT IN A SAFE PLACE (LIKE $HOME/tmp) TO AVOID ANY
 POSSIBLE DISASTER.
 
-# Acknowledgement 
+# Acknowledgement
 
 This bone animation code is based on the skinning project written by
 Randall Smith for 2015 Spring Graphics Course.
