@@ -71,7 +71,8 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 			glm::vec3 normal = glm::vec3(bone->C[1]);
 			glm::vec3 new_normal = glm::rotate(normal, roll_speed, tangent);
 			glm::vec3 new_binormal = glm::normalize(glm::cross(tangent, new_normal));
-			bone->C = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(new_normal, 0.0f), glm::vec4(new_binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
+			bone->C = glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(new_normal, 0.0f), 
+				glm::vec4(new_binormal, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 			for (uint i = 0; i < bone->children.size(); ++i) {
 				mesh_->updateLocalToWorld(bone->children[i]);
 			}
@@ -121,9 +122,9 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		look_ = glm::column(orientation_, 2);
 	} else if (drag_bone && current_bone_ != -1) {
 		pose_changed_ = true;
-		printf("mdir %f %f %f\n", mouse_direction.x, mouse_direction.x, mouse_direction.x);
-		glm::vec3 world_mouse_direction = glm::vec3(glm::inverse(projection_matrix_ * view_matrix_) * glm::vec4(mouse_direction, 0.0f));
-		printf("wmdir %f %f %f\n", world_mouse_direction.x, world_mouse_direction.x, world_mouse_direction.x);
+		glm::vec3 world_mouse_direction = glm::vec3(
+			glm::inverse(projection_matrix_ * view_matrix_ * model_matrix_) * 
+			glm::vec4(mouse_direction, 0.0f));
 		mesh_->rotateBone(current_bone_, world_mouse_direction, look_, rotation_speed_);
 		return ;
 	}

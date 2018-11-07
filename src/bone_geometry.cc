@@ -123,22 +123,19 @@ glm::mat4 Mesh::calculateRotationMatrix(glm::vec3 offset){
 	return glm::mat4(glm::vec4(tangent, 0.0f), glm::vec4(normal, 0.0f), glm::vec4(binormal, 0.0f), glm::vec4(0.0f,0.0f,0.0f,1.0f));
 }
 
-void Mesh::rotateBone(int bone_id, glm::vec3 mouse_direction, glm::vec3 look, float rotation_speed){
+void Mesh::rotateBone(int bone_id, glm::vec3 world_mouse_direction, glm::vec3 look, float rotation_speed){
 	Bone* bone = skeleton.bones[bone_id];
-	// take its cross product with the look direction,
-	glm::vec3 rotation_axis = glm::cross(mouse_direction, look);
-	printf("rot %f %f %f\n", rotation_axis.x, rotation_axis.y, rotation_axis.z);
-	// and rotate all basis vectors of the bone about this axis by rotation_speed radians.
-	//glm::vec3 tangent = glm::vec3(skeleton.bones[bone_id]->C[0]);
+	glm::vec3 world_rotation_axis = glm::cross(world_mouse_direction, look);
+	glm::mat4 WtL_R = glm::inverse(bone->LocalToWorld_R * bone->C);
+	glm::vec4 local_rotation_axis = WtL_R * glm::vec4(world_rotation_axis, 0.0f);
+	
+	glm::vec3 axis = glm::vec3(local_rotation_axis);
+	glm::vec3 a = glm::vec3(axis.z, axis.y, axis.x);
+	printf("a: %f %f %f\n", a.x, a.y, a.z);
 
-	//glm::vec3 new_offset = glm::rotate(tangent, rotation_speed, rotation_axis);
-
-	glm::mat4 new_C = glm::rotate(rotation_speed, rotation_axis);
-
-	//Bone* bone = skeleton.bones[bone_id];
-	bone->C *= new_C; //= calculateRotationMatrix(new_offset);
+	bone->C = glm::rotate(bone->C, rotation_speed, a);
 	glm::vec4 new_offset = bone->C[0];
-	bone->T = glm::translate(glm::vec3(new_offset) * bone->length);//new_offset * bone->length);
+	bone->T = glm::translate(glm::vec3(new_offset) * bone->length);
 	bone->DUi = precalculateWeights(bone);
 
 	if (bone->parent != NULL) {
