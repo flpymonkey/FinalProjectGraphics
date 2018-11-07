@@ -11,8 +11,6 @@ Drawing the Cylinders
 Ray-Cylinder intersection
 Bone Picking
 Bone Manipulation
-
-TODO:
 Parse weights
 Linear blend skinning
 J key screen-shot feature
