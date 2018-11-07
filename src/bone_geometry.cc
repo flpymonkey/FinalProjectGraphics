@@ -129,11 +129,7 @@ void Mesh::rotateBone(int bone_id, glm::vec3 world_mouse_direction, glm::vec3 lo
 	glm::mat4 WtL_R = glm::inverse(bone->LocalToWorld_R * bone->C);
 	glm::vec4 local_rotation_axis = WtL_R * glm::vec4(world_rotation_axis, 0.0f);
 	
-	glm::vec3 axis = glm::vec3(local_rotation_axis);
-	glm::vec3 a = glm::vec3(axis.z, axis.y, axis.x);
-	printf("a: %f %f %f\n", a.x, a.y, a.z);
-
-	bone->C = glm::rotate(bone->C, rotation_speed, a);
+	bone->C = glm::rotate(bone->C, rotation_speed, glm::vec3(local_rotation_axis));
 	glm::vec4 new_offset = bone->C[0];
 	bone->T = glm::translate(glm::vec3(new_offset) * bone->length);
 	bone->DUi = precalculateWeights(bone);
