@@ -27,7 +27,7 @@ bool fps_mode = true;
 enum { kVertexBuffer, kNormalBuffer, kIndexBuffer, kNumVbos };
 
 // These are our VAOs.
-enum { kGeometryVao, kFloorVao, kNumVaos };
+enum { kGeometryVao, kFloorVao, kScreenVao, kNumVaos };
 
 GLuint g_array_objects[kNumVaos];  // This will store the VAO descriptors.
 GLuint g_buffer_objects[kNumVaos][kNumVbos];  // These will store VBO descriptors.
@@ -95,6 +95,30 @@ void main()
 	float dot_nl = dot(normalize(light_direction), normalize(normal));
 	dot_nl = clamp(dot_nl, 0.0, 1.0);
 	fragment_color = clamp(dot_nl * color, 0.0, 1.0);
+}
+)zzz";
+
+const char* screen_vertex_shader =
+R"zzz(#version 330 core
+in vec2 vertex_position;
+in vec2 aTexCoords;
+out vec2 TexCoords;
+void main()
+{
+    TexCoords = aTexCoords;
+    gl_Position = vec4(vertex_position.x, vertex_position.y, 0.0, 1.0);
+}
+)zzz";
+
+const char* screen_fragment_shader =
+R"zzz(#version 330 core
+out vec4 fragment_color;
+in vec2 TexCoords;
+uniform sampler2D screenTexture;
+void main()
+{
+    vec3 col = texture(screenTexture, TexCoords).rgb;
+    fragment_color = vec4(col, 1.0);
 }
 )zzz";
 
@@ -405,7 +429,6 @@ int main(int argc, char* argv[])
 	CHECK_GL_ERROR(program_id = glCreateProgram());
 	CHECK_GL_ERROR(glAttachShader(program_id, vertex_shader_id));
 	CHECK_GL_ERROR(glAttachShader(program_id, fragment_shader_id));
-//	CHECK_GL_ERROR(glAttachShader(program_id, geometry_shader_id));
 
 	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kVertexBuffer]));
 	// NOTE: We do not send anything right now, we just describe it to OpenGL.
@@ -436,6 +459,7 @@ int main(int argc, char* argv[])
 	CHECK_GL_ERROR(light_position_location =
 			glGetUniformLocation(program_id, "light_position"));
 
+	// Create floor program ========================
 	// Setup fragment shader for the floor
 	GLuint floor_fragment_shader_id = 0;
 	const char* floor_fragment_source_pointer = floor_fragment_shader;
@@ -451,13 +475,11 @@ int main(int argc, char* argv[])
     CHECK_GL_ERROR(floor_program_id = glCreateProgram());
 	CHECK_GL_ERROR(glAttachShader(floor_program_id, vertex_shader_id));
 	CHECK_GL_ERROR(glAttachShader(floor_program_id, floor_fragment_shader_id));
-//	CHECK_GL_ERROR(glAttachShader(floor_program_id, floor_geometry_shader_id));
 
 	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kFloorVao][kVertexBuffer]));
 
 	// Bind attributes.
 	CHECK_GL_ERROR(glBindAttribLocation(floor_program_id, 0, "vertex_position"));
-
 	CHECK_GL_ERROR(glBindAttribLocation(floor_program_id, 1, "vertex_normal"));
 	CHECK_GL_ERROR(glBindFragDataLocation(floor_program_id, 0, "fragment_color"));
 	glLinkProgram(floor_program_id);
@@ -478,15 +500,105 @@ int main(int argc, char* argv[])
 	float aspect = 0.0f;
 	float theta = 0.0f;
 
+	// screen quad VAO, for displaying game as a texture
+	float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+			// positions   // texCoords
+			-1.0f,  1.0f,  0.0f, 1.0f,
+			-1.0f, -1.0f,  0.0f, 0.0f,
+			 1.0f, -1.0f,  1.0f, 0.0f,
+
+			-1.0f,  1.0f,  0.0f, 1.0f,
+			 1.0f, -1.0f,  1.0f, 0.0f,
+			 1.0f,  1.0f,  1.0f, 1.0f
+	};
+
+	unsigned int quadVAO, quadVBO;
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1, &quadVBO);
+	glBindVertexArray(quadVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	// Create basic quad program ========================
+	// Setup vertex shader for the quad.
+	GLuint screen_vertex_shader_id = 0;
+	const char* screen_vertex_source_pointer = screen_vertex_shader;
+	CHECK_GL_ERROR(screen_vertex_shader_id = glCreateShader(GL_VERTEX_SHADER));
+	CHECK_GL_ERROR(glShaderSource(screen_vertex_shader_id, 1, &screen_vertex_source_pointer, nullptr));
+	glCompileShader(screen_vertex_shader_id);
+	CHECK_GL_SHADER_ERROR(screen_vertex_shader_id);
+
+	// Setup fragment shader for the quad
+	GLuint screen_fragment_shader_id = 0;
+	const char* screen_fragment_source_pointer = screen_fragment_shader;
+	CHECK_GL_ERROR(screen_fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER));
+	CHECK_GL_ERROR(glShaderSource(screen_fragment_shader_id, 1,
+				&screen_fragment_source_pointer, nullptr));
+	glCompileShader(screen_fragment_shader_id);
+	CHECK_GL_SHADER_ERROR(screen_fragment_shader_id);
+
+	// Setup the program
+	GLuint screen_program_id = 0;
+  CHECK_GL_ERROR(screen_program_id = glCreateProgram());
+	CHECK_GL_ERROR(glAttachShader(screen_program_id, screen_vertex_shader_id));
+	CHECK_GL_ERROR(glAttachShader(screen_program_id, screen_fragment_shader_id));
+
+	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kScreenVao][kVertexBuffer]));
+
+	// Bind attributes.
+	CHECK_GL_ERROR(glBindAttribLocation(screen_program_id, 0, "vertex_position"));
+	CHECK_GL_ERROR(glBindAttribLocation(screen_program_id, 1, "aTexCoords"));
+
+	CHECK_GL_ERROR(glBindFragDataLocation(screen_program_id, 0, "fragment_color"));
+	glLinkProgram(screen_program_id);
+	CHECK_GL_PROGRAM_ERROR(screen_program_id);
+
+	// Get the uniform locations.
+	GLint screen_projection_matrix_location = 0;
+	CHECK_GL_ERROR(screen_projection_matrix_location =
+			glGetUniformLocation(screen_program_id, "screenTexture"));
+
+	// configure alternate framebuffer
+	unsigned int framebuffer;
+	glGenFramebuffers(1, &framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+	// create a color attachment texture
+	unsigned int textureColorBuffer;
+	glGenTextures(1, &textureColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBuffer, 0);
+
+	unsigned int rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window_width, window_height); // use a single renderbuffer object for both a depth AND stencil buffer.
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // now actually attach it
+
+	// Check that frame buffer is set up correctly
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	clock_t last_frame_time = clock();
 	while (!glfwWindowShouldClose(window)) {
-		// Setup some basic window stuff.
-		glfwGetFramebufferSize(window, &window_width, &window_height);
-		glViewport(0, 0, window_width, window_height);
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glEnable(GL_DEPTH_TEST);
+		// render
+		// ------
+		// bind to framebuffer and draw scene as we normally would to color texture
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+
+		// make sure we clear the framebuffer's content
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glDepthFunc(GL_LESS);
 
 		// Switch to the Geometry VAO.
 		CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kGeometryVao]));
@@ -540,8 +652,8 @@ int main(int argc, char* argv[])
 		// 	4. Call glDrawElements, since input geometry is
 		// 	indicated by VAO.
 
-        // Switch to Floor VAO.
-        CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kFloorVao]));
+    // Switch to Floor VAO.
+    CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kFloorVao]));
 
         // Use our program.
 		CHECK_GL_ERROR(glUseProgram(floor_program_id));
@@ -555,6 +667,20 @@ int main(int argc, char* argv[])
 
 		// Draw our triangles.
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_obj_faces.size() * 3, GL_UNSIGNED_INT, 0));
+
+
+		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+    // clear all relevant buffers
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+    glClear(GL_COLOR_BUFFER_BIT);
+
+		// Use our program.
+		CHECK_GL_ERROR(glUseProgram(screen_program_id));
+    glBindVertexArray(quadVAO);
+    glBindTexture(GL_TEXTURE_2D, textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		// Poll and swap.
 		glfwPollEvents();
