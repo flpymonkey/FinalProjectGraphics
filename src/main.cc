@@ -32,71 +32,18 @@ enum { kGeometryVao, kFloorVao, kNumVaos };
 GLuint g_array_objects[kNumVaos];  // This will store the VAO descriptors.
 GLuint g_buffer_objects[kNumVaos][kNumVbos];  // These will store VBO descriptors.
 
-// C++ 11 String Literal
-// See http://en.cppreference.com/w/cpp/language/string_literal
+// Shaders
 const char* vertex_shader =
-R"zzz(#version 330 core
-in vec4 vertex_position;
-in vec4 vertex_normal;
-uniform mat4 view;
-uniform mat4 projection;
-uniform vec4 light_position;
-out vec4 light_direction;
-out vec4 normal;
-out vec4 world_normal;
-out vec4 world_position;
-void main()
-{
-// Transform vertex into clipping coordinates
-	gl_Position = projection * view * vertex_position;
-// Lighting in camera coordinates
-//  Compute light direction and transform to camera coordinates
-        light_direction = view * (light_position - vertex_position);
-//  Transform normal to camera coordinates
-        normal = view * vertex_normal;
-        world_normal = vertex_normal;
-        world_position = projection * view * vertex_position;
-}
-)zzz";
+#include "shaders/default.vert"
+;
 
 const char* fragment_shader =
-R"zzz(#version 330 core
-in vec4 normal;
-in vec4 light_direction;
-in vec4 world_normal;
-out vec4 fragment_color;
-void main()
-{
-	vec4 color = abs(normalize(world_normal)) + vec4(0.0, 0.0, 0.0, 1.0);
-	float dot_nl = dot(normalize(light_direction), normalize(normal));
-	dot_nl = clamp(dot_nl, 0.0, 1.0);
-	fragment_color = clamp(dot_nl * color, 0.0, 1.0);
-}
-)zzz";
+#include "shaders/default.frag"
+;
 
-// FIXME: Implement shader effects with an alternative shader.
 const char* floor_fragment_shader =
-R"zzz(#version 330 core
-in vec4 normal;
-in vec4 light_direction;
-in vec4 world_position;
-uniform mat4 view;
-uniform mat4 projection;
-uniform vec4 light_position;
-out vec4 fragment_color;
-void main()
-{
-	vec4 position = inverse(projection * view) * vec4(world_position.xyz / world_position.w, 1.0f);
-    position /= position.w;
-	vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
-    if (mod(floor(position[0]) + floor(position[2]), 2) == 0) {
-        color = vec4(1.0, 1.0, 1.0, 1.0);
-    }
-	float dot_nl = dot(normalize(light_direction), normalize(normal));
-	dot_nl = clamp(dot_nl, 0.0, 1.0);
-	fragment_color = clamp(dot_nl * color, 0.0, 1.0);
-}
-)zzz";
+#include "shaders/floor.frag"
+;
 
 void
 ErrorCallback(int error, const char* description)
