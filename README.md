@@ -1,11 +1,27 @@
-See Project4ProgressReport.txt for project information 
-
 # Getting Started
+
+## What is different
+
+Most part of this file is the same as the ray-tracer project.
+Differences are listed below:
+
+* Dependencies
+	- We do not depend on FLTK anymore, but GLEW and GLFW are essential
+	  now.
+* How to add your files
+	- Simplified the description and remove the example unrelated to this
+	  project.
+* libutgraphicsutil.so
+	- This project depends on libutgraphicsutil.so to run. Please do not
+	  move it to somewhere else because we use rpath to specify the
+	  location of the library with absolute path. At the same time, you
+	  also do not need to change your LD_LIBRARY_PATH.
 
 ## Build
 
-You are already quite familar with the graphics projects, so
-TL;DR:
+Assume the present working directory (PWD) is under the root directory of this
+project. The following commands will create a directory named as "build" and
+build the starter code within this directory.
 
 ```
 mkdir build
@@ -14,49 +30,70 @@ cmake ..
 make -j8
 ```
 
-## Execution
+When finished, the binary called ray will be placed at build/bin/ directory.
 
-```
-cd build
-./bin/skinning ../assets/pmd/Meiko_Sakine.pmd
-```
+You can change build to any name you like, although "build" is the most
+commonly used one.
 
-You need to provide a .pmd file to launche the skinning code. A set of PMD
-files have been shipped under assets/pmd directory.
+NOTE: It is recommended to use this build scheme (called out-of-source build).
+Besides the advantages listed [here]
+(http://voices.canonical.com/jussi.pakkanen/2013/04/16/why-you-should-consider-using-separate-build-directories/),
+a more practical reason is we did not test in-source building at all.
 
-## Notes about the skeletion code
+## Dependencies
 
-The skeleton code is trimmed from the reference code, which has a RenderClass
-to simplify the multi-pass rendering. However, this class is somewhat
-sophisticated. If you find it is quite hard to understand the RenderClass, do
-NOT use it. Testing your C++ skill is not a part of this assignment.
+The starter code depends on GLEW, GLFW, and certainly, the OpenGL to run.
 
-## Package for submission
+UTCS UNIX hosts already have them installed. For your own system you may need
+to install them through the corresponding package manager. If you are using OS
+X, [Homebrew](http://brew.sh/) is recommended.
 
-The submitted package assumes the same file structure as the published one.
-You should check your submission with the command
+## How to add your file
 
-```
-./skinning_testpackage.sh <your package file name>
-```
+In most cases you do not need to modify the build system manually to add new
+files. The build system will automatically add source files under the
+following directories to your project.
 
-You should get a "Build successfully" message from the script, and a
-skinning.bin as the build result.
+	src/
 
-skinning_testpackage.sh is a script under the skinning/ directory.
+However, since EVERY source file in these directories will be added to the
+project to build, it is not a good practice to add random source files, say a
+"Hello World" program, under these directories also, which will cause linking
+errors due to multiple main functions.
 
-WARNING: THIS SCRIPT RUNS ``rm -rf skinning`` AS THE LAST STEP FOR CLEAN UP.
-BACKUP YOUR CODE AND RUN IT IN A SAFE PLACE (LIKE $HOME/tmp) TO AVOID ANY
-POSSIBLE DISASTER.
+On the other hand, all files out of these directories will NOT be added to the
+project automatically. 
 
-# Acknowledgement
+## Tools that help you read the code
 
-This bone animation code is based on the skinning project written by
+This starter code includes many features and lots of files, and usually it is
+troublesome to jump over these files. For these cases, a source indexer helps
+you a lot.
+
+[cscope](http://cscope.sourceforge.net/) and [rtags](http://www.rtags.net/)
+are two recommended ones. Cscope is included in most distributions, while
+rtags requires build from source. However rtags understands C++ precisely
+because it uses the Clang compiler fronted.
+
+## Some notes about the compiler
+
+On 3rd floor lab machines, the g++-5.2.0 will be used (located at
+/lusr/opt/gcc-5.2.0/bin/g++). Otherwise the default C++ compiler is used.
+
+C++11 is enabled by default.
+
+## Some notes about glm
+
+We disabled the member function 'length()' for all vector types to avoid
+confusion, which returns the number of elements in a vector object, rather than
+the norm of the vector. If you really want to get the number of elements in
+the vector object, use 'size()' instead.
+
+The build system will clone the 0.9.7.6 version from the official repository
+if glm does not present. Otherwise, the glm installed by the system (may be
+older) will be used.
+
+# Acknowledgement 
+
+This starter code is modified based on the bunny and menger project written by
 Randall Smith for 2015 Spring Graphics Course.
-
-The PMD parser library is written by
-[itsuhane](https://github.com/itsuhane/libmmd), licensed under Boost Software
-License.
-
-The author of PMD models is Animasa, you can download the model with the
-official editor from his webpage [VPVP](http://www.geocities.jp/higuchuu4/index_e.htm).

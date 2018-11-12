@@ -1,12 +1,10 @@
 #ifndef DEBUGGL_H
 #define DEBUGGL_H
 
-void debugglTerminate();
-
 #define CHECK_SUCCESS(x)   \
   do {                     \
     if (!(x)) {            \
-      debugglTerminate();     \
+      glfwTerminate();     \
       exit(EXIT_FAILURE);  \
     }                      \
   } while (0)
@@ -20,12 +18,12 @@ void debugglTerminate();
     if (status != GL_TRUE) {                                                \
       std::string log(length, 0);                                           \
       glGetShaderInfoLog(id, length, nullptr, &log[0]);                     \
-      std::cerr << __func__ << " Line :" << __LINE__                                     \
+      std::cerr << "Line :" << __LINE__                                     \
                 << " Status: " << status                                    \
                 << " OpenGL Shader Error: Log = \n"                         \
                 << &log[0];                                                 \
       std::cerr << length << " bytes\n";                                    \
-      debugglTerminate();                                                      \
+      glfwTerminate();                                                      \
       exit(EXIT_FAILURE);                                                   \
     }                                                                       \
   } while (0)
@@ -39,9 +37,9 @@ void debugglTerminate();
     if (status != GL_TRUE) {                                                 \
       std::string log(length, 0);                                            \
       glGetProgramInfoLog(id, length, nullptr, &log[0]);                     \
-      std::cerr << __func__ << " Line :" << __LINE__ << " OpenGL Program Error: Log = \n" \
+      std::cerr << "Line :" << __LINE__ << " OpenGL Program Error: Log = \n" \
                 << &log[0];                                                  \
-      debugglTerminate();                                                       \
+      glfwTerminate();                                                       \
       exit(EXIT_FAILURE);                                                    \
     }                                                                        \
   } while (0)
@@ -51,9 +49,9 @@ void debugglTerminate();
     { statement; }                                                            \
     GLenum error = GL_NO_ERROR;                                               \
     if ((error = glGetError()) != GL_NO_ERROR) {                              \
-      std::cerr << __func__ << " Line :" << __LINE__ << " OpenGL Error: code  = " << error \
+      std::cerr << "Line :" << __LINE__ << " OpenGL Error: code  = " << error \
                 << " description =  " << DebugGLErrorToString(int(error));    \
-      debugglTerminate();                                                        \
+      glfwTerminate();                                                        \
       exit(EXIT_FAILURE);                                                     \
     }                                                                         \
   } while (0)
