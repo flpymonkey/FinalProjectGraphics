@@ -112,15 +112,34 @@ void main()
 
 const char* screen_fragment_shader =
 R"zzz(#version 330 core
-out vec4 fragment_color;
 in vec2 TexCoords;
 uniform sampler2D screenTexture;
-void main()
-{
-    vec3 col = texture(screenTexture, TexCoords).rgb;
-    fragment_color = vec4(col, 1.0);
+
+uniform int uGhosts; // number of ghost samples: set to 3
+uniform float uGhostDispersal; // dispersion factor
+
+out vec4 fragment_color;
+
+void main() {
+  vec2 texcoord = -TexCoords + vec2(1.0);
+  vec2 texelSize = 1.0 / vec2(textureSize(screenTexture, 0));
+
+// ghost vector to image centre:
+  vec2 ghostVec = (vec2(0.5) - texcoord) * 1; // uGhostDispersal
+
+// sample ghosts:
+  vec4 result = vec4(0.0);
+  for (int i = 0; i < 3; ++i) { // number of ghost samples: set to 3
+     vec2 offset = fract(texcoord + ghostVec * float(i));
+
+     result += texture(screenTexture, offset);
+  }
+
+  fragment_color = result;
 }
 )zzz";
+
+
 
 void
 ErrorCallback(int error, const char* description)
