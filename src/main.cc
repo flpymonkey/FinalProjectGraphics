@@ -14,6 +14,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <debuggl.h>
+
+// Classes
+#include "floor.h"
 #include "menger.h"
 #include "camera.h"
 
@@ -51,6 +54,7 @@ ErrorCallback(int error, const char* description)
 	std::cerr << "GLFW Error: " << description << "\n";
 }
 
+std::shared_ptr<Floor> g_floor;
 std::shared_ptr<Menger> g_menger;
 Camera g_camera;
 
@@ -158,58 +162,11 @@ MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 	g_current_button = button;
 }
 
-void
-create_floor(std::vector<glm::vec4>& floor_obj_vertices,
-    std::vector<glm::vec4>& floor_vtx_normals,
-    std::vector<glm::uvec3>& floor_obj_faces)
-{
-    // Calculate half lengths.
-    float length = 1000.0f;
-    float half_length = length * 0.5f;
-    float minx = -half_length;
-    float maxx = half_length;
-    float minz = -half_length;
-    float maxz = half_length;
-
-    // Floor data.
-	// Top, bottom-right triangle.
-	// floor_obj_vertices.push_back(glm::vec4(minx, -2.0f, maxz, 1.0f));
-	// floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	// floor_obj_vertices.push_back(glm::vec4(maxx, -2.0f, minz, 1.0f));
-	// floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	// floor_obj_vertices.push_back(glm::vec4(minx, -2.0f, minz, 1.0f));
-	// floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	// floor_obj_faces.push_back(glm::uvec3(0, 1, 2));
-
-	// // Top, top-left triangle.
-	// floor_obj_vertices.push_back(glm::vec4(minx, -2.0f, maxz, 1.0f));
-	// floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	// floor_obj_vertices.push_back(glm::vec4(maxx, -2.0f, maxz, 1.0f));
-	// floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	// floor_obj_vertices.push_back(glm::vec4(maxx, -2.0f, minz, 1.0f));
-	// floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	// floor_obj_faces.push_back(glm::uvec3(3, 4, 5));
-
-	floor_obj_vertices.push_back(glm::vec4(0.0f, -2.0f, 0.0f, 1.0f)); // 0
-	floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	floor_obj_vertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)); // 1
-	floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	floor_obj_vertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)); // 2
-	floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	floor_obj_vertices.push_back(glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f)); // 3
-	floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	floor_obj_vertices.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f)); // 4
-	floor_vtx_normals.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	floor_obj_faces.push_back(glm::uvec3(0, 2, 1));
-	floor_obj_faces.push_back(glm::uvec3(0, 3, 2));
-	floor_obj_faces.push_back(glm::uvec3(0, 4, 3));
-	floor_obj_faces.push_back(glm::uvec3(0, 1, 4));
-}
-
 int main(int argc, char* argv[])
 {
 	std::string window_title = "Menger";
 	if (!glfwInit()) exit(EXIT_FAILURE);
+	g_floor = std::make_shared<Floor>();
 	g_menger = std::make_shared<Menger>();
 	glfwSetErrorCallback(ErrorCallback);
 
@@ -299,7 +256,7 @@ int main(int argc, char* argv[])
     std::vector<glm::vec4> floor_vtx_normals;
     std::vector<glm::uvec3> floor_obj_faces;
 
-    create_floor(floor_obj_vertices, floor_vtx_normals, floor_obj_faces);
+    g_floor->create_floor(floor_obj_vertices, floor_vtx_normals, floor_obj_faces);
 
 
   // Switch to Floor VAO.
