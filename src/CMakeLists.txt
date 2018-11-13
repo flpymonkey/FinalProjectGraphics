@@ -1,7 +1,7 @@
 SET(pwd ${CMAKE_CURRENT_LIST_DIR})
 
 AUX_SOURCE_DIRECTORY(${pwd} src)
-add_executable(menger ${src})
-message(STATUS "menger added")
+add_executable(lens ${src})
+message(STATUS "lens added")
 
-target_link_libraries(menger ${stdgl_libraries})
+target_link_libraries(lens ${stdgl_libraries})
