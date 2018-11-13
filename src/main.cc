@@ -21,6 +21,10 @@ int window_width = 800, window_height = 600;
 double prev_x = 0;
 double prev_y = 0;
 
+// Used to brighten hdr exposure shader as described in this tutorial:
+// https://learnopengl.com/Advanced-Lighting/HDR
+float exposure = 1.0f;
+
 bool fps_mode = true;
 
 // VBO and VAO descriptors.
@@ -110,34 +114,71 @@ void main()
 }
 )zzz";
 
+// hdr shader which uses Reinhard tone mapping for high dynamic range
 const char* screen_fragment_shader =
 R"zzz(#version 330 core
+out vec4 fragment_color;
 in vec2 TexCoords;
 uniform sampler2D screenTexture;
 
-uniform int uGhosts; // number of ghost samples: set to 3
-uniform float uGhostDispersal; // dispersion factor
+uniform float exposure;
 
-out vec4 fragment_color;
+void main()
+{
+		const float gamma = 2.2;
+    vec3 hdrColor = texture(screenTexture, TexCoords).rgb;
 
-void main() {
-  vec2 texcoord = -TexCoords + vec2(1.0);
-  vec2 texelSize = 1.0 / vec2(textureSize(screenTexture, 0));
+		// Exposure tone mapping
+    vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
+    // gamma correction
+    mapped = pow(mapped, vec3(1.0 / gamma));
 
-// ghost vector to image centre:
-  vec2 ghostVec = (vec2(0.5) - texcoord) * 1; // uGhostDispersal
-
-// sample ghosts:
-  vec4 result = vec4(0.0);
-  for (int i = 0; i < 3; ++i) { // number of ghost samples: set to 3
-     vec2 offset = fract(texcoord + ghostVec * float(i));
-
-     result += texture(screenTexture, offset);
-  }
-
-  fragment_color = result;
+    fragment_color = vec4(mapped, 1.0);
 }
 )zzz";
+
+// // this is the standard screen_fragment_shader, simply copies pixels with no post-processing
+// const char* screen_fragment_shader =
+// R"zzz(#version 330 core
+// out vec4 fragment_color;
+// in vec2 TexCoords;
+// uniform sampler2D screenTexture;
+// void main()
+// {
+//     vec3 col = texture(screenTexture, TexCoords).rgb;
+//     fragment_color = vec4(col, 1.0);
+// }
+// )zzz";
+
+// This fragment shader is the basis for doing lens flare's, but it does trippy stuff
+// const char* screen_fragment_shader =
+// R"zzz(#version 330 core
+// in vec2 TexCoords;
+// uniform sampler2D screenTexture;
+//
+// uniform int uGhosts; // number of ghost samples: set to 3
+// uniform float uGhostDispersal; // dispersion factor
+//
+// out vec4 fragment_color;
+//
+// void main() {
+//   vec2 texcoord = -TexCoords + vec2(1.0);
+//   vec2 texelSize = 1.0 / vec2(textureSize(screenTexture, 0));
+//
+// // ghost vector to image centre:
+//   vec2 ghostVec = (vec2(0.5) - texcoord) * 10; // uGhostDispersal
+//
+// // sample ghosts:
+//   vec4 result = vec4(0.0);
+//   for (int i = 0; i < 3; ++i) { // number of ghost samples: set to 3
+//      vec2 offset = fract(texcoord + ghostVec * float(i));
+//
+//      result += texture(screenTexture, offset);
+//   }
+//
+//   fragment_color = result;
+// }
+// )zzz";
 
 
 
@@ -204,7 +245,20 @@ KeyCallback(GLFWwindow* window,
 		}
 	} else if (key == GLFW_KEY_C && action != GLFW_RELEASE) {
 		fps_mode = !fps_mode;
+	} else if (key == GLFW_KEY_Q && action != GLFW_RELEASE){
+		// Adjust exposure down
+		printf("%s\n", "DOWN");
+		if (exposure > 0.0f){
+			exposure -= 0.1f;
+		} else {
+			exposure = 0.0f;
+		}
+	} else if (key == GLFW_KEY_E && action != GLFW_RELEASE) {
+		printf("%s\n", "UP");
+		// Adjust exposure up
+		exposure += 0.1f;
 	}
+
 	if (!g_menger)
 		return ; // 0-4 only available in Menger mode.
 	if (key == GLFW_KEY_0 && action != GLFW_RELEASE) {
@@ -515,7 +569,7 @@ int main(int argc, char* argv[])
 	CHECK_GL_ERROR(floor_light_position_location =
 			glGetUniformLocation(floor_program_id, "light_position"));
 
-	glm::vec4 light_position = glm::vec4(10.0f, 10.0f, 10.0f, 1.0f);
+	glm::vec4 light_position = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
 	float aspect = 0.0f;
 	float theta = 0.0f;
 
@@ -590,7 +644,7 @@ int main(int argc, char* argv[])
 	unsigned int textureColorBuffer;
 	glGenTextures(1, &textureColorBuffer);
 	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_width, window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBuffer, 0);
@@ -674,7 +728,7 @@ int main(int argc, char* argv[])
     // Switch to Floor VAO.
     CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kFloorVao]));
 
-        // Use our program.
+    // Use our program.
 		CHECK_GL_ERROR(glUseProgram(floor_program_id));
 
 		// Pass uniforms in.
@@ -693,12 +747,17 @@ int main(int argc, char* argv[])
     glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
     // clear all relevant buffers
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Use our program.
 		CHECK_GL_ERROR(glUseProgram(screen_program_id));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+		// Set the exposure in the shader
+		glUniform1f(glGetUniformLocation(screen_program_id, "exposure"), exposure);
+
     glBindVertexArray(quadVAO);
-    glBindTexture(GL_TEXTURE_2D, textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		// Poll and swap.
