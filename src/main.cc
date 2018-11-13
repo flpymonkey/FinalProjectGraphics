@@ -247,16 +247,14 @@ KeyCallback(GLFWwindow* window,
 		fps_mode = !fps_mode;
 	} else if (key == GLFW_KEY_Q && action != GLFW_RELEASE){
 		// Adjust exposure down
-		printf("%s\n", "DOWN");
 		if (exposure > 0.0f){
-			exposure -= 0.1f;
+			exposure -= 0.02f;
 		} else {
 			exposure = 0.0f;
 		}
 	} else if (key == GLFW_KEY_E && action != GLFW_RELEASE) {
-		printf("%s\n", "UP");
 		// Adjust exposure up
-		exposure += 0.1f;
+		exposure += 0.02f;
 	}
 
 	if (!g_menger)
