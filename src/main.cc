@@ -19,12 +19,15 @@
 #include "floor.h"
 #include "menger.h"
 #include "camera.h"
+#include "controller.h"
 
-int window_width = 800, window_height = 600;
-double prev_x = 0;
-double prev_y = 0;
+int window_width = 800;
+int window_height = 600;
 
-bool fps_mode = true;
+Floor* g_floor;
+Menger* g_menger;
+Camera* g_camera;
+Controller* g_controller;
 
 // VBO and VAO descriptors.
 enum { kVertexBuffer, kNormalBuffer, kIndexBuffer, kNumVbos };
@@ -54,120 +57,16 @@ ErrorCallback(int error, const char* description)
 	std::cerr << "GLFW Error: " << description << "\n";
 }
 
-std::shared_ptr<Floor> g_floor;
-std::shared_ptr<Menger> g_menger;
-Camera g_camera;
-
-void
-KeyCallback(GLFWwindow* window,
-            int key,
-            int scancode,
-            int action,
-            int mods)
-{
-	// Note:
-	// This is only a list of functions to implement.
-	// you may want to re-organize this piece of code.
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
-	else if (key == GLFW_KEY_W && action != GLFW_RELEASE) {
-		if (fps_mode){
-			g_camera.forwardTranslate();
-		} else {
-			g_camera.zoomForward();
-		}
-	} else if (key == GLFW_KEY_S && action != GLFW_RELEASE) {
-		if (fps_mode){
-			g_camera.backwardTranslate();
-		} else {
-			g_camera.zoomBackward();
-		}
-	} else if (key == GLFW_KEY_A && action != GLFW_RELEASE) {
-		if (fps_mode){
-			g_camera.leftTranslate();
-		} else {
-			g_camera.rightCenter();
-		}
-	} else if (key == GLFW_KEY_D && action != GLFW_RELEASE) {
-		if (fps_mode) {
-			g_camera.rightTranslate();
-		} else {
-			g_camera.leftCenter();
-		}
-	} else if (key == GLFW_KEY_LEFT && action != GLFW_RELEASE) {
-		g_camera.rollLeft();
-	} else if (key == GLFW_KEY_RIGHT && action != GLFW_RELEASE) {
-		g_camera.rollRight();
-	} else if (key == GLFW_KEY_DOWN && action != GLFW_RELEASE) {
-		if (fps_mode){
-			g_camera.downTranslate();
-		} else {
-			g_camera.downCenter();
-		}
-	} else if (key == GLFW_KEY_UP && action != GLFW_RELEASE) {
-		if (fps_mode){
-			g_camera.upTranslate();
-		} else {
-			g_camera.upCenter();
-		}
-	} else if (key == GLFW_KEY_C && action != GLFW_RELEASE) {
-		fps_mode = !fps_mode;
-	}
-	if (!g_menger)
-		return ; // 0-4 only available in Menger mode.
-	if (key == GLFW_KEY_0 && action != GLFW_RELEASE) {
-		g_menger->set_nesting_level(0);
-	} else if (key == GLFW_KEY_1 && action != GLFW_RELEASE) {
-		g_menger->set_nesting_level(1);
-	} else if (key == GLFW_KEY_2 && action != GLFW_RELEASE) {
-		g_menger->set_nesting_level(2);
-	} else if (key == GLFW_KEY_3 && action != GLFW_RELEASE) {
-		g_menger->set_nesting_level(3);
-	} else if (key == GLFW_KEY_4 && action != GLFW_RELEASE) {
-		g_menger->set_nesting_level(4);
-	}
-}
-
-int g_current_button;
-bool g_mouse_pressed;
-
-void
-MousePosCallback(GLFWwindow* window, double mouse_x, double mouse_y)
-{
-	// FIXME COULD BE WEIRD RESULT IF MOUSE IS INITIALLY PRESSED ON GAME START
-	if (!g_mouse_pressed){
-		prev_x = mouse_x;
-		prev_y = mouse_y;
-		return;
-	}
-	if (g_current_button == GLFW_MOUSE_BUTTON_LEFT) {
-		if (fps_mode) {
-			g_camera.dynamicCenterRotate(prev_x, prev_y, mouse_x, mouse_y, window_width, window_height);
-		} else {
-			g_camera.dynamicEyeRotate(prev_x, prev_y, mouse_x, mouse_y, window_width, window_height);
-		}
-	} else if (g_current_button == GLFW_MOUSE_BUTTON_RIGHT) {
-		g_camera.dynamicZoom(prev_y, mouse_y, window_width, window_height);
-	} else if (g_current_button == GLFW_MOUSE_BUTTON_MIDDLE) {
-		// FIXME: middle drag
-	}
-	prev_x = mouse_x;
-	prev_y = mouse_y;
-}
-
-void
-MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
-{
-	g_mouse_pressed = (action == GLFW_PRESS);
-	g_current_button = button;
-}
-
 int main(int argc, char* argv[])
 {
 	std::string window_title = "Menger";
 	if (!glfwInit()) exit(EXIT_FAILURE);
-	g_floor = std::make_shared<Floor>();
-	g_menger = std::make_shared<Menger>();
+
+	// Setup
+	g_floor = new Floor();
+	g_menger = new Menger();
+	g_camera = new Camera();
+
 	glfwSetErrorCallback(ErrorCallback);
 
 	// Ask an OpenGL 3.3 core profile context
@@ -182,11 +81,12 @@ int main(int argc, char* argv[])
 	glfwMakeContextCurrent(window);
 	glewExperimental = GL_TRUE;
 
+	// Controller
+	g_controller = new Controller(window, g_camera, g_menger);
+
 	CHECK_SUCCESS(glewInit() == GLEW_OK);
 	glGetError();  // clear GLEW's error for it
-	glfwSetKeyCallback(window, KeyCallback);
-	glfwSetCursorPosCallback(window, MousePosCallback);
-	glfwSetMouseButtonCallback(window, MouseButtonCallback);
+
 	glfwSwapInterval(1);
 	const GLubyte* renderer = glGetString(GL_RENDERER);  // get renderer string
 	const GLubyte* version = glGetString(GL_VERSION);    // version as a string
@@ -405,7 +305,7 @@ int main(int argc, char* argv[])
 		glm::mat4 projection_matrix =
 			glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
 
-		glm::mat4 view_matrix = g_camera.get_view_matrix();
+		glm::mat4 view_matrix = g_camera->get_view_matrix();
 
 		// Send vertices to the GPU.
 		CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER,

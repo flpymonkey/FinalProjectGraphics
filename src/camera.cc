@@ -8,6 +8,9 @@ namespace {
 	float zoom_speed = 0.1f;
 };
 
+Camera::Camera() {}
+Camera::~Camera() {}
+
 // FIXME: Calculate the view matrix
 glm::mat4 Camera::get_view_matrix() const
 {
