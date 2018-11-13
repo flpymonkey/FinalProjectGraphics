@@ -56,82 +56,14 @@ const char* floor_fragment_shader =
 ;
 
 const char* screen_vertex_shader =
-R"zzz(#version 330 core
-in vec2 vertex_position;
-in vec2 aTexCoords;
-out vec2 TexCoords;
-void main()
-{
-    TexCoords = aTexCoords;
-    gl_Position = vec4(vertex_position.x, vertex_position.y, 0.0, 1.0);
-}
-)zzz";
+#include "shaders/screen_default.vert"
+;
 
 // hdr shader which uses Reinhard tone mapping for high dynamic range
 const char* screen_fragment_shader =
-R"zzz(#version 330 core
-out vec4 fragment_color;
-in vec2 TexCoords;
-uniform sampler2D screenTexture;
+#include "shaders/screen_hdr.frag"
+;
 
-uniform float exposure;
-
-void main()
-{
-		const float gamma = 2.2;
-    vec3 hdrColor = texture(screenTexture, TexCoords).rgb;
-
-		// Exposure tone mapping
-    vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
-    // gamma correction
-    mapped = pow(mapped, vec3(1.0 / gamma));
-
-    fragment_color = vec4(mapped, 1.0);
-}
-)zzz";
-
-// // this is the standard screen_fragment_shader, simply copies pixels with no post-processing
-// const char* screen_fragment_shader =
-// R"zzz(#version 330 core
-// out vec4 fragment_color;
-// in vec2 TexCoords;
-// uniform sampler2D screenTexture;
-// void main()
-// {
-//     vec3 col = texture(screenTexture, TexCoords).rgb;
-//     fragment_color = vec4(col, 1.0);
-// }
-// )zzz";
-
-// This fragment shader is the basis for doing lens flare's, but it does trippy stuff
-// const char* screen_fragment_shader =
-// R"zzz(#version 330 core
-// in vec2 TexCoords;
-// uniform sampler2D screenTexture;
-//
-// uniform int uGhosts; // number of ghost samples: set to 3
-// uniform float uGhostDispersal; // dispersion factor
-//
-// out vec4 fragment_color;
-//
-// void main() {
-//   vec2 texcoord = -TexCoords + vec2(1.0);
-//   vec2 texelSize = 1.0 / vec2(textureSize(screenTexture, 0));
-//
-// // ghost vector to image centre:
-//   vec2 ghostVec = (vec2(0.5) - texcoord) * 10; // uGhostDispersal
-//
-// // sample ghosts:
-//   vec4 result = vec4(0.0);
-//   for (int i = 0; i < 3; ++i) { // number of ghost samples: set to 3
-//      vec2 offset = fract(texcoord + ghostVec * float(i));
-//
-//      result += texture(screenTexture, offset);
-//   }
-//
-//   fragment_color = result;
-// }
-// )zzz";
 
 void
 ErrorCallback(int error, const char* description)
