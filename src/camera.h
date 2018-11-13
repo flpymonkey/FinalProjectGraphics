@@ -7,6 +7,9 @@
 
 class Camera {
 public:
+	Camera();
+	~Camera();
+	
 	glm::mat4 get_view_matrix() const;
 	// FIXME: add functions to manipulate camera objects.
 	glm::vec3 get_mouse_move_direction(int, int, float, float, float);
