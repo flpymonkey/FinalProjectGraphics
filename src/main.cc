@@ -120,71 +120,8 @@ int main(int argc, char* argv[])
 
 	glEnable(GL_CULL_FACE); // Added to see faces are correct.
 
-    // FIXME: Create the geometry from a Menger object (in menger.cc).
-    std::vector<glm::vec4> obj_vertices;
-    std::vector<glm::vec4> vtx_normals;
-    std::vector<glm::uvec3> obj_faces;
-
-	g_menger->set_nesting_level(1);
-	g_menger->generate_geometry(obj_vertices, vtx_normals, obj_faces);
-	g_menger->set_clean();
-
-	glm::vec4 min_bounds = glm::vec4(std::numeric_limits<float>::max());
-	glm::vec4 max_bounds = glm::vec4(-std::numeric_limits<float>::max());
-	for (int i = 0; i < obj_vertices.size(); ++i) {
-		min_bounds = glm::min(obj_vertices[i], min_bounds);
-		max_bounds = glm::max(obj_vertices[i], max_bounds);
-	}
-	std::cout << "min_bounds = " << glm::to_string(min_bounds) << "\n";
-	std::cout << "max_bounds = " << glm::to_string(max_bounds) << "\n";
-
-	// Setup our VAO array.
-	CHECK_GL_ERROR(glGenVertexArrays(kNumVaos, &g_array_objects[0]));
-
-	// Switch to the VAO for Geometry.
-	CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kGeometryVao]));
-
-	// Generate buffer objects
-	CHECK_GL_ERROR(glGenBuffers(kNumVbos, &g_buffer_objects[kGeometryVao][0]));
-
-	// Setup vertex data in a VBO.
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kVertexBuffer]));
-	// NOTE: We do not send anything right now, we just describe it to OpenGL.
-	CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-				sizeof(float) * obj_vertices.size() * 4, nullptr,
-				GL_STATIC_DRAW));
-	CHECK_GL_ERROR(glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0));
-	CHECK_GL_ERROR(glEnableVertexAttribArray(0));
-
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kNormalBuffer]));
-	// NOTE: We do not send anything right now, we just describe it to OpenGL.
-	CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-				sizeof(float) * vtx_normals.size() * 4, nullptr,
-				GL_STATIC_DRAW));
-	CHECK_GL_ERROR(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0));
-	CHECK_GL_ERROR(glEnableVertexAttribArray(1));
-
-	// Setup element array buffer.
-	CHECK_GL_ERROR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kIndexBuffer]));
-	CHECK_GL_ERROR(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-				sizeof(uint32_t) * obj_faces.size() * 3,
-				&obj_faces[0], GL_STATIC_DRAW));
-
-	/*
- 	 * So far the geometry is loaded into g_buffer_objects[kGeometryVao][*].
-	 * These buffers are bound to g_array_objects[kGeometryVao]
-	 */
-
-    // <<<Floor Data>>>
-    std::vector<glm::vec4> floor_vertices;
-    std::vector<glm::vec4> floor_normals;
-    std::vector<glm::uvec3> floor_faces;
-
-    g_floor->create_floor(floor_vertices, floor_normals, floor_faces);
-    // <<<Floor Data>>>
-
-    // <<<Floor Renderpass>>>
-    projection_matrix = glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
+	// <<<Renderpass Setup>>>
+ 	projection_matrix = glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
 	view_matrix = g_camera->get_view_matrix();
 	model_matrix = glm::mat4(1.0f);
 	glm::vec4 light_position = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
@@ -220,10 +157,18 @@ int main(int argc, char* argv[])
  //    auto std_model_data = [&mats]() -> const void* {
 	// 	return mats.model;
 	// }; // This returns point to model matrix
+
+	glm::mat4 menger_model_matrix = glm::mat4(1.0f);
+	auto menger_model_data = [&menger_model_matrix]() -> const void* {
+		return &menger_model_matrix[0][0];
+	}; // This return model matrix for the menger.
+
 	glm::mat4 floor_model_matrix = glm::mat4(1.0f);
 	auto floor_model_data = [&floor_model_matrix]() -> const void* {
 		return &floor_model_matrix[0][0];
 	}; // This return model matrix for the floor.
+
+
 	auto std_view_data = [&mats]() -> const void* {
 		return mats.view;
 	};
@@ -246,13 +191,43 @@ int main(int argc, char* argv[])
 	// };
 
     //ShaderUniform std_model = { "model", matrix_binder, std_model_data };
+    ShaderUniform menger_model = { "model", matrix_binder, menger_model_data};
 	ShaderUniform floor_model = { "model", matrix_binder, floor_model_data};
 	ShaderUniform std_view = { "view", matrix_binder, std_view_data };
 	//ShaderUniform std_camera = { "camera_position", vector3_binder, std_camera_data };
 	ShaderUniform std_proj = { "projection", matrix_binder, std_proj_data };
 	ShaderUniform std_light = { "light_position", vector_binder, std_light_data };
 	//ShaderUniform object_alpha = { "alpha", float_binder, alpha_data };
+	// <<<RenderPass Setup>>>
 
+    // <<<Menger Data>>>
+    std::vector<glm::vec4> menger_vertices;
+    std::vector<glm::vec4> menger_normals;
+    std::vector<glm::uvec3> menger_faces;
+
+	g_menger->set_nesting_level(1);
+	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces);
+	g_menger->set_clean();
+
+	glm::vec4 min_bounds = glm::vec4(std::numeric_limits<float>::max());
+	glm::vec4 max_bounds = glm::vec4(-std::numeric_limits<float>::max());
+	for (int i = 0; i < menger_vertices.size(); ++i) {
+		min_bounds = glm::min(menger_vertices[i], min_bounds);
+		max_bounds = glm::max(menger_vertices[i], max_bounds);
+	}
+	std::cout << "min_bounds = " << glm::to_string(min_bounds) << "\n";
+	std::cout << "max_bounds = " << glm::to_string(max_bounds) << "\n";
+	// <<<Menger Data>>>
+
+    // <<<Floor Data>>>
+    std::vector<glm::vec4> floor_vertices;
+    std::vector<glm::vec4> floor_normals;
+    std::vector<glm::uvec3> floor_faces;
+
+    g_floor->create_floor(floor_vertices, floor_normals, floor_faces);
+    // <<<Floor Data>>>
+
+    // <<<Floor Renderpass>>>
 	RenderDataInput floor_pass_input;
 	floor_pass_input.assign(0, "vertex_position", floor_vertices.data(), floor_vertices.size(), 4, GL_FLOAT);
 	floor_pass_input.assign(1, "normal", floor_normals.data(), floor_normals.size(), 4, GL_FLOAT);
@@ -264,57 +239,6 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
     // <<<Floor Renderpass>>>
-
-	// Setup vertex shader.
-	GLuint vertex_shader_id = 0;
-	const char* vertex_source_pointer = vertex_shader;
-	CHECK_GL_ERROR(vertex_shader_id = glCreateShader(GL_VERTEX_SHADER));
-	CHECK_GL_ERROR(glShaderSource(vertex_shader_id, 1, &vertex_source_pointer, nullptr));
-	glCompileShader(vertex_shader_id);
-	CHECK_GL_SHADER_ERROR(vertex_shader_id);
-
-	// Setup fragment shader.
-	GLuint fragment_shader_id = 0;
-	const char* fragment_source_pointer = fragment_shader;
-	CHECK_GL_ERROR(fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER));
-	CHECK_GL_ERROR(glShaderSource(fragment_shader_id, 1, &fragment_source_pointer, nullptr));
-	glCompileShader(fragment_shader_id);
-	CHECK_GL_SHADER_ERROR(fragment_shader_id);
-
-	// Let's create our program.
-	GLuint program_id = 0;
-	CHECK_GL_ERROR(program_id = glCreateProgram());
-	CHECK_GL_ERROR(glAttachShader(program_id, vertex_shader_id));
-	CHECK_GL_ERROR(glAttachShader(program_id, fragment_shader_id));
-
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kVertexBuffer]));
-	// NOTE: We do not send anything right now, we just describe it to OpenGL.
-	CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-				sizeof(float) * obj_vertices.size() * 4, nullptr,
-				GL_STATIC_DRAW));
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kNormalBuffer]));
-	// NOTE: We do not send anything right now, we just describe it to OpenGL.
-	CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-				sizeof(float) * vtx_normals.size() * 4, nullptr,
-				GL_STATIC_DRAW));
-	// Bind attributes.
-	CHECK_GL_ERROR(glBindAttribLocation(program_id, 0, "vertex_position"));
-
-	CHECK_GL_ERROR(glBindAttribLocation(program_id, 1, "vertex_normal"));
-	CHECK_GL_ERROR(glBindFragDataLocation(program_id, 0, "fragment_color"));
-	glLinkProgram(program_id);
-	CHECK_GL_PROGRAM_ERROR(program_id);
-
-	// Get the uniform locations.
-	GLint projection_matrix_location = 0;
-	CHECK_GL_ERROR(projection_matrix_location =
-			glGetUniformLocation(program_id, "projection"));
-	GLint view_matrix_location = 0;
-	CHECK_GL_ERROR(view_matrix_location =
-			glGetUniformLocation(program_id, "view"));
-	GLint light_position_location = 0;
-	CHECK_GL_ERROR(light_position_location =
-			glGetUniformLocation(program_id, "light_position"));
 
 	float theta = 0.0f;
 
@@ -418,11 +342,11 @@ int main(int argc, char* argv[])
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Switch to the Geometry VAO.
-		CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kGeometryVao]));
+		// // Switch to the Geometry VAO.
+		// CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kGeometryVao]));
 
 		if (g_menger && g_menger->is_dirty()) {
-		  g_menger->generate_geometry(obj_vertices, vtx_normals, obj_faces);
+		  	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces);
 			g_menger->set_clean();
 		}
 
@@ -433,34 +357,21 @@ int main(int argc, char* argv[])
 
 		view_matrix = g_camera->get_view_matrix();
 
-		// Send vertices to the GPU.
-		CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER,
-		                            g_buffer_objects[kGeometryVao][kVertexBuffer]));
-		CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-		                            sizeof(float) * obj_vertices.size() * 4,
-		                            &obj_vertices[0], GL_STATIC_DRAW));
-		CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER,
-		                            g_buffer_objects[kGeometryVao][kNormalBuffer]));
-		CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-		                            sizeof(float) * vtx_normals.size() * 4,
-		                            &vtx_normals[0], GL_STATIC_DRAW));
-		CHECK_GL_ERROR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kIndexBuffer]));
-		CHECK_GL_ERROR(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-					sizeof(uint32_t) * obj_faces.size() * 3,
-					&obj_faces[0], GL_STATIC_DRAW));
+		// <<<Render Menger>>>
+		RenderDataInput menger_pass_input;
+		menger_pass_input.assign(0, "vertex_position", menger_vertices.data(), menger_vertices.size(), 4, GL_FLOAT);
+		menger_pass_input.assign(1, "normal", menger_normals.data(), menger_normals.size(), 4, GL_FLOAT);
+		menger_pass_input.assign_index(menger_faces.data(), menger_faces.size(), 3);
+		RenderPass menger_pass(-1,
+				menger_pass_input,
+				{ vertex_shader, NULL, fragment_shader},
+				{ menger_model, std_view, std_proj, std_light },
+				{ "fragment_color" }
+				);
 
-		// Use our program.
-		CHECK_GL_ERROR(glUseProgram(program_id));
-
-		// Pass uniforms in.
-		CHECK_GL_ERROR(glUniformMatrix4fv(projection_matrix_location, 1, GL_FALSE,
-					&projection_matrix[0][0]));
-		CHECK_GL_ERROR(glUniformMatrix4fv(view_matrix_location, 1, GL_FALSE,
-					&view_matrix[0][0]));
-		CHECK_GL_ERROR(glUniform4fv(light_position_location, 1, &light_position[0]));
-
-		// Draw our triangles.
-		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, obj_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		menger_pass.setup();
+		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		// <<<Render Menger>>>
 
 		// <<<Render Floor>>>
 		floor_pass.setup();
