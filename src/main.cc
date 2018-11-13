@@ -20,6 +20,7 @@
 #include "menger.h"
 #include "camera.h"
 #include "controller.h"
+#include "render_pass.h"
 
 int window_width = 800;
 int window_height = 600;
