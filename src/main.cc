@@ -22,11 +22,13 @@
 #include "controller.h"
 #include "render_pass.h"
 
+// Lights Tutorial
+#include "shader.h"
 
 // assimp
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+// #include <assimp/Importer.hpp>
+// #include <assimp/scene.h>
+// #include <assimp/postprocess.h>
 
 struct MatrixPointers {
 	const float *projection, *model, *view;
@@ -51,7 +53,7 @@ Camera* g_camera;
 Controller* g_controller;
 
 // Ass importer
-Assimp::Importer importer;
+// Assimp::Importer importer;
 
 // error while loading shared libraries: libassimp.so.3:
 // cannot open shared object file: No such file or directory
