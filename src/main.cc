@@ -22,6 +22,11 @@
 #include "controller.h"
 #include "render_pass.h"
 
+// assimp
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 int window_width = 800;
 int window_height = 600;
 
@@ -33,6 +38,12 @@ Floor* g_floor;
 Menger* g_menger;
 Camera* g_camera;
 Controller* g_controller;
+
+// Ass importer
+Assimp::Importer importer;
+
+// error while loading shared libraries: libassimp.so.3:
+// cannot open shared object file: No such file or directory
 
 // VBO and VAO descriptors.
 enum { kVertexBuffer, kNormalBuffer, kIndexBuffer, kNumVbos };
