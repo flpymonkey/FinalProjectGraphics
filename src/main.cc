@@ -30,18 +30,6 @@
 // #include <assimp/scene.h>
 // #include <assimp/postprocess.h>
 
-struct PointLight {
-    glm::vec3 position;
-
-    float constant;
-    float linear;
-    float quadratic;
-
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
-};
-
 struct MatrixPointers {
 	const float *projection, *model, *view;
 };
@@ -402,6 +390,8 @@ int main(int argc, char* argv[])
 				{ menger_model, std_view, std_proj, std_light, std_view_position },
 				{ "fragment_color" }
 				);
+
+		menger_pass.loadLights();
 
 		menger_pass.setup();
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));

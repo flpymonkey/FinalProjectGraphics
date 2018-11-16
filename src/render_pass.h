@@ -150,6 +150,29 @@ public:
 	 * corresponding uniforms for Phong shading.
 	 */
 	bool renderWithMaterial(int i); // return false if material id is invalid
+
+	// <<<Lights>>>
+	void loadLights() {
+		glUseProgram(sp_); 
+		setVec3("pointLights[0].position", glm::vec3(5.0f, 5.0f, 5.0f));
+        setVec3("pointLights[0].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+        setVec3("pointLights[0].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+        setVec3("pointLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+        setFloat("pointLights[0].constant", 1.0f);
+        setFloat("pointLights[0].linear", 0.09f);
+        setFloat("pointLights[0].quadratic", 0.032f);
+	}
+
+	void setFloat(const std::string &name, const float value) const
+    { 
+        glUniform1f(glGetUniformLocation(sp_, name.c_str()), value); 
+    }
+
+	void setVec3(const std::string &name, const glm::vec3 &value) const
+    { 
+        glUniform3fv(glGetUniformLocation(sp_, name.c_str()), 1, &value[0]); 
+    }
+	// <<<Lights>>>
 private:
 	void initMaterialUniform();
 	void createMaterialTexture();
