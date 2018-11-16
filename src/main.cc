@@ -30,6 +30,18 @@
 // #include <assimp/scene.h>
 // #include <assimp/postprocess.h>
 
+struct PointLight {
+    glm::vec3 position;
+
+    float constant;
+    float linear;
+    float quadratic;
+
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+};
+
 struct MatrixPointers {
 	const float *projection, *model, *view;
 };
@@ -139,6 +151,7 @@ int main(int argc, char* argv[])
 	view_matrix = g_camera->get_view_matrix();
 	model_matrix = glm::mat4(1.0f);
 	glm::vec4 light_position = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
+
     //glm::vec4 light_position = glm::vec4(0.0f, 100.0f, 0.0f, 1.0f);
 	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
 	mats.projection = &projection_matrix[0][0];
@@ -195,6 +208,12 @@ int main(int argc, char* argv[])
 	auto std_light_data = [&light_position]() -> const void* {
 		return &light_position[0];
 	};
+
+	glm::vec4 eye_position = glm::vec4(g_camera->getPosition(), 1.0f);
+
+	auto std_view_position_data = [&eye_position]() -> const void* {
+		return &eye_position[0];
+	};
 	// auto alpha_data  = [&gui]() -> const void* {
 	// 	static const float transparet = 0.5; // Alpha constant goes here
 	// 	static const float non_transparet = 1.0;
@@ -211,6 +230,7 @@ int main(int argc, char* argv[])
 	//ShaderUniform std_camera = { "camera_position", vector3_binder, std_camera_data };
 	ShaderUniform std_proj = { "projection", matrix_binder, std_proj_data };
 	ShaderUniform std_light = { "light_position", vector_binder, std_light_data };
+	ShaderUniform std_view_position = { "view_position", vector_binder, std_view_position_data };
 	//ShaderUniform object_alpha = { "alpha", float_binder, alpha_data };
 	// <<<RenderPass Setup>>>
 
@@ -379,7 +399,7 @@ int main(int argc, char* argv[])
 		RenderPass menger_pass(-1,
 				menger_pass_input,
 				{ vertex_shader, NULL, fragment_shader},
-				{ menger_model, std_view, std_proj, std_light },
+				{ menger_model, std_view, std_proj, std_light, std_view_position },
 				{ "fragment_color" }
 				);
 
