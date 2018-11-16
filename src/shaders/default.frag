@@ -5,7 +5,7 @@ in vec4 world_normal;
 in vec4 world_position;
 out vec4 fragment_color;
 
-uniform vec3 view_position;
+uniform vec4 view_position;
 
 struct PointLight {
     vec3 position;
@@ -28,14 +28,14 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0);
+    float spec = max(dot(viewDir, reflectDir), 0.0);
     // attenuation
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
     // combine results
     vec3 ambient = light.ambient;
     vec3 diffuse = light.diffuse * diff;
-    vec3 specular = vec3(1.0, 1.0, 1.0) * 1.0;
+    vec3 specular = light.specular * spec;
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
