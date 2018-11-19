@@ -1,5 +1,10 @@
 #include "debuggl.h"
-#include <portable_gl.h>
+
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
+#include <GL/gl.h>
+#endif
 
 const char* DebugGLErrorToString(int error) {
 	switch (error) {

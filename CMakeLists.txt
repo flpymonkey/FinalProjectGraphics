@@ -21,6 +21,9 @@ IF (EXISTS ${CMAKE_SOURCE_DIR}/external)
   MESSAGE(STATUS "OpenGL: ${OPENGL_LIBRARIES}")
   LIST(APPEND stdgl_libraries ${OPENGL_gl_LIBRARY})
 
+  # Compile external dependencies
+  add_subdirectory (external)
+
   if (APPLE)
   	FIND_LIBRARY(COCOA_LIBRARY Cocoa REQUIRED)
   endif(APPLE)

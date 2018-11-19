@@ -13,7 +13,7 @@
 // OpenGL library includes
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <debuggl.h>
+#include "debuggl.h"
 
 // Classes
 #include "floor.h"
