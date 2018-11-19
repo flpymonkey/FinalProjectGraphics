@@ -44,24 +44,108 @@ GLuint g_buffer_objects[kNumVaos][kNumVbos];  // These will store VBO descriptor
 
 // Shaders
 const char* vertex_shader =
-#include "shaders/default.vert"
+R"zzz(#version 330 core
+in vec4 vertex_position;
+in vec4 vertex_normal;
+uniform mat4 view;
+uniform mat4 projection;
+uniform vec4 light_position;
+out vec4 light_direction;
+out vec4 normal;
+out vec4 world_normal;
+out vec4 world_position;
+void main()
+{
+// Transform vertex into clipping coordinates
+	gl_Position = projection * view * vertex_position;
+// Lighting in camera coordinates
+//  Compute light direction and transform to camera coordinates
+        light_direction = view * (light_position - vertex_position);
+//  Transform normal to camera coordinates
+        normal = view * vertex_normal;
+        world_normal = vertex_normal;
+        world_position = projection * view * vertex_position;
+}
+)zzz"
 ;
 
 const char* fragment_shader =
-#include "shaders/default.frag"
+R"zzz(#version 330 core
+in vec4 normal;
+in vec4 light_direction;
+in vec4 world_normal;
+out vec4 fragment_color;
+void main()
+{
+	vec4 color = abs(normalize(world_normal)) + vec4(0.0, 0.0, 0.0, 1.0);
+	float dot_nl = dot(normalize(light_direction), normalize(normal));
+	dot_nl = clamp(dot_nl, 0.0, 1.0);
+	fragment_color = clamp(dot_nl * color, 0.0, 1.0);
+}
+)zzz"
 ;
 
 const char* floor_fragment_shader =
-#include "shaders/floor.frag"
+R"zzz(#version 330 core
+in vec4 normal;
+in vec4 light_direction;
+in vec4 world_position;
+uniform mat4 view;
+uniform mat4 projection;
+uniform vec4 light_position;
+out vec4 fragment_color;
+void main()
+{
+	vec4 position = inverse(projection * view) * vec4(world_position.xyz / world_position.w, 1.0f);
+    position /= position.w;
+	vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
+    if (mod(floor(position[0]) + floor(position[2]), 2) == 0) {
+        color = vec4(1.0, 1.0, 1.0, 1.0);
+    }
+	float dot_nl = dot(normalize(light_direction), normalize(normal));
+	dot_nl = clamp(dot_nl, 0.0, 1.0);
+	fragment_color = clamp(dot_nl * color, 0.0, 1.0);
+}
+)zzz"
 ;
 
 const char* screen_vertex_shader =
-#include "shaders/screen_default.vert"
+R"zzz(#version 330 core
+in vec2 vertex_position;
+in vec2 aTexCoords;
+out vec2 TexCoords;
+void main()
+{
+    TexCoords = aTexCoords;
+    gl_Position = vec4(vertex_position.x, vertex_position.y, 0.0, 1.0);
+}
+)zzz"
+
 ;
 
 // hdr shader which uses Reinhard tone mapping for high dynamic range
 const char* screen_fragment_shader =
-#include "shaders/screen_hdr.frag"
+R"zzz(#version 330 core
+out vec4 fragment_color;
+in vec2 TexCoords;
+uniform sampler2D screenTexture;
+
+uniform float exposure;
+
+// hdr shader which uses Reinhard tone mapping for high dynamic range
+void main()
+{
+		const float gamma = 2.2;
+    vec3 hdrColor = texture(screenTexture, TexCoords).rgb;
+
+		// Exposure tone mapping
+    vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
+    // gamma correction
+    mapped = pow(mapped, vec3(1.0 / gamma));
+
+    fragment_color = vec4(mapped, 1.0);
+}
+)zzz"
 ;
 
 
