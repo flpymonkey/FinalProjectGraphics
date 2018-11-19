@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.3)
-project(GLSL)
+project(Final)
 
 IF (EXISTS ${CMAKE_SOURCE_DIR}/external)
   MESSAGE ("Using external directory for Windows/Mac build.")
