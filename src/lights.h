@@ -7,6 +7,7 @@
 class DirectionalLight {
 public:
     DirectionalLight();
+    DirectionalLight(glm::vec3 direction);
     ~DirectionalLight();
     
     void setDirection(glm::vec3 direction);
@@ -31,6 +32,7 @@ private:
 class PointLight {
 public:
     PointLight();
+    PointLight(glm::vec3 position);
     ~PointLight();
     
     void setPosition(glm::vec3 position);
@@ -55,10 +57,10 @@ public:
     float getQuadratic();
 	
 private:
-    vec3 position;
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
+    glm::vec3 position;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
     float constant;
     float linear;
     float quadratic;
@@ -67,6 +69,7 @@ private:
 class SpotLight {
 public:
     SpotLight();
+    SpotLight(glm::vec3 position, glm::vec3 direction);
     ~SpotLight();
     
     void setPosition(glm::vec3 position);
@@ -100,11 +103,11 @@ public:
     float getOuterCutOff();
 	
 private:
-    vec3 position;
-    vec3 direction;
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;  
+    glm::vec3 position;
+    glm::vec3 direction;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;  
     float constant;
     float linear;
     float quadratic;

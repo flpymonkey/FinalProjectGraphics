@@ -18,6 +18,7 @@
 #include <map>
 #include <functional>
 #include "material.h"
+#include "lights.h"
 
 /*
  * ShaderUniform: description of a uniform in a shader program.
@@ -152,25 +153,123 @@ public:
 	bool renderWithMaterial(int i); // return false if material id is invalid
 
 	// <<<Lights>>>
-	void loadLights() {
-		glUseProgram(sp_); 
-		setVec3("pointLights[0].position", glm::vec3(5.0f, 5.0f, 5.0f));
-        setVec3("pointLights[0].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-        setVec3("pointLights[0].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-        setVec3("pointLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-        setFloat("pointLights[0].constant", 1.0f);
-        setFloat("pointLights[0].linear", 0.09f);
-        setFloat("pointLights[0].quadratic", 0.032f);
+	// NOTE: Must be called when using default shaders.
+	// Source: https://learnopengl.com/Lighting/Multiple-lights
+	void loadLights(std::vector<DirectionalLight>& directionalLights, 
+		std::vector<PointLight>& pointLights, 
+		std::vector<SpotLight>& spotLights) {
+
+		int limit = 10; // Max Lights.
+
+		glUseProgram(sp_);
+
+		if (directionalLights.size() == 0 && pointLights.size() == 0 && spotLights.size() == 0) {
+			setInt("dLights", 1);
+			setInt("pLights", 0);
+			setInt("sLights", 0);
+
+			DirectionalLight directionalLight = DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f));
+			setVec3("directionalLights[0].position", directionalLight.getDirection());
+		    setVec3("directionalLights[0].ambient", directionalLight.getAmbient());
+		    setVec3("directionalLights[0].diffuse", directionalLight.getDiffuse());
+		    setVec3("directionalLights[0].specular", directionalLight.getSpecular());
+		}
+
+		int size = directionalLights.size();
+		if (size != 0) {
+			if (size > limit) {
+				size = limit;
+			}
+			setInt("dLights", size);
+			for (int dLight = 0; dLight < size; dLight++) {
+				setVec3("directionalLights[" + std::to_string(dLight) + "].position", directionalLights[dLight].getDirection());
+		        setVec3("directionalLights[" + std::to_string(dLight) + "].ambient", directionalLights[dLight].getAmbient());
+		        setVec3("directionalLights[" + std::to_string(dLight) + "].diffuse", directionalLights[dLight].getDiffuse());
+		        setVec3("directionalLights[" + std::to_string(dLight) + "].specular", directionalLights[dLight].getSpecular());
+	   		}
+   		}
+
+   		size = pointLights.size();
+   		if (size != 0) {
+   			if (size > limit) {
+				size = limit;
+			}
+	        setInt("pLights", size);
+	        for (int pLight = 0; pLight < size; pLight++) {
+				setVec3("pointLights[" + std::to_string(pLight) + "].position", pointLights[pLight].getPosition());
+		        setVec3("pointLights[" + std::to_string(pLight) + "].ambient", pointLights[pLight].getAmbient());
+		        setVec3("pointLights[" + std::to_string(pLight) + "].diffuse", pointLights[pLight].getDiffuse());
+		        setVec3("pointLights[" + std::to_string(pLight) + "].specular", pointLights[pLight].getSpecular());
+		        setFloat("pointLights[" + std::to_string(pLight) + "].constant", pointLights[pLight].getConstant());
+		        setFloat("pointLights[" + std::to_string(pLight) + "].linear", pointLights[pLight].getLinear());
+		        setFloat("pointLights[" + std::to_string(pLight) + "].quadratic", pointLights[pLight].getQuadratic());
+	    	}
+    	}
+
+    	size = spotLights.size();
+    	if (size != 0) {
+    		if (size > limit) {
+				size = limit;
+			}
+	        setInt("sLights", size);
+	        for (int sLight = 0; sLight < size; sLight++) {
+		        setVec3("spotLights[" + std::to_string(sLight) + "].position", spotLights[sLight].getPosition());
+		        setVec3("spotLights[" + std::to_string(sLight) + "].direction", spotLights[sLight].getDirection());
+		        setVec3("spotLights[" + std::to_string(sLight) + "].ambient", spotLights[sLight].getAmbient());
+		        setVec3("spotLights[" + std::to_string(sLight) + "].diffuse", spotLights[sLight].getDiffuse());
+		        setVec3("spotLights[" + std::to_string(sLight) + "].specular", spotLights[sLight].getSpecular());
+		        setFloat("spotLights[" + std::to_string(sLight) + "].constant", spotLights[sLight].getConstant());
+		        setFloat("spotLights[" + std::to_string(sLight) + "].linear", spotLights[sLight].getLinear());
+		        setFloat("spotLights[" + std::to_string(sLight) + "].quadratic", spotLights[sLight].getQuadratic());
+		        setFloat("spotLights[" + std::to_string(sLight) + "].cutOff", spotLights[sLight].getCutOff());
+		        setFloat("spotLights[" + std::to_string(sLight) + "].outerCutOff", spotLights[sLight].getOuterCutOff());
+    		}
+		}
 	}
+
+	void setBool(const std::string &name, const bool value) const
+    {         
+        glUniform1i(glGetUniformLocation(sp_, name.c_str()), (int)value); 
+    }
+
+	void setInt(const std::string &name, const int value) const
+    { 
+        glUniform1i(glGetUniformLocation(sp_, name.c_str()), value); 
+    }
 
 	void setFloat(const std::string &name, const float value) const
     { 
         glUniform1f(glGetUniformLocation(sp_, name.c_str()), value); 
     }
 
+    void setVec2(const std::string &name, const glm::vec2 &value) const
+    { 
+        glUniform2fv(glGetUniformLocation(sp_, name.c_str()), 1, &value[0]); 
+    }
+
 	void setVec3(const std::string &name, const glm::vec3 &value) const
     { 
         glUniform3fv(glGetUniformLocation(sp_, name.c_str()), 1, &value[0]); 
+    }
+
+    void setVec4(const std::string &name, const glm::vec4 &value) const
+    { 
+        glUniform4fv(glGetUniformLocation(sp_, name.c_str()), 1, &value[0]); 
+    }
+
+    void setMat2(const std::string &name, const glm::mat2 &mat) const
+    {
+        glUniformMatrix2fv(glGetUniformLocation(sp_, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    }
+
+    void setMat3(const std::string &name, const glm::mat3 &mat) const
+    {
+        glUniformMatrix3fv(glGetUniformLocation(sp_, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    }
+
+    void setMat4(const std::string &name, const glm::mat4 &mat) const
+    {
+        glUniformMatrix4fv(glGetUniformLocation(sp_, name.c_str()), 1, GL_FALSE, &mat[0][0]);
     }
 	// <<<Lights>>>
 private:

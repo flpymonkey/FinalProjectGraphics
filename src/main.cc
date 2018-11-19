@@ -21,9 +21,7 @@
 #include "camera.h"
 #include "controller.h"
 #include "render_pass.h"
-
-// Lights Tutorial
-#include "shader.h"
+#include "lights.h"
 
 // assimp
 // #include <assimp/Importer.hpp>
@@ -133,6 +131,22 @@ int main(int argc, char* argv[])
 	std::cout << "OpenGL version supported:" << version << "\n";
 
 	glEnable(GL_CULL_FACE); // Added to see faces are correct.
+
+	// <<<Lights>>>
+	std::vector<DirectionalLight> directionalLights;
+	DirectionalLight directionalLight = DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f));
+	//directionalLights.push_back(directionalLight);
+
+	std::vector<PointLight> pointLights;
+	PointLight pointLight = PointLight(glm::vec3(5.0f, 5.0f, 5.0f));
+	pointLights.push_back(pointLight);
+	pointLight = PointLight(glm::vec3(-5.0f, 5.0f, 5.0f));
+	pointLights.push_back(pointLight);
+
+	std::vector<SpotLight> spotLights;
+	SpotLight spotLight = SpotLight(glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+	//spotLights.push_back(spotLight);
+	// <<<Lights>>>
 
 	// <<<Renderpass Setup>>>
  	projection_matrix = glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
@@ -391,7 +405,7 @@ int main(int argc, char* argv[])
 				{ "fragment_color" }
 				);
 
-		menger_pass.loadLights();
+		menger_pass.loadLights(directionalLights, pointLights, spotLights);
 
 		menger_pass.setup();
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
