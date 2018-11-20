@@ -61,6 +61,7 @@ ENDIF()
 MESSAGE(STATUS "stdgl: ${stdgl_libraries}")
 
 ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(src/shaders)
 
 IF (EXISTS ${CMAKE_SOURCE_DIR}/sln/CMakeLists.txt)
 	ADD_SUBDIRECTORY(sln)
