@@ -9,7 +9,7 @@ class Camera {
 public:
 	Camera();
 	~Camera();
-	
+
 	glm::mat4 get_view_matrix() const;
 	// FIXME: add functions to manipulate camera objects.
 	glm::vec3 get_mouse_move_direction(int, int, float, float, float);
@@ -36,6 +36,10 @@ public:
 	void dynamicEyeRotate(double prev_x, double prev_y, double x, double y,
 		int window_width, int window_height);
 	void dynamicZoom(double prev_y, double y, int window_width, int window_height);
+
+	glm::vec3 getPosition(){
+		return eye_;
+	}
 
 
 private:

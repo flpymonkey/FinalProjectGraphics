@@ -1,10 +1,12 @@
 #ifndef DEBUGGL_H
 #define DEBUGGL_H
 
+void debugglTerminate();
+
 #define CHECK_SUCCESS(x)   \
   do {                     \
     if (!(x)) {            \
-      glfwTerminate();     \
+      debugglTerminate();     \
       exit(EXIT_FAILURE);  \
     }                      \
   } while (0)
@@ -23,7 +25,7 @@
                 << " OpenGL Shader Error: Log = \n"                         \
                 << &log[0];                                                 \
       std::cerr << length << " bytes\n";                                    \
-      glfwTerminate();                                                      \
+      debugglTerminate();                                                      \
       exit(EXIT_FAILURE);                                                   \
     }                                                                       \
   } while (0)
@@ -39,7 +41,7 @@
       glGetProgramInfoLog(id, length, nullptr, &log[0]);                     \
       std::cerr << "Line :" << __LINE__ << " OpenGL Program Error: Log = \n" \
                 << &log[0];                                                  \
-      glfwTerminate();                                                       \
+      debugglTerminate();                                                       \
       exit(EXIT_FAILURE);                                                    \
     }                                                                        \
   } while (0)
@@ -51,7 +53,7 @@
     if ((error = glGetError()) != GL_NO_ERROR) {                              \
       std::cerr << "Line :" << __LINE__ << " OpenGL Error: code  = " << error \
                 << " description =  " << DebugGLErrorToString(int(error));    \
-      glfwTerminate();                                                        \
+      debugglTerminate();                                                        \
       exit(EXIT_FAILURE);                                                     \
     }                                                                         \
   } while (0)

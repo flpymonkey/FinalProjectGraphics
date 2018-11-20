@@ -26,6 +26,23 @@
 #include "menger.h"
 #include "camera.h"
 #include "controller.h"
+#include "render_pass.h"
+#include "lights.h"
+
+// assimp
+// #include <assimp/Importer.hpp>
+// #include <assimp/scene.h>
+// #include <assimp/postprocess.h>
+
+struct MatrixPointers {
+	const float *projection, *model, *view;
+};
+
+glm::mat4 projection_matrix;
+glm::mat4 view_matrix;
+glm::mat4 model_matrix;
+
+float aspect = 0.0f;
 
 int window_width = 800;
 int window_height = 600;
@@ -38,6 +55,12 @@ Floor* g_floor;
 Menger* g_menger;
 Camera* g_camera;
 Controller* g_controller;
+
+// Ass importer
+// Assimp::Importer importer;
+
+// error while loading shared libraries: libassimp.so.3:
+// cannot open shared object file: No such file or directory
 
 // VBO and VAO descriptors.
 enum { kVertexBuffer, kNormalBuffer, kIndexBuffer, kNumVbos };
@@ -77,16 +100,146 @@ void main()
 
 const char* fragment_shader =
 R"zzz(#version 330 core
+
+// Source: https://learnopengl.com/Lighting/Multiple-lights
+
+struct Material {
+    sampler2D diffuse;
+    sampler2D specular;
+    float shininess;
+}; 
+
+struct DirectionalLight {
+    vec3 direction;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+struct PointLight {
+    vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float constant;
+    float linear;
+    float quadratic;
+};
+
+struct SpotLight {
+    vec3 position;
+    vec3 direction;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular; 
+    float constant;
+    float linear;
+    float quadratic;
+    float cutOff;
+    float outerCutOff;
+};
+
 in vec4 normal;
 in vec4 light_direction;
 in vec4 world_normal;
+in vec4 world_position;
+
+uniform vec4 view_position;
+
+uniform int dLights;
+uniform int pLights;
+uniform int sLights;
+
+uniform DirectionalLight directionalLights[10];
+uniform PointLight pointLights[10];
+uniform SpotLight spotLights[10];
+
 out vec4 fragment_color;
+
+// calculates the color when using a directional light.
+vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
+{
+    vec3 lightDir = normalize(-light.direction);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0); // material.shininess);
+    // combine results
+    vec3 ambient = light.ambient; // * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse = light.diffuse * diff; // * vec3(texture(material.diffuse, TexCoords));
+    vec3 specular = light.specular * spec; // * vec3(texture(material.specular, TexCoords));
+    return (ambient + diffuse + specular);
+}
+
+// calculates the color when using a point light.
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
+    vec3 lightDir = normalize(light.position - fragPos);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0); // material.shininess);
+    // attenuation
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+    // combine results
+    vec3 ambient = light.ambient; // * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse = light.diffuse * diff; // * vec3(texture(material.diffuse, TexCoords));
+    vec3 specular = light.specular * spec; // * vec3(texture(material.specular, TexCoords));
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+}
+
+// calculates the color when using a spot light.
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
+    vec3 lightDir = normalize(light.position - fragPos);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0); // material.shininess);
+    // attenuation
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+    // spotlight intensity
+    float theta = dot(lightDir, normalize(-light.direction)); 
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    // combine results
+    vec3 ambient = light.ambient; // * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse = light.diffuse * diff; // * vec3(texture(material.diffuse, TexCoords));
+    vec3 specular = light.specular * spec; // * vec3(texture(material.specular, TexCoords));
+    ambient *= attenuation * intensity;
+    diffuse *= attenuation * intensity;
+    specular *= attenuation * intensity;
+    return (ambient + diffuse + specular);
+}
+
 void main()
 {
 	vec4 color = abs(normalize(world_normal)) + vec4(0.0, 0.0, 0.0, 1.0);
-	float dot_nl = dot(normalize(light_direction), normalize(normal));
-	dot_nl = clamp(dot_nl, 0.0, 1.0);
-	fragment_color = clamp(dot_nl * color, 0.0, 1.0);
+
+	vec3 norm = vec3(normalize(normal));
+	vec3 viewDir = normalize(vec3(view_position) - vec3(world_position));
+
+    for (int dLight = 0; dLight < dLights; dLight++) {
+        fragment_color += vec4(CalcDirLight(directionalLights[dLight], norm, viewDir), 1.0);
+    }
+
+    for (int pLight = 0; pLight < pLights; pLight++) {
+	   fragment_color += vec4(CalcPointLight(pointLights[pLight], norm, vec3(world_position), viewDir), 1.0);
+    }
+
+    for (int sLight = 0; sLight < sLights; sLight++) {
+        fragment_color += vec4(CalcSpotLight(spotLights[sLight], norm, vec3(world_position), viewDir), 1.0);
+    }
+
+    fragment_color *= color;
 }
 )zzz"
 ;
@@ -199,189 +352,150 @@ int main(int argc, char* argv[])
 
 	glEnable(GL_CULL_FACE); // Added to see faces are correct.
 
-    // FIXME: Create the geometry from a Menger object (in menger.cc).
-    std::vector<glm::vec4> obj_vertices;
-    std::vector<glm::vec4> vtx_normals;
-    std::vector<glm::uvec3> obj_faces;
+	// <<<Lights>>>
+	std::vector<DirectionalLight> directionalLights;
+	DirectionalLight directionalLight = DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f));
+	directionalLights.push_back(directionalLight);
+
+	std::vector<PointLight> pointLights;
+	PointLight pointLight = PointLight(glm::vec3(5.0f, 5.0f, 5.0f));
+	//pointLights.push_back(pointLight);
+	pointLight = PointLight(glm::vec3(-5.0f, 5.0f, 5.0f));
+	//pointLights.push_back(pointLight);
+
+	std::vector<SpotLight> spotLights;
+	SpotLight spotLight = SpotLight(glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+	//spotLights.push_back(spotLight);
+	// <<<Lights>>>
+
+	// <<<Renderpass Setup>>>
+ 	projection_matrix = glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
+	view_matrix = g_camera->get_view_matrix();
+	model_matrix = glm::mat4(1.0f);
+	glm::vec4 light_position = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
+
+    //glm::vec4 light_position = glm::vec4(0.0f, 100.0f, 0.0f, 1.0f);
+	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
+	mats.projection = &projection_matrix[0][0];
+	mats.model= &model_matrix[0][0];
+	mats.view = &view_matrix[0][0];
+	/*
+	 * In the following we are going to define several lambda functions to bind Uniforms.
+	 *
+	 * Introduction about lambda functions:
+	 *      http://en.cppreference.com/w/cpp/language/lambda
+	 *      http://www.stroustrup.com/C++11FAQ.html#lambda
+	 */
+	auto matrix_binder = [](int loc, const void* data) {
+		glUniformMatrix4fv(loc, 1, GL_FALSE, (const GLfloat*)data);
+	};
+	// auto bone_matrix_binder = [&mesh](int loc, const void* data) {
+	// 	auto nelem = mesh.getNumberOfBones();
+	// 	glUniformMatrix4fv(loc, nelem, GL_FALSE, (const GLfloat*)data);
+	// };
+	auto vector_binder = [](int loc, const void* data) {
+		glUniform4fv(loc, 1, (const GLfloat*)data);
+	};
+	// auto vector3_binder = [](int loc, const void* data) {
+	// 	glUniform3fv(loc, 1, (const GLfloat*)data);
+	// };
+	// auto float_binder = [](int loc, const void* data) {
+	// 	glUniform1fv(loc, 1, (const GLfloat*)data);
+	// };
+
+ //    auto std_model_data = [&mats]() -> const void* {
+	// 	return mats.model;
+	// }; // This returns point to model matrix
+
+	glm::mat4 menger_model_matrix = glm::mat4(1.0f);
+	auto menger_model_data = [&menger_model_matrix]() -> const void* {
+		return &menger_model_matrix[0][0];
+	}; // This return model matrix for the menger.
+
+	glm::mat4 floor_model_matrix = glm::mat4(1.0f);
+	auto floor_model_data = [&floor_model_matrix]() -> const void* {
+		return &floor_model_matrix[0][0];
+	}; // This return model matrix for the floor.
+
+
+	auto std_view_data = [&mats]() -> const void* {
+		return mats.view;
+	};
+	// auto std_camera_data  = [&gui]() -> const void* {
+	// 	return &gui.getCamera()[0];
+	// };
+	auto std_proj_data = [&mats]() -> const void* {
+		return mats.projection;
+	};
+	auto std_light_data = [&light_position]() -> const void* {
+		return &light_position[0];
+	};
+
+	glm::vec4 eye_position = glm::vec4(g_camera->getPosition(), 1.0f);
+
+	auto std_view_position_data = [&eye_position]() -> const void* {
+		return &eye_position[0];
+	};
+	// auto alpha_data  = [&gui]() -> const void* {
+	// 	static const float transparet = 0.5; // Alpha constant goes here
+	// 	static const float non_transparet = 1.0;
+	// 	if (gui.isTransparent())
+	// 		return &transparet;
+	// 	else
+	// 		return &non_transparet;
+	// };
+
+    //ShaderUniform std_model = { "model", matrix_binder, std_model_data };
+    ShaderUniform menger_model = { "model", matrix_binder, menger_model_data};
+	ShaderUniform floor_model = { "model", matrix_binder, floor_model_data};
+	ShaderUniform std_view = { "view", matrix_binder, std_view_data };
+	//ShaderUniform std_camera = { "camera_position", vector3_binder, std_camera_data };
+	ShaderUniform std_proj = { "projection", matrix_binder, std_proj_data };
+	ShaderUniform std_light = { "light_position", vector_binder, std_light_data };
+	ShaderUniform std_view_position = { "view_position", vector_binder, std_view_position_data };
+	//ShaderUniform object_alpha = { "alpha", float_binder, alpha_data };
+	// <<<RenderPass Setup>>>
+
+    // <<<Menger Data>>>
+    std::vector<glm::vec4> menger_vertices;
+    std::vector<glm::vec4> menger_normals;
+    std::vector<glm::uvec3> menger_faces;
 
 	g_menger->set_nesting_level(1);
-	g_menger->generate_geometry(obj_vertices, vtx_normals, obj_faces);
+	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces);
 	g_menger->set_clean();
 
 	glm::vec4 min_bounds = glm::vec4(std::numeric_limits<float>::max());
 	glm::vec4 max_bounds = glm::vec4(-std::numeric_limits<float>::max());
-	for (int i = 0; i < obj_vertices.size(); ++i) {
-		min_bounds = glm::min(obj_vertices[i], min_bounds);
-		max_bounds = glm::max(obj_vertices[i], max_bounds);
+	for (int i = 0; i < menger_vertices.size(); ++i) {
+		min_bounds = glm::min(menger_vertices[i], min_bounds);
+		max_bounds = glm::max(menger_vertices[i], max_bounds);
 	}
 	std::cout << "min_bounds = " << glm::to_string(min_bounds) << "\n";
 	std::cout << "max_bounds = " << glm::to_string(max_bounds) << "\n";
+	// <<<Menger Data>>>
 
-	// Setup our VAO array.
-	CHECK_GL_ERROR(glGenVertexArrays(kNumVaos, &g_array_objects[0]));
+    // <<<Floor Data>>>
+    std::vector<glm::vec4> floor_vertices;
+    std::vector<glm::vec4> floor_normals;
+    std::vector<glm::uvec3> floor_faces;
 
-	// Switch to the VAO for Geometry.
-	CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kGeometryVao]));
+    g_floor->create_floor(floor_vertices, floor_normals, floor_faces);
+    // <<<Floor Data>>>
 
-	// Generate buffer objects
-	CHECK_GL_ERROR(glGenBuffers(kNumVbos, &g_buffer_objects[kGeometryVao][0]));
+    // <<<Floor Renderpass>>>
+	RenderDataInput floor_pass_input;
+	floor_pass_input.assign(0, "vertex_position", floor_vertices.data(), floor_vertices.size(), 4, GL_FLOAT);
+	floor_pass_input.assign(1, "normal", floor_normals.data(), floor_normals.size(), 4, GL_FLOAT);
+	floor_pass_input.assign_index(floor_faces.data(), floor_faces.size(), 3);
+	RenderPass floor_pass(-1,
+			floor_pass_input,
+			{ vertex_shader, NULL, floor_fragment_shader},
+			{ floor_model, std_view, std_proj, std_light },
+			{ "fragment_color" }
+			);
+    // <<<Floor Renderpass>>>
 
-	// Setup vertex data in a VBO.
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kVertexBuffer]));
-	// NOTE: We do not send anything right now, we just describe it to OpenGL.
-	CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-				sizeof(float) * obj_vertices.size() * 4, nullptr,
-				GL_STATIC_DRAW));
-	CHECK_GL_ERROR(glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0));
-	CHECK_GL_ERROR(glEnableVertexAttribArray(0));
-
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kNormalBuffer]));
-	// NOTE: We do not send anything right now, we just describe it to OpenGL.
-	CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-				sizeof(float) * vtx_normals.size() * 4, nullptr,
-				GL_STATIC_DRAW));
-	CHECK_GL_ERROR(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0));
-	CHECK_GL_ERROR(glEnableVertexAttribArray(1));
-
-	// Setup element array buffer.
-	CHECK_GL_ERROR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kIndexBuffer]));
-	CHECK_GL_ERROR(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-				sizeof(uint32_t) * obj_faces.size() * 3,
-				&obj_faces[0], GL_STATIC_DRAW));
-
-	/*
- 	 * So far the geometry is loaded into g_buffer_objects[kGeometryVao][*].
-	 * These buffers are bound to g_array_objects[kGeometryVao]
-	 */
-
-	// FIXME: load the floor into g_buffer_objects[kFloorVao][*],
-	//        and bind the VBO to g_array_objects[kFloorVao]
-    std::vector<glm::vec4> floor_obj_vertices;
-    std::vector<glm::vec4> floor_vtx_normals;
-    std::vector<glm::uvec3> floor_obj_faces;
-
-    g_floor->create_floor(floor_obj_vertices, floor_vtx_normals, floor_obj_faces);
-
-
-  // Switch to Floor VAO.
-	CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kFloorVao]));
-
-	// Generate buffer objects
-	CHECK_GL_ERROR(glGenBuffers(kNumVbos, &g_buffer_objects[kFloorVao][0]));
-
-	// Setup vertex data in a VBO.
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kFloorVao][kVertexBuffer]));
-	// NOTE: We do not send anything right now, we just describe it to OpenGL.
-	CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-				sizeof(float) * floor_obj_vertices.size() * 4, &floor_obj_vertices[0],
-				GL_STATIC_DRAW));
-	CHECK_GL_ERROR(glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0));
-	CHECK_GL_ERROR(glEnableVertexAttribArray(0));
-
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kFloorVao][kNormalBuffer]));
-	// NOTE: We do not send anything right now, we just describe it to OpenGL.
-	CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-				sizeof(float) * floor_vtx_normals.size() * 4, &floor_vtx_normals[0],
-				GL_STATIC_DRAW));
-	CHECK_GL_ERROR(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0));
-	CHECK_GL_ERROR(glEnableVertexAttribArray(1));
-
-	// Setup element array buffer.
-	CHECK_GL_ERROR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_buffer_objects[kFloorVao][kIndexBuffer]));
-	CHECK_GL_ERROR(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-				sizeof(uint32_t) * floor_obj_faces.size() * 3,
-				&floor_obj_faces[0], GL_STATIC_DRAW));
-
-	// Setup vertex shader.
-	GLuint vertex_shader_id = 0;
-	const char* vertex_source_pointer = vertex_shader;
-	CHECK_GL_ERROR(vertex_shader_id = glCreateShader(GL_VERTEX_SHADER));
-	CHECK_GL_ERROR(glShaderSource(vertex_shader_id, 1, &vertex_source_pointer, nullptr));
-	glCompileShader(vertex_shader_id);
-	CHECK_GL_SHADER_ERROR(vertex_shader_id);
-
-	// Setup fragment shader.
-	GLuint fragment_shader_id = 0;
-	const char* fragment_source_pointer = fragment_shader;
-	CHECK_GL_ERROR(fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER));
-	CHECK_GL_ERROR(glShaderSource(fragment_shader_id, 1, &fragment_source_pointer, nullptr));
-	glCompileShader(fragment_shader_id);
-	CHECK_GL_SHADER_ERROR(fragment_shader_id);
-
-	// Let's create our program.
-	GLuint program_id = 0;
-	CHECK_GL_ERROR(program_id = glCreateProgram());
-	CHECK_GL_ERROR(glAttachShader(program_id, vertex_shader_id));
-	CHECK_GL_ERROR(glAttachShader(program_id, fragment_shader_id));
-
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kVertexBuffer]));
-	// NOTE: We do not send anything right now, we just describe it to OpenGL.
-	CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-				sizeof(float) * obj_vertices.size() * 4, nullptr,
-				GL_STATIC_DRAW));
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kNormalBuffer]));
-	// NOTE: We do not send anything right now, we just describe it to OpenGL.
-	CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-				sizeof(float) * vtx_normals.size() * 4, nullptr,
-				GL_STATIC_DRAW));
-	// Bind attributes.
-	CHECK_GL_ERROR(glBindAttribLocation(program_id, 0, "vertex_position"));
-
-	CHECK_GL_ERROR(glBindAttribLocation(program_id, 1, "vertex_normal"));
-	CHECK_GL_ERROR(glBindFragDataLocation(program_id, 0, "fragment_color"));
-	glLinkProgram(program_id);
-	CHECK_GL_PROGRAM_ERROR(program_id);
-
-	// Get the uniform locations.
-	GLint projection_matrix_location = 0;
-	CHECK_GL_ERROR(projection_matrix_location =
-			glGetUniformLocation(program_id, "projection"));
-	GLint view_matrix_location = 0;
-	CHECK_GL_ERROR(view_matrix_location =
-			glGetUniformLocation(program_id, "view"));
-	GLint light_position_location = 0;
-	CHECK_GL_ERROR(light_position_location =
-			glGetUniformLocation(program_id, "light_position"));
-
-	// Create floor program
-	// Setup fragment shader for the floor
-	GLuint floor_fragment_shader_id = 0;
-	const char* floor_fragment_source_pointer = floor_fragment_shader;
-	CHECK_GL_ERROR(floor_fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER));
-	CHECK_GL_ERROR(glShaderSource(floor_fragment_shader_id, 1,
-				&floor_fragment_source_pointer, nullptr));
-	glCompileShader(floor_fragment_shader_id);
-	CHECK_GL_SHADER_ERROR(floor_fragment_shader_id);
-
-	// FIXME: Setup another program for the floor, and get its locations.
-	// Note: you can reuse the vertex and geometry shader objects
-	GLuint floor_program_id = 0;
-    CHECK_GL_ERROR(floor_program_id = glCreateProgram());
-	CHECK_GL_ERROR(glAttachShader(floor_program_id, vertex_shader_id));
-	CHECK_GL_ERROR(glAttachShader(floor_program_id, floor_fragment_shader_id));
-
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kFloorVao][kVertexBuffer]));
-
-	// Bind attributes.
-	CHECK_GL_ERROR(glBindAttribLocation(floor_program_id, 0, "vertex_position"));
-	CHECK_GL_ERROR(glBindAttribLocation(floor_program_id, 1, "vertex_normal"));
-	CHECK_GL_ERROR(glBindFragDataLocation(floor_program_id, 0, "fragment_color"));
-	glLinkProgram(floor_program_id);
-	CHECK_GL_PROGRAM_ERROR(floor_program_id);
-
-    // Get the uniform locations.
-	GLint floor_projection_matrix_location = 0;
-	CHECK_GL_ERROR(floor_projection_matrix_location =
-			glGetUniformLocation(floor_program_id, "projection"));
-	GLint floor_view_matrix_location = 0;
-	CHECK_GL_ERROR(floor_view_matrix_location =
-			glGetUniformLocation(floor_program_id, "view"));
-	GLint floor_light_position_location = 0;
-	CHECK_GL_ERROR(floor_light_position_location =
-			glGetUniformLocation(floor_program_id, "light_position"));
-
-	glm::vec4 light_position = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
-	float aspect = 0.0f;
 	float theta = 0.0f;
 
 	// screen quad VAO, for displaying game as a texture
@@ -484,74 +598,43 @@ int main(int argc, char* argv[])
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Switch to the Geometry VAO.
-		CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kGeometryVao]));
+		// // Switch to the Geometry VAO.
+		// CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kGeometryVao]));
 
 		if (g_menger && g_menger->is_dirty()) {
-		  g_menger->generate_geometry(obj_vertices, vtx_normals, obj_faces);
+		  	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces);
 			g_menger->set_clean();
 		}
 
 		// Compute the projection matrix.
 		aspect = static_cast<float>(window_width) / window_height;
-		glm::mat4 projection_matrix =
+		projection_matrix =
 			glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
 
-		glm::mat4 view_matrix = g_camera->get_view_matrix();
+		view_matrix = g_camera->get_view_matrix();
 
-		// Send vertices to the GPU.
-		CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER,
-		                            g_buffer_objects[kGeometryVao][kVertexBuffer]));
-		CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-		                            sizeof(float) * obj_vertices.size() * 4,
-		                            &obj_vertices[0], GL_STATIC_DRAW));
-		CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER,
-		                            g_buffer_objects[kGeometryVao][kNormalBuffer]));
-		CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER,
-		                            sizeof(float) * vtx_normals.size() * 4,
-		                            &vtx_normals[0], GL_STATIC_DRAW));
-		CHECK_GL_ERROR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_buffer_objects[kGeometryVao][kIndexBuffer]));
-		CHECK_GL_ERROR(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-					sizeof(uint32_t) * obj_faces.size() * 3,
-					&obj_faces[0], GL_STATIC_DRAW));
+		// <<<Render Menger>>>
+		RenderDataInput menger_pass_input;
+		menger_pass_input.assign(0, "vertex_position", menger_vertices.data(), menger_vertices.size(), 4, GL_FLOAT);
+		menger_pass_input.assign(1, "normal", menger_normals.data(), menger_normals.size(), 4, GL_FLOAT);
+		menger_pass_input.assign_index(menger_faces.data(), menger_faces.size(), 3);
+		RenderPass menger_pass(-1,
+				menger_pass_input,
+				{ vertex_shader, NULL, fragment_shader},
+				{ menger_model, std_view, std_proj, std_light, std_view_position },
+				{ "fragment_color" }
+				);
 
-		// Use our program.
-		CHECK_GL_ERROR(glUseProgram(program_id));
+		menger_pass.loadLights(directionalLights, pointLights, spotLights);
 
-		// Pass uniforms in.
-		CHECK_GL_ERROR(glUniformMatrix4fv(projection_matrix_location, 1, GL_FALSE,
-					&projection_matrix[0][0]));
-		CHECK_GL_ERROR(glUniformMatrix4fv(view_matrix_location, 1, GL_FALSE,
-					&view_matrix[0][0]));
-		CHECK_GL_ERROR(glUniform4fv(light_position_location, 1, &light_position[0]));
+		menger_pass.setup();
+		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		// <<<Render Menger>>>
 
-		// Draw our triangles.
-		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, obj_faces.size() * 3, GL_UNSIGNED_INT, 0));
-
-		// FIXME: Render the floor
-		// Note: What you need to do is
-		// 	1. Switch VAO
-		// 	2. Switch Program
-		// 	3. Pass Uniforms
-		// 	4. Call glDrawElements, since input geometry is
-		// 	indicated by VAO.
-
-    // Switch to Floor VAO.
-    CHECK_GL_ERROR(glBindVertexArray(g_array_objects[kFloorVao]));
-
-    // Use our program.
-		CHECK_GL_ERROR(glUseProgram(floor_program_id));
-
-		// Pass uniforms in.
-		CHECK_GL_ERROR(glUniformMatrix4fv(floor_projection_matrix_location, 1, GL_FALSE,
-					&projection_matrix[0][0]));
-		CHECK_GL_ERROR(glUniformMatrix4fv(floor_view_matrix_location, 1, GL_FALSE,
-					&view_matrix[0][0]));
-		CHECK_GL_ERROR(glUniform4fv(floor_light_position_location, 1, &light_position[0]));
-
-		// Draw our triangles.
-		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_obj_faces.size() * 3, GL_UNSIGNED_INT, 0));
-
+		// <<<Render Floor>>>
+		floor_pass.setup();
+		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		// <<<Render Floor>>>
 
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -1,0 +1,17 @@
+FIND_PACKAGE (assimp QUIET)
+if (${assimp_FOUND})
+    set(ASSIMP_LIBRARY "assimp")
+    add_library(${ASSIMP_LIBRARY} SHARED IMPORTED)
+    set_target_properties(${ASSIMP_LIBRARY} PROPERTIES IMPORTED_LOCATION "${ASSIMP_LIBRARY_DIRS}/libassimp.so")
+else (${assimp_FOUND})
+    SET(expected_assimp_dir ${CMAKE_SOURCE_DIR}/third-party/assimp)
+    IF (NOT EXISTS ${expected_glm_dir})
+      EXECUTE_PROCESS(COMMAND git clone -b v4.1.0 https://github.com/assimp/assimp.git ${expected_assimp_dir})
+      EXECUTE_PROCESS(COMMAND cmake CMakeLists.txt -G "Unix Makefiles"
+                      WORKING_DIRECTORY ${expected_assimp_dir})
+      EXECUTE_PROCESS(COMMAND make -j4
+                      WORKING_DIRECTORY ${expected_assimp_dir})
+    ENDIF()
+    add_library(${expected_assimp_dir} SHARED IMPORTED)
+    set_target_properties(${expected_assimp_dir} PROPERTIES IMPORTED_LOCATION "${expected_assimp_dir}/lib/libassimp.so")
+endif(${assimp_FOUND})

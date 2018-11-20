@@ -1,11 +1,6 @@
 #include "debuggl.h"
-
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#include <windows.h>
-#include <GL/gl.h>
-#endif
+//#include "portable_gl.h"
+#include <GLFW/glfw3.h>
 
 const char* DebugGLErrorToString(int error) {
 	switch (error) {
@@ -29,4 +24,9 @@ const char* DebugGLErrorToString(int error) {
 			break;
 	}
 	return "Unicorns Exist";
+}
+
+void debugglTerminate()
+{
+	glfwTerminate();
 }
