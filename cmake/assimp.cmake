@@ -5,7 +5,7 @@ if (${assimp_FOUND})
     set_target_properties(${ASSIMP_LIBRARY} PROPERTIES IMPORTED_LOCATION "${ASSIMP_LIBRARY_DIRS}/libassimp.so")
 else (${assimp_FOUND})
     SET(expected_assimp_dir ${CMAKE_SOURCE_DIR}/third-party/assimp)
-    IF (NOT EXISTS ${expected_glm_dir})
+    IF (NOT EXISTS ${expected_assimp_dir})
       EXECUTE_PROCESS(COMMAND git clone -b v4.1.0 https://github.com/assimp/assimp.git ${expected_assimp_dir})
       EXECUTE_PROCESS(COMMAND cmake CMakeLists.txt -G "Unix Makefiles"
                       WORKING_DIRECTORY ${expected_assimp_dir})

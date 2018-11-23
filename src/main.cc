@@ -14,11 +14,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-// Include AssImp
-#include <assimp/Importer.hpp>      // C++ importer interface
-#include <assimp/scene.h>           // Output data structure
-#include <assimp/postprocess.h>     // Post processing flags
-
 #include "debuggl.h"
 
 // Classes
@@ -28,11 +23,7 @@
 #include "controller.h"
 #include "render_pass.h"
 #include "lights.h"
-
-// assimp
-// #include <assimp/Importer.hpp>
-// #include <assimp/scene.h>
-// #include <assimp/postprocess.h>
+#include "model.h"
 
 struct MatrixPointers {
 	const float *projection, *model, *view;
@@ -280,6 +271,10 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
     // <<<Floor Renderpass>>>
+    
+    // <<<Model>>>
+    Model nanosuit("nanosuit.fbx");
+    // <<<Model>>>
 
 	float theta = 0.0f;
 
