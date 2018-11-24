@@ -14,11 +14,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-// Include AssImp
-#include <assimp/Importer.hpp>      // C++ importer interface
-#include <assimp/scene.h>           // Output data structure
-#include <assimp/postprocess.h>     // Post processing flags
-
 #include "debuggl.h"
 
 // Classes
@@ -33,6 +28,10 @@
 // #include <assimp/Importer.hpp>
 // #include <assimp/scene.h>
 // #include <assimp/postprocess.h>
+
+// include nanoUI
+#include <nanogui/screen.h>
+
 
 struct MatrixPointers {
 	const float *projection, *model, *view;

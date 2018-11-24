@@ -35,12 +35,18 @@ IF (EXISTS ${CMAKE_SOURCE_DIR}/external)
 	external/glew-1.13.0/include/
 	external/assimp-3.0.1270/include/
 	external/bullet-2.81-rev2613/src/
+  external/nanogui/include/
 	.
   )
+
+  include_directories(${NANOGUI_EXTRA_INCS})
+  add_definitions(${NANOGUI_EXTRA_DEFS})
+
   set(ALL_LIBS
   	${OPENGL_LIBRARY}
   	glfw
   	GLEW_1130
+    nanogui
   )
   add_definitions(
   	-DTW_STATIC
