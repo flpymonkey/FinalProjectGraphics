@@ -13,7 +13,13 @@
 // OpenGL library includes
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <debuggl.h>
+
+// Include AssImp
+#include <assimp/Importer.hpp>      // C++ importer interface
+#include <assimp/scene.h>           // Output data structure
+#include <assimp/postprocess.h>     // Post processing flags
+
+#include "debuggl.h"
 
 // Classes
 #include "floor.h"
@@ -90,7 +96,6 @@ const char* screen_lensflare_shader =
 #include "shaders/screen_lensflare.frag"
 ;
 
-
 void
 ErrorCallback(int error, const char* description)
 {
@@ -138,13 +143,13 @@ int main(int argc, char* argv[])
 	// <<<Lights>>>
 	std::vector<DirectionalLight> directionalLights;
 	DirectionalLight directionalLight = DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f));
-	//directionalLights.push_back(directionalLight);
+	directionalLights.push_back(directionalLight);
 
 	std::vector<PointLight> pointLights;
 	PointLight pointLight = PointLight(glm::vec3(5.0f, 5.0f, 5.0f));
-	pointLights.push_back(pointLight);
+	//pointLights.push_back(pointLight);
 	pointLight = PointLight(glm::vec3(-5.0f, 5.0f, 5.0f));
-	pointLights.push_back(pointLight);
+	//pointLights.push_back(pointLight);
 
 	std::vector<SpotLight> spotLights;
 	SpotLight spotLight = SpotLight(glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));

@@ -1,7 +1,7 @@
 #include <GL/glew.h>
 #include "render_pass.h"
 #include <iostream>
-#include <debuggl.h>
+#include "debuggl.h"
 #include <map>
 
 /*
