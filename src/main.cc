@@ -91,6 +91,24 @@ ErrorCallback(int error, const char* description)
 	std::cerr << "GLFW Error: " << description << "\n";
 }
 
+void
+printVec3(const char* name, glm::vec3 data)
+{
+    printf("%s: (%f, %f, %f)\n", name, data.x, data.y, data.z);
+}
+
+void
+printUvec3(const char* name, glm::uvec3 data)
+{
+    printf("%s: (%d, %d, %d)\n", name, data.x, data.y, data.z);
+}
+
+void
+printVec4(const char* name, glm::vec4 data)
+{
+    printf("%s: (%f, %f, %f, %f)\n", name, data.x, data.y, data.z, data.w);
+}
+
 int main(int argc, char* argv[])
 {
 	std::string window_title = "Menger";
@@ -288,9 +306,14 @@ int main(int argc, char* argv[])
     bool status = false;
 
     //status = loadOBJ("/u/marshe/Desktop/FinalProjectGraphics/src/assets/suzanne.obj", v, uv, n);
-    status = loadAssImp("/u/marshe/Desktop/FinalProjectGraphics/src/assets/untitled.obj", in, v, uv, n);
+    //status = loadAssImp("/u/marshe/Desktop/FinalProjectGraphics/src/assets/untitled.obj", in, v, uv, n);
+    status = loadAssImp("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\untitled.obj", in, v, uv, n);
 
     printf("Loaded\n");
+    
+    printf("v: %d\n", v.size());
+    printf("n: %d\n", n.size());
+    printf("in: %d\n", in.size());
 
     std::vector<glm::vec4> model_vertices;
     for (int i = 0; i < v.size(); i++) {
@@ -301,11 +324,29 @@ int main(int argc, char* argv[])
     	model_normals.push_back(glm::vec4(n[i], 0.0));
     }
     std::vector<glm::uvec3> model_faces;
-    for (int i = 0; i < v.size(); i++) {
-    	model_faces.push_back(glm::uvec3(in[i], in[i + 1], in[i + 2]));
-    	//model_faces.push_back(glm::uvec3(i, i + 1, i + 2));
+    for (int i = 0; i < v.size() / 3; i++) {
+    	//model_faces.push_back(glm::uvec3((float)in[i], (float)in[i + 1], (float)in[i + 2]));
+    	model_faces.push_back(glm::uvec3(3 * i, (3 * i) + 1, (3 * i) + 2));
+    }
+    
+    for (int i = 0; i < in.size(); i++) {
+        //printf("in[%d]: %d\n", i, in[i]);
+    }
+    
+    for (int i = 0; i < model_vertices.size(); i++) {
+        printVec4("model_vertices", model_vertices[i]);
+        //printVec4("model_normals", model_normals[i]);
+    }
+    
+    for (int i = 0; i < model_faces.size(); i++) {
+        printUvec3("model_faces", model_faces[i]);
     }
 
+    
+    //std::vector<glm::vec4> model_vertices;
+    //std::vector<glm::vec4> model_normals;
+    //std::vector<glm::uvec3> model_faces;
+    //g_menger->create_cube(model_vertices, model_normals, model_faces, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1.0f, 0);
 
     RenderDataInput model_pass_input;
 	model_pass_input.assign(0, "vertex_position", model_vertices.data(), model_vertices.size(), 4, GL_FLOAT);

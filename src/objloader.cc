@@ -118,7 +118,7 @@ bool loadAssImp(
 
 	Assimp::Importer importer;
 
-	const aiScene* scene = importer.ReadFile(path, 0/*aiProcess_JoinIdenticalVertices | aiProcess_SortByPType*/);
+	const aiScene* scene = importer.ReadFile(path, 0/*aiProcess_Triangulate | aiProcess_JoinIdenticalVertices /*| aiProcess_SortByPType*/);
 	if( !scene) {
 		fprintf( stderr, importer.GetErrorString());
 		getchar();
@@ -150,11 +150,19 @@ bool loadAssImp(
 
 	// Fill face indices
 	indices.reserve(3*mesh->mNumFaces);
-	for (unsigned int i=0; i<mesh->mNumFaces; i++){
+	for (unsigned int i=0; i < mesh->mNumFaces; i++){
 		// Assume the model has only triangles.
-		indices.push_back(mesh->mFaces[i].mIndices[0]);
-		indices.push_back(mesh->mFaces[i].mIndices[1]);
-		indices.push_back(mesh->mFaces[i].mIndices[2]);
+        aiFace face = mesh->mFaces[i];
+        for(unsigned int j = 0; j < face.mNumIndices; j++) {
+                indices.push_back(face.mIndices[j]);
+                //printf("in[%d]: %d\n", i, face.mIndices[j]);
+        }
+        //printf("in[%d]: %f\n", i, mesh->mFaces[i].mIndices[0]);
+        //printf("in[%d]: %f\n", i, mesh->mFaces[i].mIndices[1]);
+        //printf("in[%d]: %f\n", i, mesh->mFaces[i].mIndices[2]);
+		//indices.push_back(mesh->mFaces[i].mIndices[0]);
+		//indices.push_back(mesh->mFaces[i].mIndices[1]);
+		//indices.push_back(mesh->mFaces[i].mIndices[2]);
 	}
 	
 	// The "scene" pointer will be deleted automatically by "importer"
