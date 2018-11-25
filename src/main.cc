@@ -82,9 +82,12 @@ const char* screen_vertex_shader =
 #include "shaders/screen_default.vert"
 ;
 
-// hdr shader which uses Reinhard tone mapping for high dynamic range
-const char* screen_fragment_shader =
-#include "shaders/screen_hdr.frag"
+const char* screen_downsample_shader =
+#include "shaders/screen_downsample.frag"
+;
+
+const char* screen_lensflare_shader =
+#include "shaders/screen_lensflare.frag"
 ;
 
 
@@ -310,35 +313,67 @@ int main(int argc, char* argv[])
 	glCompileShader(screen_vertex_shader_id);
 	CHECK_GL_SHADER_ERROR(screen_vertex_shader_id);
 
-	// Setup fragment shader for the quad
-	GLuint screen_fragment_shader_id = 0;
-	const char* screen_fragment_source_pointer = screen_fragment_shader;
-	CHECK_GL_ERROR(screen_fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER));
-	CHECK_GL_ERROR(glShaderSource(screen_fragment_shader_id, 1,
-				&screen_fragment_source_pointer, nullptr));
-	glCompileShader(screen_fragment_shader_id);
-	CHECK_GL_SHADER_ERROR(screen_fragment_shader_id);
+	// Setup downsample shader for the quad ====================
+	GLuint screen_downsample_shader_id = 0;
+	const char* screen_downsample_source_pointer = screen_downsample_shader;
+	CHECK_GL_ERROR(screen_downsample_shader_id = glCreateShader(GL_FRAGMENT_SHADER));
+	CHECK_GL_ERROR(glShaderSource(screen_downsample_shader_id, 1,
+				&screen_downsample_source_pointer, nullptr));
+	glCompileShader(screen_downsample_shader_id);
+	CHECK_GL_SHADER_ERROR(screen_downsample_shader_id);
 
 	// Setup the program
-	GLuint screen_program_id = 0;
-  CHECK_GL_ERROR(screen_program_id = glCreateProgram());
-	CHECK_GL_ERROR(glAttachShader(screen_program_id, screen_vertex_shader_id));
-	CHECK_GL_ERROR(glAttachShader(screen_program_id, screen_fragment_shader_id));
+	GLuint screen_downsample_program_id = 0;
+  CHECK_GL_ERROR(screen_downsample_program_id = glCreateProgram());
+	CHECK_GL_ERROR(glAttachShader(screen_downsample_program_id, screen_vertex_shader_id));
+	CHECK_GL_ERROR(glAttachShader(screen_downsample_program_id, screen_downsample_shader_id));
 
 	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kScreenVao][kVertexBuffer]));
 
 	// Bind attributes.
-	CHECK_GL_ERROR(glBindAttribLocation(screen_program_id, 0, "vertex_position"));
-	CHECK_GL_ERROR(glBindAttribLocation(screen_program_id, 1, "aTexCoords"));
+	CHECK_GL_ERROR(glBindAttribLocation(screen_downsample_program_id, 0, "vertex_position"));
+	CHECK_GL_ERROR(glBindAttribLocation(screen_downsample_program_id, 1, "aTexCoords"));
 
-	CHECK_GL_ERROR(glBindFragDataLocation(screen_program_id, 0, "fragment_color"));
-	glLinkProgram(screen_program_id);
-	CHECK_GL_PROGRAM_ERROR(screen_program_id);
+	CHECK_GL_ERROR(glBindFragDataLocation(screen_downsample_program_id, 0, "fragment_color"));
+	glLinkProgram(screen_downsample_program_id);
+	CHECK_GL_PROGRAM_ERROR(screen_downsample_program_id);
 
 	// Get the uniform locations.
 	GLint screen_projection_matrix_location = 0;
 	CHECK_GL_ERROR(screen_projection_matrix_location =
-			glGetUniformLocation(screen_program_id, "screenTexture"));
+			glGetUniformLocation(screen_downsample_program_id, "screenTexture"));
+	// ===========================================================
+
+	// Setup lensflare shader for the quad ====================
+	GLuint screen_lensflare_shader_id = 0;
+	const char* screen_lensflare_source_pointer = screen_lensflare_shader;
+	CHECK_GL_ERROR(screen_lensflare_shader_id = glCreateShader(GL_FRAGMENT_SHADER));
+	CHECK_GL_ERROR(glShaderSource(screen_lensflare_shader_id, 1,
+				&screen_lensflare_source_pointer, nullptr));
+	glCompileShader(screen_lensflare_shader_id);
+	CHECK_GL_SHADER_ERROR(screen_lensflare_shader_id);
+
+	// Setup the program
+	GLuint screen_lensflare_program_id = 0;
+	CHECK_GL_ERROR(screen_lensflare_program_id = glCreateProgram());
+	CHECK_GL_ERROR(glAttachShader(screen_lensflare_program_id, screen_vertex_shader_id));
+	CHECK_GL_ERROR(glAttachShader(screen_lensflare_program_id, screen_lensflare_shader_id));
+
+	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kScreenVao][kVertexBuffer]));
+
+	// Bind attributes.
+	CHECK_GL_ERROR(glBindAttribLocation(screen_lensflare_program_id, 0, "vertex_position"));
+	CHECK_GL_ERROR(glBindAttribLocation(screen_lensflare_program_id, 1, "aTexCoords"));
+
+	CHECK_GL_ERROR(glBindFragDataLocation(screen_lensflare_program_id, 0, "fragment_color"));
+	glLinkProgram(screen_lensflare_program_id);
+	CHECK_GL_PROGRAM_ERROR(screen_lensflare_program_id);
+
+	// Get the uniform locations.
+	GLint screen_projection_matrix_location2 = 0;
+	CHECK_GL_ERROR(screen_projection_matrix_location2 =
+			glGetUniformLocation(screen_lensflare_program_id, "screenTexture"));
+	// ===========================================================
 
 	// configure alternate framebuffer
 	unsigned int framebuffer;
@@ -424,12 +459,16 @@ int main(int argc, char* argv[])
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Use our program.
-		CHECK_GL_ERROR(glUseProgram(screen_program_id));
+		CHECK_GL_ERROR(glUseProgram(screen_downsample_program_id));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+		CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 
 		// Set the exposure in the shader
-		glUniform1f(glGetUniformLocation(screen_program_id, "exposure"), exposure);
+		glUniform1f(glGetUniformLocation(screen_downsample_program_id, "exposure"), exposure);
 
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
