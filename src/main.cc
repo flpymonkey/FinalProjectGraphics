@@ -25,6 +25,7 @@
 #include "lights.h"
 #include "model.h"
 #include "objloader.h"
+#include "loader.h"
 
 struct MatrixPointers {
 	const float *projection, *model, *view;
@@ -299,6 +300,7 @@ int main(int argc, char* argv[])
     // <<<Model>>>
     // string const path = "assets/suzanne.obj";
     //Model nanosuit("/u/marshe/Desktop/FinalProjectGraphics/src/assets/untitled.obj");
+    /*
 	std::vector<unsigned short> in;
     std::vector<glm::vec3> v;
     std::vector<glm::vec2> uv;
@@ -341,11 +343,15 @@ int main(int argc, char* argv[])
     for (int i = 0; i < model_faces.size(); i++) {
         printUvec3("model_faces", model_faces[i]);
     }
-
+    */
     
-    //std::vector<glm::vec4> model_vertices;
-    //std::vector<glm::vec4> model_normals;
-    //std::vector<glm::uvec3> model_faces;
+    std::vector<glm::vec4> model_vertices;
+    std::vector<glm::vec4> model_normals;
+    std::vector<glm::uvec3> model_faces;
+    Loader* loader;
+    loader = new Loader();
+    loader->loadObj("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\monkey.obj", model_vertices, model_normals, model_faces);
+    
     //g_menger->create_cube(model_vertices, model_normals, model_faces, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1.0f, 0);
 
     RenderDataInput model_pass_input;
@@ -361,7 +367,7 @@ int main(int argc, char* argv[])
 
 	model_pass.loadLights(directionalLights, pointLights, spotLights);
 
-	printf("Setted\n");
+	//printf("Setted\n");
 
     // <<<Model>>>
 
