@@ -24,6 +24,7 @@
 #include "render_pass.h"
 #include "lights.h"
 #include "model.h"
+#include "objloader.h"
 
 struct MatrixPointers {
 	const float *projection, *model, *view;
@@ -183,6 +184,11 @@ int main(int argc, char* argv[])
 	// 	return mats.model;
 	// }; // This returns point to model matrix
 
+	glm::mat4 model_model_matrix = glm::mat4(1.0f);
+	auto model_model_data = [&model_model_matrix]() -> const void* {
+		return &model_model_matrix[0][0];
+	}; // This return model matrix for the menger.
+
 	glm::mat4 menger_model_matrix = glm::mat4(1.0f);
 	auto menger_model_data = [&menger_model_matrix]() -> const void* {
 		return &menger_model_matrix[0][0];
@@ -221,7 +227,7 @@ int main(int argc, char* argv[])
 	// 		return &non_transparet;
 	// };
 
-    //ShaderUniform std_model = { "model", matrix_binder, std_model_data };
+    ShaderUniform model_model = { "model", matrix_binder, model_model_data };
     ShaderUniform menger_model = { "model", matrix_binder, menger_model_data};
 	ShaderUniform floor_model = { "model", matrix_binder, floor_model_data};
 	ShaderUniform std_view = { "view", matrix_binder, std_view_data };
@@ -273,7 +279,49 @@ int main(int argc, char* argv[])
     // <<<Floor Renderpass>>>
     
     // <<<Model>>>
-    Model nanosuit("nanosuit.fbx");
+    // string const path = "assets/suzanne.obj";
+    //Model nanosuit("/u/marshe/Desktop/FinalProjectGraphics/src/assets/untitled.obj");
+	std::vector<unsigned short> in;
+    std::vector<glm::vec3> v;
+    std::vector<glm::vec2> uv;
+    std::vector<glm::vec3> n;
+    bool status = false;
+
+    //status = loadOBJ("/u/marshe/Desktop/FinalProjectGraphics/src/assets/suzanne.obj", v, uv, n);
+    status = loadAssImp("/u/marshe/Desktop/FinalProjectGraphics/src/assets/untitled.obj", in, v, uv, n);
+
+    printf("Loaded\n");
+
+    std::vector<glm::vec4> model_vertices;
+    for (int i = 0; i < v.size(); i++) {
+    	model_vertices.push_back(glm::vec4(v[i], 1.0));
+    }
+    std::vector<glm::vec4> model_normals;
+    for (int i = 0; i < n.size(); i++) {
+    	model_normals.push_back(glm::vec4(n[i], 0.0));
+    }
+    std::vector<glm::uvec3> model_faces;
+    for (int i = 0; i < v.size(); i++) {
+    	model_faces.push_back(glm::uvec3(in[i], in[i + 1], in[i + 2]));
+    	//model_faces.push_back(glm::uvec3(i, i + 1, i + 2));
+    }
+
+
+    RenderDataInput model_pass_input;
+	model_pass_input.assign(0, "vertex_position", model_vertices.data(), model_vertices.size(), 4, GL_FLOAT);
+	model_pass_input.assign(1, "normal", model_normals.data(), model_normals.size(), 4, GL_FLOAT);
+	model_pass_input.assign_index(model_faces.data(), model_faces.size(), 3);
+	RenderPass model_pass(-1,
+			model_pass_input,
+			{ vertex_shader, NULL, fragment_shader},
+			{ model_model, std_view, std_proj, std_light, std_view_position},
+			{ "fragment_color" }
+			);
+
+	model_pass.loadLights(directionalLights, pointLights, spotLights);
+
+	printf("Setted\n");
+
     // <<<Model>>>
 
 	float theta = 0.0f;
@@ -408,13 +456,18 @@ int main(int argc, char* argv[])
 		menger_pass.loadLights(directionalLights, pointLights, spotLights);
 
 		menger_pass.setup();
-		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		//CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Render Menger>>>
 
 		// <<<Render Floor>>>
 		floor_pass.setup();
-		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		//CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Render Floor>>>
+
+		// <<<Model>>>
+		model_pass.setup();
+		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, model_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		// <<<Model>>>
 
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -16,6 +16,7 @@
 #include "mesh.h"
 
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <sstream>
 #include <iostream>
