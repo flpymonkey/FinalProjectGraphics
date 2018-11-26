@@ -298,61 +298,12 @@ int main(int argc, char* argv[])
     // <<<Floor Renderpass>>>
     
     // <<<Model>>>
-    // string const path = "assets/suzanne.obj";
-    //Model nanosuit("/u/marshe/Desktop/FinalProjectGraphics/src/assets/untitled.obj");
-    /*
-	std::vector<unsigned short> in;
-    std::vector<glm::vec3> v;
-    std::vector<glm::vec2> uv;
-    std::vector<glm::vec3> n;
-    bool status = false;
-
-    //status = loadOBJ("/u/marshe/Desktop/FinalProjectGraphics/src/assets/suzanne.obj", v, uv, n);
-    //status = loadAssImp("/u/marshe/Desktop/FinalProjectGraphics/src/assets/untitled.obj", in, v, uv, n);
-    status = loadAssImp("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\untitled.obj", in, v, uv, n);
-
-    printf("Loaded\n");
-    
-    printf("v: %d\n", v.size());
-    printf("n: %d\n", n.size());
-    printf("in: %d\n", in.size());
-
-    std::vector<glm::vec4> model_vertices;
-    for (int i = 0; i < v.size(); i++) {
-    	model_vertices.push_back(glm::vec4(v[i], 1.0));
-    }
-    std::vector<glm::vec4> model_normals;
-    for (int i = 0; i < n.size(); i++) {
-    	model_normals.push_back(glm::vec4(n[i], 0.0));
-    }
-    std::vector<glm::uvec3> model_faces;
-    for (int i = 0; i < v.size() / 3; i++) {
-    	//model_faces.push_back(glm::uvec3((float)in[i], (float)in[i + 1], (float)in[i + 2]));
-    	model_faces.push_back(glm::uvec3(3 * i, (3 * i) + 1, (3 * i) + 2));
-    }
-    
-    for (int i = 0; i < in.size(); i++) {
-        //printf("in[%d]: %d\n", i, in[i]);
-    }
-    
-    for (int i = 0; i < model_vertices.size(); i++) {
-        printVec4("model_vertices", model_vertices[i]);
-        //printVec4("model_normals", model_normals[i]);
-    }
-    
-    for (int i = 0; i < model_faces.size(); i++) {
-        printUvec3("model_faces", model_faces[i]);
-    }
-    */
-    
     std::vector<glm::vec4> model_vertices;
     std::vector<glm::vec4> model_normals;
     std::vector<glm::uvec3> model_faces;
     Loader* loader;
     loader = new Loader();
     loader->loadObj("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\monkey.obj", model_vertices, model_normals, model_faces);
-    
-    //g_menger->create_cube(model_vertices, model_normals, model_faces, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1.0f, 0);
 
     RenderDataInput model_pass_input;
 	model_pass_input.assign(0, "vertex_position", model_vertices.data(), model_vertices.size(), 4, GL_FLOAT);
@@ -366,9 +317,6 @@ int main(int argc, char* argv[])
 			);
 
 	model_pass.loadLights(directionalLights, pointLights, spotLights);
-
-	//printf("Setted\n");
-
     // <<<Model>>>
 
 	float theta = 0.0f;
