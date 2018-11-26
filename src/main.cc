@@ -464,9 +464,9 @@ int main(int argc, char* argv[])
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Use our program.
-		CHECK_GL_ERROR(glUseProgram(screen_downsample_program_id));
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+		// CHECK_GL_ERROR(glUseProgram(screen_downsample_program_id));
+		// glActiveTexture(GL_TEXTURE0);
+		// glBindTexture(GL_TEXTURE_2D, textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 
 		CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
 		glActiveTexture(GL_TEXTURE0);
