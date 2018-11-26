@@ -544,35 +544,35 @@ int main(int argc, char* argv[])
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// Use our programs.
-		// // downsampling pass for lensflare effect
-		// glBindFramebuffer(GL_FRAMEBUFFER, downsample_framebuffer);
-		// glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-		// // clear all relevant buffers
-		// glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
-		// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //
-		// CHECK_GL_ERROR(glUseProgram(screen_downsample_program_id));
-		// glActiveTexture(GL_TEXTURE0);
-		// glBindTexture(GL_TEXTURE_2D, downsample_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
-    //
-		// glBindVertexArray(quadVAO);
-    // glDrawArrays(GL_TRIANGLES, 0, 6);
-		// glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //
-    //
-		// // now bind back to default geometry_framebuffer and draw a quad plane with the attached geometry_framebuffer color texture
-    // glBindFramebuffer(GL_FRAMEBUFFER, lensflare_framebuffer);
-    // glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-    // // clear all relevant buffers
-    // glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //
-		// CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
-		// glActiveTexture(GL_TEXTURE0);
-		// glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
-    //
-    // glBindVertexArray(quadVAO);
-    // glDrawArrays(GL_TRIANGLES, 0, 6);
+		// downsampling pass for lensflare effect
+		glBindFramebuffer(GL_FRAMEBUFFER, downsample_framebuffer);
+		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+		// clear all relevant buffers
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		CHECK_GL_ERROR(glUseProgram(screen_downsample_program_id));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+		glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+		// now bind back to default geometry_framebuffer and draw a quad plane with the attached geometry_framebuffer color texture
+    glBindFramebuffer(GL_FRAMEBUFFER, lensflare_framebuffer);
+    glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+    // clear all relevant buffers
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, downsample_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
 		// Final default pass to create final screen quad
@@ -584,7 +584,7 @@ int main(int argc, char* argv[])
 
 		CHECK_GL_ERROR(glUseProgram(screen_default_program_id));
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+		glBindTexture(GL_TEXTURE_2D, lensflare_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
