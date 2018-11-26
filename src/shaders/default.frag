@@ -42,6 +42,7 @@ in vec4 normal;
 in vec4 light_direction;
 in vec4 world_normal;
 in vec4 world_position;
+in vec2 uv;
 
 uniform vec4 view_position;
 
@@ -52,6 +53,7 @@ uniform int sLights;
 uniform DirectionalLight directionalLights[10];
 uniform PointLight pointLights[10];
 uniform SpotLight spotLights[10];
+uniform Material material;
 
 out vec4 fragment_color;
 
@@ -63,11 +65,11 @@ vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0); // material.shininess);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     // combine results
-    vec3 ambient = light.ambient; // * vec3(texture(material.diffuse, TexCoords));
-    vec3 diffuse = light.diffuse * diff; // * vec3(texture(material.diffuse, TexCoords));
-    vec3 specular = light.specular * spec; // * vec3(texture(material.specular, TexCoords));
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, uv));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, uv));
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, uv));
     return (ambient + diffuse + specular);
 }
 
@@ -79,14 +81,14 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0); // material.shininess);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     // attenuation
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
     // combine results
-    vec3 ambient = light.ambient; // * vec3(texture(material.diffuse, TexCoords));
-    vec3 diffuse = light.diffuse * diff; // * vec3(texture(material.diffuse, TexCoords));
-    vec3 specular = light.specular * spec; // * vec3(texture(material.specular, TexCoords));
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, uv));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, uv));
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, uv));
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
@@ -101,7 +103,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0); // material.shininess);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     // attenuation
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
@@ -110,9 +112,9 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float epsilon = light.cutOff - light.outerCutOff;
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
     // combine results
-    vec3 ambient = light.ambient; // * vec3(texture(material.diffuse, TexCoords));
-    vec3 diffuse = light.diffuse * diff; // * vec3(texture(material.diffuse, TexCoords));
-    vec3 specular = light.specular * spec; // * vec3(texture(material.specular, TexCoords));
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, uv));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, uv));
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, uv));
     ambient *= attenuation * intensity;
     diffuse *= attenuation * intensity;
     specular *= attenuation * intensity;
@@ -138,6 +140,6 @@ void main()
         fragment_color += vec4(CalcSpotLight(spotLights[sLight], norm, vec3(world_position), viewDir), 1.0);
     }
 
-    fragment_color *= color;
+    //fragment_color *= color;
 }
 )zzz"

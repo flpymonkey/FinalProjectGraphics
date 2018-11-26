@@ -226,6 +226,13 @@ public:
     		}
 		}
 	}
+    
+    void loadMaterials() {
+        glUseProgram(sp_);
+        setInt("material.diffuse", 0);
+        setInt("material.specular", 1);
+        setFloat("material.shininess", 32.0f);
+    }
 
 	void setBool(const std::string &name, const bool value) const
     {         

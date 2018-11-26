@@ -23,9 +23,12 @@
 #include "controller.h"
 #include "render_pass.h"
 #include "lights.h"
-#include "model.h"
-#include "objloader.h"
+//#include "model.h"
+//#include "objloader.h"
 #include "loader.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 struct MatrixPointers {
 	const float *projection, *model, *view;
@@ -108,6 +111,42 @@ void
 printVec4(const char* name, glm::vec4 data)
 {
     printf("%s: (%f, %f, %f, %f)\n", name, data.x, data.y, data.z, data.w);
+}
+
+unsigned int loadTexture(char const* path) {
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
 }
 
 int main(int argc, char* argv[])
@@ -303,11 +342,58 @@ int main(int argc, char* argv[])
     std::vector<glm::uvec3> model_faces;
     Loader* loader;
     loader = new Loader();
-    loader->loadObj("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\monkey.obj", model_vertices, model_normals, model_faces);
+    loader->loadObj("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\untitled.obj", model_vertices, model_normals, model_faces);
+    
+    std::vector<glm::vec2> model_uvs;
+    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
+    
+    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
+    
+    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    
+    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    
+    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    
+    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
+    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
+    
+    unsigned int diffuseMap = loadTexture("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\container2.png");
+    unsigned int specularMap = loadTexture("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\container2_specular.png");
 
     RenderDataInput model_pass_input;
 	model_pass_input.assign(0, "vertex_position", model_vertices.data(), model_vertices.size(), 4, GL_FLOAT);
 	model_pass_input.assign(1, "normal", model_normals.data(), model_normals.size(), 4, GL_FLOAT);
+    model_pass_input.assign(2, "uv", model_uvs.data(), model_uvs.size(), 2, GL_FLOAT);
 	model_pass_input.assign_index(model_faces.data(), model_faces.size(), 3);
 	RenderPass model_pass(-1,
 			model_pass_input,
@@ -317,6 +403,7 @@ int main(int argc, char* argv[])
 			);
 
 	model_pass.loadLights(directionalLights, pointLights, spotLights);
+    model_pass.loadMaterials();
     // <<<Model>>>
 
 	float theta = 0.0f;
@@ -440,6 +527,7 @@ int main(int argc, char* argv[])
 		RenderDataInput menger_pass_input;
 		menger_pass_input.assign(0, "vertex_position", menger_vertices.data(), menger_vertices.size(), 4, GL_FLOAT);
 		menger_pass_input.assign(1, "normal", menger_normals.data(), menger_normals.size(), 4, GL_FLOAT);
+        menger_pass_input.assign(2, "uv", model_uvs.data(), model_uvs.size(), 2, GL_FLOAT);
 		menger_pass_input.assign_index(menger_faces.data(), menger_faces.size(), 3);
 		RenderPass menger_pass(-1,
 				menger_pass_input,
@@ -449,6 +537,7 @@ int main(int argc, char* argv[])
 				);
 
 		menger_pass.loadLights(directionalLights, pointLights, spotLights);
+        menger_pass.loadMaterials();
 
 		menger_pass.setup();
 		//CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
@@ -461,6 +550,12 @@ int main(int argc, char* argv[])
 
 		// <<<Model>>>
 		model_pass.setup();
+        // bind diffuse map
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        // bind specular map
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, model_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Model>>>
 

@@ -10,6 +10,9 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+//#define STB_IMAGE_IMPLEMENTATION
+//#include "stb_image.h"
+
 class Loader {
 public:
     Loader();
@@ -19,6 +22,8 @@ public:
         std::vector<glm::vec4>& vertices, 
         std::vector<glm::vec4>& normals,
         std::vector<glm::uvec3>& faces);
+        
+    //unsigned int loadTexture(char const* path);
     
 private:
 
