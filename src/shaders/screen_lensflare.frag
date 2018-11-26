@@ -2,7 +2,7 @@ R"zzz(#version 330 core
 in vec2 TexCoords;
 uniform sampler2D screenTexture;
 
-uniform int uGhosts; // number of ghost samples: set to 3
+uniform float uGhosts; // number of ghost samples: set to 3
 uniform float uGhostDispersal; // dispersion factor
 
 out vec4 fragment_color;
@@ -13,7 +13,7 @@ void main() {
   vec2 texelSize = 1.0 / vec2(textureSize(screenTexture, 0));
 
 // ghost vector to image centre:
-  vec2 ghostVec = (vec2(0.5) - texcoord) * 1; // uGhostDispersal
+  vec2 ghostVec = (vec2(0.5) - texcoord) * 0.25;
 
 // sample ghosts:
   vec4 result = vec4(0.0);

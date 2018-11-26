@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
 	// };
 
     //ShaderUniform std_model = { "model", matrix_binder, std_model_data };
-    ShaderUniform menger_model = { "model", matrix_binder, menger_model_data};
+  ShaderUniform menger_model = { "model", matrix_binder, menger_model_data};
 	ShaderUniform floor_model = { "model", matrix_binder, floor_model_data};
 	ShaderUniform std_view = { "view", matrix_binder, std_view_data };
 	//ShaderUniform std_camera = { "camera_position", vector3_binder, std_camera_data };
@@ -381,7 +381,14 @@ int main(int argc, char* argv[])
 	// Get the uniform locations.
 	GLint screen_downsample_projection_matrix_location = 0;
 	CHECK_GL_ERROR(screen_downsample_projection_matrix_location =
-			glGetUniformLocation(screen_downsample_program_id, "screenTexture"));
+	glGetUniformLocation(screen_downsample_program_id, "screenTexture"));
+
+  int uScaleLocation = glGetUniformLocation(screen_downsample_program_id, "uScale");
+  int uBiasLocation = glGetUniformLocation(screen_downsample_program_id, "uBias");
+  glUseProgram(screen_downsample_program_id);
+  // Adjust uScale and uBias
+  glUniform4f(uScaleLocation, 0.1f, 0.1f, 0.1f, 1.0f);
+  glUniform4f(uBiasLocation, -0.9f, -0.9f, -0.9f, 1.0f);
 	// ===========================================================
 
 	// configure downsample_framebuffer
@@ -439,7 +446,13 @@ int main(int argc, char* argv[])
 	// Get the uniform locations.
 	GLint screen_lensflare_projection_matrix_location = 0;
 	CHECK_GL_ERROR(screen_lensflare_projection_matrix_location =
-			glGetUniformLocation(screen_lensflare_program_id, "screenTexture"));
+	glGetUniformLocation(screen_lensflare_program_id, "screenTexture"));
+
+  // FIXME: THIS DOES NOT PASS TO THE UNIFORM CORRECTLY, FIX HARDCODED VALUES
+  // float ghostDispersal = 0.25f;
+  // float numberOfGhosts = 3.0f;
+  // glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhostDispersal"), ghostDispersal);
+  // glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhosts"), numberOfGhosts);
 	// ===========================================================
 
 	// configure lensflare_framebuffer
