@@ -8,6 +8,6 @@ uniform vec4 uBias;
 out vec4 fragment_color;
 
 void main() {
-  fragment_color = max(vec4(0.0), texture(screenTexture, TexCoords) + 0.9) * 1;
+  fragment_color = max(vec4(0.0), texture(screenTexture, TexCoords) + 0.5) * 1;
 }
 )zzz"
