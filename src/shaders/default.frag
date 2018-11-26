@@ -6,7 +6,7 @@ struct Material {
     sampler2D diffuse;
     sampler2D specular;
     float shininess;
-}; 
+};
 
 struct DirectionalLight {
     vec3 direction;
@@ -30,7 +30,7 @@ struct SpotLight {
     vec3 direction;
     vec3 ambient;
     vec3 diffuse;
-    vec3 specular; 
+    vec3 specular;
     float constant;
     float linear;
     float quadratic;
@@ -82,7 +82,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0); // material.shininess);
     // attenuation
     float distance = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
     // combine results
     vec3 ambient = light.ambient; // * vec3(texture(material.diffuse, TexCoords));
     vec3 diffuse = light.diffuse * diff; // * vec3(texture(material.diffuse, TexCoords));
@@ -104,9 +104,9 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.0); // material.shininess);
     // attenuation
     float distance = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
     // spotlight intensity
-    float theta = dot(lightDir, normalize(-light.direction)); 
+    float theta = dot(lightDir, normalize(-light.direction));
     float epsilon = light.cutOff - light.outerCutOff;
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
     // combine results
@@ -121,7 +121,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 
 void main()
 {
-	vec4 color = abs(normalize(world_normal)) + vec4(0.0, 0.0, 0.0, 1.0);
+	vec4 color = abs(normalize(world_normal)) + vec4(100.0, 100.0, 100.0, 1.0);
 
 	vec3 norm = vec3(normalize(normal));
 	vec3 viewDir = normalize(vec3(view_position) - vec3(world_position));
