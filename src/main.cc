@@ -461,6 +461,7 @@ int main(int argc, char* argv[])
 	GLint screen_lensflare_projection_matrix_location = 0;
 	CHECK_GL_ERROR(screen_lensflare_projection_matrix_location =
 	glGetUniformLocation(screen_lensflare_program_id, "screenTexture"));
+	glUniform1i(screen_lensflare_projection_matrix_location, 0);
 
 	// FIXME, problem with using this texture!
 	int width, height, nrChannels;
@@ -473,16 +474,16 @@ int main(int argc, char* argv[])
 
 	glGenTextures(1, &lens_color_texture);
 	// glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, lens_color_texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_1D, lens_color_texture);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, width, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
 	GLint lens_color_texture_location = 0;
 	CHECK_GL_ERROR(lens_color_texture_location =
 	glGetUniformLocation(screen_lensflare_program_id, "uLensColor"));
-	glUniform1i(lens_color_texture_location, lens_color_texture);
+	glUniform1i(lens_color_texture_location, 1);
 
   float ghostDispersal = 0.25f;
   glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhostDispersal"), ghostDispersal);
@@ -492,6 +493,9 @@ int main(int argc, char* argv[])
 
 	float haloWidth = 0.5f;
 	glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uHaloWidth"), haloWidth);
+
+	float uDistortion = 0.5f;
+	glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uDistortion"), haloWidth);
 	// ===========================================================
 
 	// configure lensflare_framebuffer
@@ -623,7 +627,7 @@ int main(int argc, char* argv[])
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, downsample_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, lens_color_texture);
+		glBindTexture(GL_TEXTURE_1D, lens_color_texture);
 
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -638,6 +642,8 @@ int main(int argc, char* argv[])
 
 		CHECK_GL_ERROR(glUseProgram(screen_default_program_id));
 		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, lensflare_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 
     glBindVertexArray(quadVAO);

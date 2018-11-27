@@ -5,9 +5,26 @@ uniform sampler2D screenTexture;
 uniform float uGhosts; // number of ghost samples: set to 3
 uniform float uGhostDispersal; // dispersion factor
 uniform float uHaloWidth; //used to simulate halo on a lens
-uniform sampler2D uLensColor;
+uniform float uDistortion;
+uniform sampler1D uLensColor;
 
 out vec4 fragment_color;
+
+
+vec4 textureDistorted(
+      in sampler2D tex,
+      in vec2 texcoord,
+      in vec2 direction, // direction of distortion
+      in vec3 distortion // per-channel distortion factor
+   ) {
+  return vec4(
+     texture(tex, texcoord + direction * distortion.r).r,
+     texture(tex, texcoord + direction * distortion.g).g,
+     texture(tex, texcoord + direction * distortion.b).b,
+     0.0
+  );
+}
+
 
 // This fragment shader is the basis for doing lens flares
 void main() {
@@ -25,6 +42,12 @@ void main() {
      float weight = length(vec2(0.5) - offset) / length(vec2(0.5));
      weight = pow(1.0 - weight, 10.0);
 
+     //vec2 texelSize = 1.0 / vec2(textureSize(screenTexture, 0));
+     //vec3 distortion = vec3(-texelSize.x * uDistortion, 0.0, texelSize.x * uDistortion);
+     //vec2 direction = normalize(ghostVec);
+
+     //result += textureDistorted(screenTexture, texelSize, direction, distortion);
+
      result += texture(screenTexture, offset);
 
      // sample halo:
@@ -34,7 +57,7 @@ void main() {
      result += texture(screenTexture, texcoord + haloVec) * weight;
   }
 
-  // result = texture(uLensColor, texcoord);
+  result *= texture(uLensColor, length(vec2(0.5) - texcoord) / length(vec2(0.5)));
 
   fragment_color = result;
 }
