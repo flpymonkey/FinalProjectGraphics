@@ -359,10 +359,17 @@ int main(int argc, char* argv[])
 	glLinkProgram(screen_default_program_id);
 	CHECK_GL_PROGRAM_ERROR(screen_default_program_id);
 
+	CHECK_GL_ERROR(glUseProgram(screen_default_program_id));
 	// Get the uniform locations.
 	GLint screen_projection_matrix_location = 0;
 	CHECK_GL_ERROR(screen_projection_matrix_location =
 			glGetUniformLocation(screen_default_program_id, "screenTexture"));
+	glUniform1i(screen_projection_matrix_location, 0);
+
+	GLint screen_effect_projection_matrix_location = 0;
+	CHECK_GL_ERROR(screen_effect_projection_matrix_location =
+			glGetUniformLocation(screen_default_program_id, "lensEffect"));
+	glUniform1i(screen_effect_projection_matrix_location, 1);
 	// ===========================================================
 
 	// Setup downsample shader for the quad ====================
