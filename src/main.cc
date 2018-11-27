@@ -467,22 +467,31 @@ int main(int argc, char* argv[])
 	unsigned char *image_data = stbi_load("/u/bencj/Documents/Graphics/final/assets/lenscolor.png", &width, &height, &nrChannels, 0);
 	unsigned int lens_color_texture;
 
-	CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
+	for (int i = 0; i < width; i++){
+		printf("%d\n", image_data[i]);
+	}
 
 	glGenTextures(1, &lens_color_texture);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_1D, lens_color_texture);
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, width, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+	// glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, lens_color_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+	CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
 	GLint lens_color_texture_location = 0;
 	CHECK_GL_ERROR(lens_color_texture_location =
 	glGetUniformLocation(screen_lensflare_program_id, "uLensColor"));
 	glUniform1i(lens_color_texture_location, lens_color_texture);
 
   float ghostDispersal = 0.25f;
-  float numberOfGhosts = 3.0f;
   glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhostDispersal"), ghostDispersal);
-  glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhosts"), numberOfGhosts);
+
+	float numberOfGhosts = 3.0f;
+	glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhosts"), numberOfGhosts);
+
+	float haloWidth = 0.5f;
+	glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uHaloWidth"), haloWidth);
 	// ===========================================================
 
 	// configure lensflare_framebuffer
@@ -613,6 +622,8 @@ int main(int argc, char* argv[])
 		CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, downsample_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, lens_color_texture);
 
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
