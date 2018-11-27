@@ -29,10 +29,9 @@
 #include "render_pass.h"
 #include "lights.h"
 
-// assimp
-// #include <assimp/Importer.hpp>
-// #include <assimp/scene.h>
-// #include <assimp/postprocess.h>
+// Image loading library
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 struct MatrixPointers {
 	const float *projection, *model, *view;
@@ -44,8 +43,8 @@ glm::mat4 model_matrix;
 
 float aspect = 0.0f;
 
-int window_width = 1800;
-int window_height = 1600;
+int window_width = 800;
+int window_height = 600;
 
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
@@ -99,6 +98,19 @@ const char* screen_downsample_shader =
 const char* screen_lensflare_shader =
 #include "shaders/screen_lensflare.frag"
 ;
+
+// Used to get the current working directory
+#include <stdio.h>  /* defines FILENAME_MAX */
+#include <unistd.h>
+#define GetCurrentDir getcwd
+
+void
+PrintWorkingDirectory(){
+	char cCurrentPath[FILENAME_MAX];
+
+	cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
+	printf ("The current working directory is %s", cCurrentPath);
+}
 
 void
 ErrorCallback(int error, const char* description)
@@ -385,7 +397,9 @@ int main(int argc, char* argv[])
 
   int uScaleLocation = glGetUniformLocation(screen_downsample_program_id, "uScale");
   int uBiasLocation = glGetUniformLocation(screen_downsample_program_id, "uBias");
+
   glUseProgram(screen_downsample_program_id);
+
   // Adjust uScale and uBias
   glUniform4f(uScaleLocation, 0.1f, 0.1f, 0.1f, 1.0f);
   glUniform4f(uBiasLocation, -0.7f, -0.7f, -0.7f, 1.0f);
@@ -448,11 +462,27 @@ int main(int argc, char* argv[])
 	CHECK_GL_ERROR(screen_lensflare_projection_matrix_location =
 	glGetUniformLocation(screen_lensflare_program_id, "screenTexture"));
 
-  // FIXME: THIS DOES NOT PASS TO THE UNIFORM CORRECTLY, FIX HARDCODED VALUES
-  // float ghostDispersal = 0.25f;
-  // float numberOfGhosts = 3.0f;
-  // glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhostDispersal"), ghostDispersal);
-  // glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhosts"), numberOfGhosts);
+	// FIXME, problem with using this texture!
+	int width, height, nrChannels;
+	unsigned char *image_data = stbi_load("/u/bencj/Documents/Graphics/final/assets/lenscolor.png", &width, &height, &nrChannels, 0);
+	unsigned int lens_color_texture;
+
+	CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
+
+	glGenTextures(1, &lens_color_texture);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_1D, lens_color_texture);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, width, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+
+	GLint lens_color_texture_location = 0;
+	CHECK_GL_ERROR(lens_color_texture_location =
+	glGetUniformLocation(screen_lensflare_program_id, "uLensColor"));
+	glUniform1i(lens_color_texture_location, lens_color_texture);
+
+  float ghostDispersal = 0.25f;
+  float numberOfGhosts = 3.0f;
+  glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhostDispersal"), ghostDispersal);
+  glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhosts"), numberOfGhosts);
 	// ===========================================================
 
 	// configure lensflare_framebuffer
