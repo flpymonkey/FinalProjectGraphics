@@ -4,6 +4,7 @@ uniform sampler2D screenTexture;
 
 uniform float uGhosts; // number of ghost samples: set to 3
 uniform float uGhostDispersal; // dispersion factor
+uniform sampler2D uLensColor;
 
 out vec4 fragment_color;
 
@@ -20,8 +21,13 @@ void main() {
   for (int i = 0; i < 3; ++i) { // number of ghost samples: set to 3
      vec2 offset = fract(texcoord + ghostVec * float(i));
 
+      float weight = length(vec2(0.5) - offset) / length(vec2(0.5));
+      weight = pow(1.0 - weight, 10.0);
+
      result += texture(screenTexture, offset);
   }
+
+  result *= texture(uLensColor, length(vec2(0.5) - texcoord) / length(vec2(0.5)));
 
   fragment_color = result;
 }

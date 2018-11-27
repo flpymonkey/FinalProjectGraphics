@@ -44,8 +44,8 @@ glm::mat4 model_matrix;
 
 float aspect = 0.0f;
 
-int window_width = 800;
-int window_height = 600;
+int window_width = 1800;
+int window_height = 1600;
 
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
@@ -388,7 +388,7 @@ int main(int argc, char* argv[])
   glUseProgram(screen_downsample_program_id);
   // Adjust uScale and uBias
   glUniform4f(uScaleLocation, 0.1f, 0.1f, 0.1f, 1.0f);
-  glUniform4f(uBiasLocation, -0.9f, -0.9f, -0.9f, 1.0f);
+  glUniform4f(uBiasLocation, -0.7f, -0.7f, -0.7f, 1.0f);
 	// ===========================================================
 
 	// configure downsample_framebuffer
