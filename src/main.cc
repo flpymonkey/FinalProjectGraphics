@@ -43,8 +43,8 @@ glm::mat4 model_matrix;
 
 float aspect = 0.0f;
 
-int window_width = 800;
-int window_height = 600;
+int window_width = 1024;
+int window_height = 1024;
 
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
@@ -97,6 +97,10 @@ const char* screen_downsample_shader =
 
 const char* screen_lensflare_shader =
 #include "shaders/screen_lensflare.frag"
+;
+
+const char* screen_blur_shader =
+#include "shaders/screen_blur.frag"
 ;
 
 // Used to get the current working directory
@@ -470,7 +474,6 @@ int main(int argc, char* argv[])
 	glGetUniformLocation(screen_lensflare_program_id, "screenTexture"));
 	glUniform1i(screen_lensflare_projection_matrix_location, 0);
 
-	// FIXME, problem with using this texture!
 	int width, height, nrChannels;
 	unsigned char *image_data = stbi_load("/u/bencj/Documents/Graphics/final/assets/lenscolor.png", &width, &height, &nrChannels, 0);
 	unsigned int lens_color_texture;
@@ -480,7 +483,6 @@ int main(int argc, char* argv[])
 	}
 
 	glGenTextures(1, &lens_color_texture);
-	// glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_1D, lens_color_texture);
 	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, width, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -492,7 +494,7 @@ int main(int argc, char* argv[])
 	glGetUniformLocation(screen_lensflare_program_id, "uLensColor"));
 	glUniform1i(lens_color_texture_location, 1);
 
-  float ghostDispersal = 0.25f;
+  float ghostDispersal = 0.5f;
   glUniform1f(glGetUniformLocation(screen_lensflare_program_id, "uGhostDispersal"), ghostDispersal);
 
 	float numberOfGhosts = 3.0f;
@@ -524,6 +526,64 @@ int main(int argc, char* argv[])
 	glBindRenderbuffer(GL_RENDERBUFFER, lensflare_rbo);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window_width, window_height); // use a single renderbuffer object for both a depth AND stencil buffer.
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, lensflare_rbo); // now actually attach it
+
+	// Check that framebuffer is set up correctly
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// ===========================================================
+
+	// Setup downsample shader for the quad ====================
+	GLuint screen_blur_shader_id = 0;
+	const char* screen_blur_source_pointer = screen_blur_shader;
+	CHECK_GL_ERROR(screen_blur_shader_id = glCreateShader(GL_FRAGMENT_SHADER));
+	CHECK_GL_ERROR(glShaderSource(screen_blur_shader_id, 1,
+				&screen_blur_source_pointer, nullptr));
+	glCompileShader(screen_blur_shader_id);
+	CHECK_GL_SHADER_ERROR(screen_blur_shader_id);
+
+	// Setup the program
+	GLuint screen_blur_program_id = 0;
+	CHECK_GL_ERROR(screen_blur_program_id = glCreateProgram());
+	CHECK_GL_ERROR(glAttachShader(screen_blur_program_id, screen_vertex_shader_id));
+	CHECK_GL_ERROR(glAttachShader(screen_blur_program_id, screen_blur_shader_id));
+
+	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, g_buffer_objects[kScreenVao][kVertexBuffer]));
+
+	// Bind attributes.
+	CHECK_GL_ERROR(glBindAttribLocation(screen_blur_program_id, 0, "vertex_position"));
+	CHECK_GL_ERROR(glBindAttribLocation(screen_blur_program_id, 1, "aTexCoords"));
+
+	CHECK_GL_ERROR(glBindFragDataLocation(screen_blur_program_id, 0, "fragment_color"));
+	glLinkProgram(screen_blur_program_id);
+	CHECK_GL_PROGRAM_ERROR(screen_blur_program_id);
+
+	// Get the uniform locations.
+	GLint screen_blur_projection_matrix_location = 0;
+	CHECK_GL_ERROR(screen_blur_projection_matrix_location =
+	glGetUniformLocation(screen_blur_program_id, "screenTexture"));
+	// ===========================================================
+
+	// configure blur_framebuffer
+	unsigned int blur_framebuffer;
+	glGenFramebuffers(1, &blur_framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, blur_framebuffer);
+
+	// create a color attachment texture
+	unsigned int blur_textureColorBuffer;
+	glGenTextures(1, &blur_textureColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, blur_textureColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_width, window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blur_textureColorBuffer, 0);
+
+	unsigned int blur_rbo;
+	glGenRenderbuffers(1, &blur_rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, blur_rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window_width, window_height); // use a single renderbuffer object for both a depth AND stencil buffer.
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, blur_rbo); // now actually attach it
 
 	// Check that framebuffer is set up correctly
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
@@ -640,6 +700,21 @@ int main(int argc, char* argv[])
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
+		// now bind back to default geometry_framebuffer and draw a quad plane with the attached geometry_framebuffer color texture
+		glBindFramebuffer(GL_FRAMEBUFFER, blur_framebuffer);
+		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+		// clear all relevant buffers
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		CHECK_GL_ERROR(glUseProgram(screen_blur_program_id));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, lensflare_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+		glBindVertexArray(quadVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
 		// Final default pass to create final screen quad
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
@@ -651,7 +726,7 @@ int main(int argc, char* argv[])
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, lensflare_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+		glBindTexture(GL_TEXTURE_2D, blur_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);

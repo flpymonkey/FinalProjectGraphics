@@ -10,7 +10,8 @@ uniform sampler1D uLensColor;
 
 out vec4 fragment_color;
 
-
+// Distorts the texture with chromatic distortion as described here:
+// http://john-chapman-graphics.blogspot.com/2013/02/pseudo-lens-flare.html
 vec4 textureDistorted(
       in sampler2D tex,
       in vec2 texcoord,
@@ -57,6 +58,7 @@ void main() {
      result += texture(screenTexture, texcoord + haloVec) * weight;
   }
 
+  // Apply color distortion
   result *= texture(uLensColor, length(vec2(0.5) - texcoord) / length(vec2(0.5)));
 
   fragment_color = result;
