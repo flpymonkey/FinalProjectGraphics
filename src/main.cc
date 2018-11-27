@@ -5,7 +5,6 @@
 #include <memory>
 #include <ctime>
 
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -23,12 +22,10 @@
 #include "controller.h"
 #include "render_pass.h"
 #include "lights.h"
-//#include "model.h"
-//#include "objloader.h"
 #include "loader.h"
+#include "filesystem.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+
 
 struct MatrixPointers {
 	const float *projection, *model, *view;
@@ -111,42 +108,6 @@ void
 printVec4(const char* name, glm::vec4 data)
 {
     printf("%s: (%f, %f, %f, %f)\n", name, data.x, data.y, data.z, data.w);
-}
-
-unsigned int loadTexture(char const* path) {
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
 }
 
 int main(int argc, char* argv[])
@@ -338,57 +299,15 @@ int main(int argc, char* argv[])
     
     // <<<Model>>>
     std::vector<glm::vec4> model_vertices;
+    std::vector<glm::vec2> model_uvs;
     std::vector<glm::vec4> model_normals;
     std::vector<glm::uvec3> model_faces;
     Loader* loader;
     loader = new Loader();
-    loader->loadObj("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\untitled.obj", model_vertices, model_normals, model_faces);
-    
-    std::vector<glm::vec2> model_uvs;
-    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
-    
-    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
-    
-    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
-    
-    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
-    
-    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
-    
-    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 1.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(1.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 0.0f));
-    model_uvs.push_back(glm::vec2(0.0f, 1.0f));
-    
-    unsigned int diffuseMap = loadTexture("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\container2.png");
-    unsigned int specularMap = loadTexture("C:\\Users\\Mitchell\\Desktop\\FinalProjectGraphics\\src\\assets\\container2_specular.png");
+    loader->loadObj(path("/src/assets/untitled.obj").c_str(), model_vertices, model_uvs, model_normals, model_faces);
+
+    unsigned int diffuseMap = loader->loadTexture(path("/src/assets/container2.png").c_str());
+    unsigned int specularMap = loader->loadTexture(path("/src/assets/container2_specular.png").c_str());
 
     RenderDataInput model_pass_input;
 	model_pass_input.assign(0, "vertex_position", model_vertices.data(), model_vertices.size(), 4, GL_FLOAT);

@@ -1,5 +1,8 @@
 #include "loader.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 Loader::Loader() {
     // TODO:
 };
@@ -9,7 +12,8 @@ Loader::~Loader() {
 };
 
 void Loader::loadObj(const char* path, 
-    std::vector<glm::vec4>& vertices, 
+    std::vector<glm::vec4>& vertices,
+    std::vector<glm::vec2>& uvs,
     std::vector<glm::vec4>& normals,
     std::vector<glm::uvec3>& faces) {
             
@@ -25,18 +29,29 @@ void Loader::loadObj(const char* path,
 	const aiMesh* mesh = scene->mMeshes[0];
 
 	// Vertices.
+    vertices.reserve(mesh->mNumVertices);
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
 		aiVector3D v = mesh->mVertices[i];
 		vertices.push_back(glm::vec4(v.x, v.y, v.z, 1.0f));
 	}
+    
+    // Uvs.
+    uvs.reserve(mesh->mNumVertices);
+	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+        // One set.
+		aiVector3D uv = mesh->mTextureCoords[0][i];
+		uvs.push_back(glm::vec2(uv.x, uv.y));
+	}
 
 	// Normals.
+    normals.reserve(mesh->mNumVertices);
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
 		aiVector3D n = mesh->mNormals[i];
 		normals.push_back(glm::vec4(n.x, n.y, n.z, 0.0f));
 	}
 
 	// Faces.
+    faces.reserve(3 * mesh->mNumFaces);
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
         aiFace face = mesh->mFaces[i];
         // Triangles.
@@ -44,7 +59,7 @@ void Loader::loadObj(const char* path,
 	} 
 };
 
-/*
+
 unsigned int Loader::loadTexture(char const* path) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -79,4 +94,4 @@ unsigned int Loader::loadTexture(char const* path) {
     }
 
     return textureID;
-};*/
+};
