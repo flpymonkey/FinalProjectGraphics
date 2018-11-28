@@ -28,6 +28,7 @@
 #include "controller.h"
 #include "render_pass.h"
 #include "lights.h"
+#include "filesystem.h"
 
 // Image loading library
 #define STB_IMAGE_IMPLEMENTATION
@@ -43,8 +44,8 @@ glm::mat4 model_matrix;
 
 float aspect = 0.0f;
 
-int window_width = 2000;
-int window_height = 2000;
+int window_width = 1280;
+int window_height = 720;
 
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
@@ -553,8 +554,10 @@ int main(int argc, char* argv[])
 	glGetUniformLocation(screen_lensflare_program_id, "screenTexture"));
 	glUniform1i(screen_lensflare_projection_matrix_location, 0);
 
+	std::string lenscolor_image_path = "/../assets/lenscolor.png";
+	std::string full_path_to_image = cwd() + lenscolor_image_path;
 	int width, height, nrChannels;
-	unsigned char *image_data = stbi_load("../../assets/lenscolor.png", &width, &height, &nrChannels, 0);
+	unsigned char *image_data = stbi_load(full_path_to_image.c_str(), &width, &height, &nrChannels, 0);
 	unsigned int lens_color_texture;
 
 	for (int i = 0; i < width; i++){
