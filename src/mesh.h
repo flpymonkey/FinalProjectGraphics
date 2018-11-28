@@ -1,18 +1,23 @@
 #ifndef MESH_H
 #define MESH_H
 
-//#include <glad/glad.h> // holds all OpenGL type declarations
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-//#include <learnopengl/shader.h>
 
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <vector>
+
+struct Mesh {
+    std::vector<glm::vec4> vertices;
+    std::vector<glm::vec2> uvs;
+    std::vector<glm::vec4> normals;
+    std::vector<glm::uvec3> faces; 
+};
+
+/*
 using namespace std;
 
 struct Vertex {
@@ -33,16 +38,17 @@ struct Texture {
     string type;
     string path;
 };
-
+*/
+/*
 class Mesh {
 public:
-    /*  Mesh Data  */
+
     vector<Vertex> vertices;
     vector<unsigned int> indices;
     vector<Texture> textures;
     //unsigned int VAO;
 
-    /*  Functions  */
+
     // constructor
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
     {
@@ -91,7 +97,7 @@ public:
         // always good practice to set everything back to defaults once configured.
         glActiveTexture(GL_TEXTURE0);
     }*/
-
+/*
 private:
     /*  Render data  */
     //unsigned int VBO, EBO;
@@ -135,5 +141,6 @@ private:
 
         glBindVertexArray(0);
     }*/
-};
+//};
+
 #endif

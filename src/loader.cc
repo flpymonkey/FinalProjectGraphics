@@ -11,11 +11,7 @@ Loader::~Loader() {
     // TODO:
 };
 
-void Loader::loadObj(const char* path, 
-    std::vector<glm::vec4>& vertices,
-    std::vector<glm::vec2>& uvs,
-    std::vector<glm::vec4>& normals,
-    std::vector<glm::uvec3>& faces) {
+void Loader::loadObj(const char* path, std::vector<Mesh>& meshes) {
             
     Assimp::Importer importer;
 
@@ -26,39 +22,113 @@ void Loader::loadObj(const char* path,
 		return;
 	}
     
-	const aiMesh* mesh = scene->mMeshes[0];
-
-	// Vertices.
-    vertices.reserve(mesh->mNumVertices);
-	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-		aiVector3D v = mesh->mVertices[i];
-		vertices.push_back(glm::vec4(v.x, v.y, v.z, 1.0f));
-	}
+    if (scene->HasAnimations()) {
+        printf("Loader::loadObj(): warning scene contains unsupported animations!\n");
+    }
     
-    // Uvs.
-    uvs.reserve(mesh->mNumVertices);
-	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-        // One set.
-		aiVector3D uv = mesh->mTextureCoords[0][i];
-		uvs.push_back(glm::vec2(uv.x, uv.y));
-	}
-
-	// Normals.
-    normals.reserve(mesh->mNumVertices);
-	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-		aiVector3D n = mesh->mNormals[i];
-		normals.push_back(glm::vec4(n.x, n.y, n.z, 0.0f));
-	}
-
-	// Faces.
-    faces.reserve(3 * mesh->mNumFaces);
-	for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
-        aiFace face = mesh->mFaces[i];
-        // Triangles.
-        faces.push_back(glm::uvec3(face.mIndices[0], face.mIndices[1], face.mIndices[2]));
-	} 
+    if (scene->HasCameras()) {
+        printf("Loader::loadObj(): warning scene contains unsupported cameras!\n");
+    }
+    
+    if (scene->HasLights()) {
+        printf("Loader::loadObj(): warning scene contains unsupported lights!\n");
+    }
+    
+    if (scene->HasMeshes()) {
+        getMeshes(scene, meshes);
+    } else {
+        printf("Loader::loadObj(): warning scene does not contain meshes!\n");
+    }
+    
+    if (scene->HasMaterials()) {
+        printf("Loader::loadObj(): warning scene contains unsupported materials!\n");
+    }
+    
+    if (scene->HasTextures()) {
+        printf("Loader::loadObj(): warning scene contains unsupported textures!\n");
+    } 
 };
 
+void Loader::getMeshes(const aiScene* scene, std::vector<Mesh>& meshes) {
+    for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+        const aiMesh* mesh = scene->mMeshes[i];
+        getMesh(mesh, meshes);
+    }
+};
+
+void Loader::getMesh(const aiMesh* mesh, std::vector<Mesh>& meshes) {
+    Mesh m;
+    
+    if (mesh->HasBones()) {
+        printf("Loader::getMesh(): warning mesh contains unsupported bones!\n");
+    }
+    
+    if (mesh->HasPositions()) {
+        m.vertices.reserve(mesh->mNumVertices);
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            aiVector3D v = mesh->mVertices[i];
+            m.vertices.push_back(glm::vec4(v.x, v.y, v.z, 1.0f));
+        }
+    } else {
+        printf("Loader::getMesh(): warning mesh does not contain positions!\n");
+    }
+    
+    if (mesh->HasNormals()) {
+        m.normals.reserve(mesh->mNumVertices);
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            aiVector3D n = mesh->mNormals[i];
+            m.normals.push_back(glm::vec4(n.x, n.y, n.z, 0.0f));
+        }
+    } else {
+        m.normals.reserve(mesh->mNumVertices);
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            m.normals.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+        }
+        printf("Loader::getMesh(): warning mesh does not contain normals! Using default.\n");
+    }
+    
+    if (mesh->HasFaces()) {
+        m.faces.reserve(3 * mesh->mNumFaces);
+        for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+            aiFace face = mesh->mFaces[i];
+            // Triangles.
+            m.faces.push_back(glm::uvec3(face.mIndices[0], face.mIndices[1], face.mIndices[2]));
+        }
+    } else {
+        printf("Loader::getMesh(): warning mesh does not contain faces!\n");
+    }
+    
+    if (mesh->HasTangentsAndBitangents()) {
+        printf("Loader::getMesh(): warning mesh contains unsupported tangents and bitangents!\n");
+    }
+    
+    unsigned int uv_channels = mesh->GetNumUVChannels();
+    if (uv_channels > 1) {
+        printf("Loader::getMesh(): warning mesh contains %d unsupported sets of texture coords!\n", uv_channels - 1);
+    }
+    
+    if (mesh->HasTextureCoords(0)) {
+        m.uvs.reserve(mesh->mNumVertices);
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            // One set.
+            aiVector3D uv = mesh->mTextureCoords[0][i];
+            m.uvs.push_back(glm::vec2(uv.x, uv.y));
+        }
+    } else {
+        printf("Loader::getMesh(): warning mesh does not contain a set of uvs!\n");
+    }
+    
+    unsigned int color_channels = mesh->GetNumColorChannels();
+    if (color_channels > 0) {
+        printf("Loader::getMesh(): warning mesh contains %d unsupported sets of vertex colors!\n", color_channels);
+    }
+    
+    if (mesh->HasVertexColors(0)) {
+        printf("Loader::getMesh(): warning mesh contains unsupported vertex colors!\n");
+    }
+    
+    meshes.push_back(m);
+}
 
 unsigned int Loader::loadTexture(char const* path) {
     unsigned int textureID;
@@ -95,3 +165,4 @@ unsigned int Loader::loadTexture(char const* path) {
 
     return textureID;
 };
+

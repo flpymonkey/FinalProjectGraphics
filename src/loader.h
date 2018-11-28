@@ -23,20 +23,19 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include "mesh.h"
+
 class Loader {
 public:
     Loader();
     ~Loader();
     
-    void loadObj(const char* path, 
-        std::vector<glm::vec4>& vertices, 
-        std::vector<glm::vec2>& uvs,
-        std::vector<glm::vec4>& normals,
-        std::vector<glm::uvec3>& faces);
-        
+    void loadObj(const char* path, std::vector<Mesh>& meshes);      
     unsigned int loadTexture(char const* path);
     
 private:
+    void getMeshes(const aiScene* scene, std::vector<Mesh>& meshes);  
+    void getMesh(const aiMesh* mesh, std::vector<Mesh>& meshes);
 
 };
 

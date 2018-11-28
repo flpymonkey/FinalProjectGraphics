@@ -22,6 +22,8 @@
 #include <iostream>
 #include <map>
 #include <vector>
+
+/*
 using namespace std;
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
@@ -29,13 +31,13 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
 class Model 
 {
 public:
-    /*  Model Data */
+  
     vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     vector<Mesh> meshes;
     string directory;
     bool gammaCorrection;
 
-    /*  Functions   */
+    
     // constructor, expects a filepath to a 3D model.
     Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
     {
@@ -48,9 +50,9 @@ public:
         for(unsigned int i = 0; i < meshes.size(); i++)
             meshes[i].Draw(shader);
     }*/
-    
+    /*
 private:
-    /*  Functions   */
+  
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(string const &path)
     {
@@ -242,5 +244,5 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
     }
 
     return textureID;
-}
+}*/
 #endif
