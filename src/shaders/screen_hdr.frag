@@ -1,9 +1,10 @@
 R"zzz(#version 330 core
-out vec4 fragment_color;
 in vec2 TexCoords;
 uniform sampler2D screenTexture;
 
 uniform float exposure;
+
+out vec4 fragment_color;
 
 // hdr shader which uses Reinhard tone mapping for high dynamic range
 void main()
