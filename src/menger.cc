@@ -37,13 +37,14 @@ Menger::set_clean()
 // FIXME generate Menger sponge geometry
 void
 Menger::generate_geometry(std::vector<glm::vec4>& obj_vertices,
-	std::vector<glm::vec4>& vtx_normals, std::vector<glm::uvec3>& obj_faces) const
+	std::vector<glm::vec4>& vtx_normals,
+  std::vector<glm::uvec3>& obj_faces,
+  glm::vec4 position) const
 {
     obj_vertices.clear();
     vtx_normals.clear();
     obj_faces.clear();
-    
-	glm::vec4 position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
 	float length = 1.0f;
 
 	if (nesting_level_ <= 0) {
@@ -62,10 +63,10 @@ Menger::create_menger(std::vector<glm::vec4>& obj_vertices,
 		for (int y = 0; y < 3; y++) {
 			for (int x = 0; x < 3; x++) {
 				if (x % 2 + y % 2 + z % 2 < 2) {
-					glm::vec4 position_i = glm::vec4(-length + x * length + position.x, 
+					glm::vec4 position_i = glm::vec4(-length + x * length + position.x,
 						-length + y * length + position.y, -length + z * length + position.z, 1.0f);
 					if (level < nesting_level_) {
-						obj_faces_i = create_menger(obj_vertices, vtx_normals, obj_faces, 
+						obj_faces_i = create_menger(obj_vertices, vtx_normals, obj_faces,
 							position_i, length / 3.0f, level + 1, obj_faces_i);
 					} else {
 						create_cube(obj_vertices, vtx_normals, obj_faces, position_i, length, obj_faces_i);

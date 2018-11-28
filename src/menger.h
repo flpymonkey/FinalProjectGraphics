@@ -12,7 +12,9 @@ public:
 	bool is_dirty() const;
 	void set_clean();
 	void generate_geometry(std::vector<glm::vec4>& obj_vertices,
-		std::vector<glm::vec4>& vtx_normals, std::vector<glm::uvec3>& obj_faces) const;
+		std::vector<glm::vec4>& vtx_normals,
+    std::vector<glm::uvec3>& obj_faces,
+    glm::vec4 position) const;
 	int create_menger(std::vector<glm::vec4>& obj_vertices,
 		std::vector<glm::vec4>& vtx_normals, std::vector<glm::uvec3>& obj_faces,
 		glm::vec4 position, float length, int level, int obj_faces_i) const;

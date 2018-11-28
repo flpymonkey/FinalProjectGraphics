@@ -51,7 +51,7 @@ int window_height = 2000;
 float exposure = 0.8f;
 
 Floor* g_floor;
-Menger* g_menger;
+Menger *g_menger;
 Camera* g_camera;
 Controller* g_controller;
 
@@ -255,13 +255,15 @@ int main(int argc, char* argv[])
 	//ShaderUniform object_alpha = { "alpha", float_binder, alpha_data };
 	// <<<RenderPass Setup>>>
 
-    // <<<Menger Data>>>
-    std::vector<glm::vec4> menger_vertices;
-    std::vector<glm::vec4> menger_normals;
-    std::vector<glm::uvec3> menger_faces;
+  // <<<Menger Data>>>
+  std::vector<glm::vec4> menger_vertices;
+  std::vector<glm::vec4> menger_normals;
+  std::vector<glm::uvec3> menger_faces;
+
+  glm::vec4 menger_pos = glm::vec4(0.0f, 0.0f, -5.0f, 1.0f);
 
 	g_menger->set_nesting_level(1);
-	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces);
+	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces, menger_pos);
 	g_menger->set_clean();
 
 	glm::vec4 min_bounds = glm::vec4(std::numeric_limits<float>::max());
@@ -273,6 +275,31 @@ int main(int argc, char* argv[])
 	std::cout << "min_bounds = " << glm::to_string(min_bounds) << "\n";
 	std::cout << "max_bounds = " << glm::to_string(max_bounds) << "\n";
 	// <<<Menger Data>>>
+
+
+	// <<<Menger2 Data>>>
+	Menger *menger2 = new Menger();
+
+	std::vector<glm::vec4> menger2_vertices;
+	std::vector<glm::vec4> menger2_normals;
+	std::vector<glm::uvec3> menger2_faces;
+
+	glm::vec4 menger2_pos = glm::vec4(2.0f, 3.0f, -8.0f, 1.0f);
+
+	menger2->set_nesting_level(1);
+	menger2->generate_geometry(menger2_vertices, menger2_normals, menger2_faces, menger2_pos);
+	menger2->set_clean();
+
+	glm::vec4 min_bounds2 = glm::vec4(std::numeric_limits<float>::max());
+	glm::vec4 max_bounds2 = glm::vec4(-std::numeric_limits<float>::max());
+	for (int i = 0; i < menger2_vertices.size(); ++i) {
+		min_bounds2 = glm::min(menger2_vertices[i], min_bounds2);
+		max_bounds2 = glm::max(menger2_vertices[i], max_bounds2);
+	}
+	std::cout << "min_bounds = " << glm::to_string(min_bounds2) << "\n";
+	std::cout << "max_bounds = " << glm::to_string(max_bounds2) << "\n";
+	// <<<Menger2 Data>>>
+
 
     // <<<Floor Data>>>
     std::vector<glm::vec4> floor_vertices;
@@ -683,7 +710,7 @@ int main(int argc, char* argv[])
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		if (g_menger && g_menger->is_dirty()) {
-		  	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces);
+		  	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces, menger_pos);
 			g_menger->set_clean();
 		}
 
@@ -711,6 +738,24 @@ int main(int argc, char* argv[])
 		menger_pass.setup();
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Render Menger>>>
+
+		// <<<Render Menger2>>>
+		RenderDataInput menger2_pass_input;
+		menger2_pass_input.assign(0, "vertex_position", menger2_vertices.data(), menger2_vertices.size(), 4, GL_FLOAT);
+		menger2_pass_input.assign(1, "normal", menger2_normals.data(), menger2_normals.size(), 4, GL_FLOAT);
+		menger2_pass_input.assign_index(menger2_faces.data(), menger2_faces.size(), 3);
+		RenderPass menger2_pass(-1,
+			menger2_pass_input,
+			{ vertex_shader, NULL, fragment_shader },
+			{ menger_model, std_view, std_proj, std_light, std_view_position },
+			{ "fragment_color" }
+		);
+
+		menger2_pass.loadLights(directionalLights, pointLights, spotLights);
+
+		menger2_pass.setup();
+		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		// <<<Render Menger2>>>
 
 		// <<<Render Floor>>>
 		floor_pass.setup();
