@@ -121,7 +121,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 
 void main()
 {
-	vec4 color = abs(normalize(world_normal)) + vec4(2.0, 2.0, 2.0, 1.0);
+	vec4 color = abs(normalize(world_normal)) + vec4(3.0, 3.0, 3.0, 1.0);
 
 	vec3 norm = vec3(normalize(normal));
 	vec3 viewDir = normalize(vec3(view_position) - vec3(world_position));

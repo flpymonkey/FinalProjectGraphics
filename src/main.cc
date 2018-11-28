@@ -43,8 +43,8 @@ glm::mat4 model_matrix;
 
 float aspect = 0.0f;
 
-int window_width = 1024;
-int window_height = 1024;
+int window_width = 2000;
+int window_height = 2000;
 
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
@@ -102,19 +102,6 @@ const char* screen_lensflare_shader =
 const char* screen_blur_shader =
 #include "shaders/screen_blur.frag"
 ;
-
-// Used to get the current working directory
-#include <stdio.h>  /* defines FILENAME_MAX */
-#include <unistd.h>
-#define GetCurrentDir getcwd
-
-void
-PrintWorkingDirectory(){
-	char cCurrentPath[FILENAME_MAX];
-
-	cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
-	printf ("The current working directory is %s", cCurrentPath);
-}
 
 void
 ErrorCallback(int error, const char* description)
@@ -475,7 +462,7 @@ int main(int argc, char* argv[])
 	glUniform1i(screen_lensflare_projection_matrix_location, 0);
 
 	int width, height, nrChannels;
-	unsigned char *image_data = stbi_load("/u/bencj/Documents/Graphics/final/assets/lenscolor.png", &width, &height, &nrChannels, 0);
+	unsigned char *image_data = stbi_load("../../assets/lenscolor.png", &width, &height, &nrChannels, 0);
 	unsigned int lens_color_texture;
 
 	for (int i = 0; i < width; i++){

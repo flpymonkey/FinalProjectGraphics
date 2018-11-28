@@ -1,21 +1,39 @@
 R"zzz(#version 330 core
 uniform sampler2D screenTexture;
-
-uniform float offset[3] = float[]( 0.0, 1.3846153846, 3.2307692308 );
-uniform float weight[3] = float[]( 0.1, 0.02, 0.1 );
+in vec2 TexCoords;
+const float sampleDist = 1.0;
+const float sampleStrength = 2.2;
 
 out vec4 fragment_color;
 
 void main(void)
 {
-    fragment_color = texture2D( screenTexture, vec2(gl_FragCoord)/1024.0 ) * weight[0];
-    for (int i=1; i<3; i++) {
-        fragment_color +=
-            texture2D( screenTexture, ( vec2(gl_FragCoord)+vec2(0.0, offset[i]) )/1024.0 )
-                * weight[i];
-        fragment_color +=
-            texture2D( screenTexture, ( vec2(gl_FragCoord)-vec2(0.0, offset[i]) )/1024.0 )
-                * weight[i];
-    }
+    float samples[10];
+    samples[0] = -0.08;
+    samples[1] = -0.05;
+    samples[2] = -0.03;
+    samples[3] = -0.02;
+    samples[4] = -0.01;
+    samples[5] =  0.01;
+    samples[6] =  0.02;
+    samples[7] =  0.03;
+    samples[8] =  0.05;
+    samples[9] =  0.08;
+
+    vec2 dir = 0.5 - TexCoords;
+    float dist = sqrt(dir.x*dir.x + dir.y*dir.y);
+    dir = dir/dist;
+
+    vec4 color = texture(screenTexture,TexCoords);
+    vec4 sum = color;
+
+    for (int i = 0; i < 10; i++)
+        sum += texture( screenTexture, TexCoords + dir * samples[i] * sampleDist );
+
+    sum *= 1.0/11.0;
+    float t = dist * sampleStrength;
+    t = clamp( t ,0.0,1.0);
+
+    fragment_color = mix( color, sum, t );
 }
 )zzz"
