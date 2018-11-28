@@ -97,20 +97,20 @@ public:
 	/*
 	 * useMaterials: assign materials to the input data
 	 */
-	void useMaterials(const std::vector<Material>& );
+	//void useMaterials(const std::vector<Material>& );
 
 	int getNBuffers() const { return int(meta_.size()); }
 	RenderInputMeta getBufferMeta(int i) const { return meta_[i]; }
 	bool hasIndex() const { return has_index_; }
 	RenderInputMeta getIndexMeta() const { return index_meta_; }
 
-	bool hasMaterial() const { return !materials_.empty(); }
-	size_t getNMaterials() const { return materials_.size(); }
-	const Material& getMaterial(size_t id) const { return materials_[id]; }
-	Material& getMaterial(size_t id) { return materials_[id]; }
+	//bool hasMaterial() const { return !materials_.empty(); }
+	//size_t getNMaterials() const { return materials_.size(); }
+	//const Material& getMaterial(size_t id) const { return materials_[id]; }
+	//Material& getMaterial(size_t id) { return materials_[id]; }
 private:
 	std::vector<RenderInputMeta> meta_;
-	std::vector<Material> materials_;
+	//std::vector<Material> materials_;
 	RenderInputMeta index_meta_;
 	bool has_index_ = false;
 };
@@ -150,7 +150,7 @@ public:
 	 * renderWithMaterial: render a part of vertex buffer, after binding
 	 * corresponding uniforms for Phong shading.
 	 */
-	bool renderWithMaterial(int i); // return false if material id is invalid
+	//bool renderWithMaterial(int i); // return false if material id is invalid
 
 	// <<<Lights>>>
 	// NOTE: Must be called when using default shaders.
@@ -280,17 +280,17 @@ public:
     }
 	// <<<Lights>>>
 private:
-	void initMaterialUniform();
-	void createMaterialTexture();
+	//void initMaterialUniform();
+	//void createMaterialTexture();
 
 	int vao_;
 	RenderDataInput input_;
 	std::vector<ShaderUniform> uniforms_;
-	std::vector<std::vector<ShaderUniform>> material_uniforms_;
+	//std::vector<std::vector<ShaderUniform>> material_uniforms_;
 
 	std::vector<unsigned> glbuffers_, unilocs_, malocs_;
-	std::vector<unsigned> gltextures_, matexids_;
-	unsigned sampler2d_;
+	//std::vector<unsigned> gltextures_, matexids_;
+	//unsigned sampler2d_;
 	unsigned vs_ = 0, gs_ = 0, fs_ = 0;
 	unsigned sp_ = 0;
 

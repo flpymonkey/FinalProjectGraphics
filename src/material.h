@@ -1,7 +1,7 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-#include "image.h"
+//#include "image.h"
 #include <glm/glm.hpp>
 #include <memory>
 
@@ -18,6 +18,7 @@
  * Alternatively in theory, you can also call textureSize in GLSL to check if
  * the texture size is non-zero. However this method doesn't work here...
  */
+ /*
 struct Material {
 	// Phong shading model
 	glm::vec4 diffuse, ambient, specular;
@@ -27,5 +28,5 @@ struct Material {
 	size_t offset; // This material applies to faces starting from offset.
 	size_t nfaces; // This material applies to nfaces faces.
 };
-
+*/
 #endif
