@@ -554,15 +554,11 @@ int main(int argc, char* argv[])
 	glGetUniformLocation(screen_lensflare_program_id, "screenTexture"));
 	glUniform1i(screen_lensflare_projection_matrix_location, 0);
 
-	std::string lenscolor_image_path = "/../assets/lenscolor.png";
+	std::string lenscolor_image_path = "/assets/lenscolor.png";
 	std::string full_path_to_image = cwd() + lenscolor_image_path;
 	int width, height, nrChannels;
 	unsigned char *image_data = stbi_load(full_path_to_image.c_str(), &width, &height, &nrChannels, 0);
 	unsigned int lens_color_texture;
-
-	for (int i = 0; i < width; i++){
-		printf("%d\n", image_data[i]);
-	}
 
 	glGenTextures(1, &lens_color_texture);
 	glBindTexture(GL_TEXTURE_1D, lens_color_texture);

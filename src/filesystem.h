@@ -22,14 +22,14 @@ std::string cwd() {
     }
 
     c[sizeof(c) - 1] = '\0';
-    
+
     std::string s = std::string(c);
-    
+
     if (PLATFORM == 0) {
         return s.substr(0, s.find("\\build\\src"));
     }
 
-    return s.substr(0, s.find("/build/src"));
+    return s.substr(0, s.find("/build"));
 }
 
 std::string path(std::string file) {
