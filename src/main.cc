@@ -206,6 +206,7 @@ int main(int argc, char* argv[])
 	// }; // This returns point to model matrix
 
 	glm::mat4 model_model_matrix = glm::mat4(1.0f);
+    model_model_matrix = glm::scale(model_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
 	auto model_model_data = [&model_model_matrix]() -> const void* {
 		return &model_model_matrix[0][0];
 	}; // This return model matrix for the menger.
@@ -310,14 +311,14 @@ int main(int argc, char* argv[])
     
     Loader* loader;
     loader = new Loader();
-    loader->loadObj(path("/src/assets/tankard/MaryRoseTankard_100kMesh.obj").c_str(), meshes, materials);
+    loader->loadObj(path("/src/assets/building/buildings.obj").c_str(), meshes, materials);
     
-    model_vertices = meshes[0].vertices;
-    model_uvs = meshes[0].uvs;
-    model_normals = meshes[0].normals;
-    model_faces = meshes[0].faces;
+    model_vertices = meshes[1].vertices;
+    model_uvs = meshes[1].uvs;
+    model_normals = meshes[1].normals;
+    model_faces = meshes[1].faces;
 
-    unsigned int diffuseMap = materials[0].diffuse_ids[0];//loader->loadTexture(path("/src/assets/container2.png").c_str());
+    unsigned int diffuseMap = loader->loadTexture(path("/src/assets/container2.png").c_str());
     unsigned int specularMap = loader->loadTexture(path("/src/assets/container2_specular.png").c_str());
 
     RenderDataInput model_pass_input;
@@ -475,7 +476,7 @@ int main(int argc, char* argv[])
 
 		// <<<Render Floor>>>
 		floor_pass.setup();
-		//CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Render Floor>>>
 
 		// <<<Model>>>

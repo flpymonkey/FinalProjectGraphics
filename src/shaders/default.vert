@@ -2,6 +2,7 @@ R"zzz(#version 330 core
 in vec4 vertex_position;
 in vec4 vertex_normal;
 in vec2 vertex_uv;
+uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform vec4 light_position;
@@ -13,7 +14,7 @@ out vec2 uv;
 void main()
 {
 // Transform vertex into clipping coordinates
-	gl_Position = projection * view * vertex_position;
+	gl_Position = projection * view * model * vertex_position;
 // Lighting in camera coordinates
 //  Compute light direction and transform to camera coordinates
         light_direction = view * (light_position - vertex_position);
