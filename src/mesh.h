@@ -14,7 +14,8 @@ struct Mesh {
     std::vector<glm::vec4> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec4> normals;
-    std::vector<glm::uvec3> faces; 
+    std::vector<glm::uvec3> faces;
+    unsigned int material_id;
 };
 
 /*

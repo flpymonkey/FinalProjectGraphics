@@ -5,6 +5,11 @@
 #include <glm/glm.hpp>
 #include <memory>
 
+struct Material {
+    std::vector<unsigned int> diffuse_ids;
+    std::vector<unsigned int> specular_ids;
+};
+
 /*
  * PMD format groups faces according to their materials.
  * Each material was assigned to a continuous sequence of faces.

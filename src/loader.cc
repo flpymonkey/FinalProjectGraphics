@@ -11,7 +11,7 @@ Loader::~Loader() {
     // TODO:
 };
 
-void Loader::loadObj(const char* path, std::vector<Mesh>& meshes) {
+void Loader::loadObj(const char* path, std::vector<Mesh>& meshes, std::vector<Material>& materials) {
             
     Assimp::Importer importer;
 
@@ -41,7 +41,9 @@ void Loader::loadObj(const char* path, std::vector<Mesh>& meshes) {
     }
     
     if (scene->HasMaterials()) {
-        printf("Loader::loadObj(): warning scene contains unsupported materials!\n");
+        getMaterials(path, scene, meshes, materials);
+    } else {
+        printf("Loader::loadObj(): warning scene does not contain materials!\n");
     }
     
     if (scene->HasTextures()) {
@@ -127,7 +129,51 @@ void Loader::getMesh(const aiMesh* mesh, std::vector<Mesh>& meshes) {
         printf("Loader::getMesh(): warning mesh contains unsupported vertex colors!\n");
     }
     
+    m.material_id = mesh->mMaterialIndex;
     meshes.push_back(m);
+}
+
+void Loader::getMaterials(const char* path, const aiScene* scene, std::vector<Mesh>& meshes, std::vector<Material>& materials) {
+    for (unsigned int i = 0; i < meshes.size(); i++) {
+        const aiMaterial* material = scene->mMaterials[meshes[i].material_id];
+        getMaterial(path, material, materials);
+    }
+}
+
+void Loader::getMaterial(const char* path, const aiMaterial* material, std::vector<Material>& materials) {
+    Material m;
+    
+    if (material->GetTextureCount(aiTextureType_AMBIENT) > 0) {
+        printf("Loader::getMaterial(): warning material contains unsupported ambient textures!\n"); 
+    }
+    
+    if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+        for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE); i++) {
+            aiString string;
+            material->GetTexture(aiTextureType_DIFFUSE, i, &string);
+            std::string p = mtl_path(path, std::string(string.C_Str()));
+            m.diffuse_ids.push_back(loadTexture(p.c_str()));
+        }
+    } else {
+        printf("Loader::getMaterial(): warning material does not contain diffuse textures!\n");
+    }
+    
+    if (material->GetTextureCount(aiTextureType_SPECULAR) > 0) {
+        for (unsigned int i = 0; i < material->GetTextureCount(aiTextureType_SPECULAR); i++) {
+            aiString string;
+            material->GetTexture(aiTextureType_SPECULAR, i, &string);
+            std::string p = mtl_path(path, std::string(string.C_Str()));
+            m.specular_ids.push_back(loadTexture(p.c_str()));
+        }
+    } else {
+        printf("Loader::getMaterial(): warning material does not contain specular textures!\n");
+    }
+    
+    if (material->GetTextureCount(aiTextureType_HEIGHT) > 0) {
+        printf("Loader::getMaterial(): warning material contains unsupported height textures!\n"); 
+    }
+    
+    materials.push_back(m);
 }
 
 unsigned int Loader::loadTexture(char const* path) {

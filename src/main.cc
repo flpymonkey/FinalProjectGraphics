@@ -24,6 +24,7 @@
 #include "lights.h"
 #include "loader.h"
 #include "mesh.h"
+#include "material.h"
 #include "filesystem.h"
 
 
@@ -305,16 +306,18 @@ int main(int argc, char* argv[])
     std::vector<glm::uvec3> model_faces;
     
     std::vector<Mesh> meshes;
+    std::vector<Material> materials;
+    
     Loader* loader;
     loader = new Loader();
-    loader->loadObj(path("/src/assets/tankard/MaryRoseTankard_100kMesh.obj").c_str(), meshes);
+    loader->loadObj(path("/src/assets/tankard/MaryRoseTankard_100kMesh.obj").c_str(), meshes, materials);
     
     model_vertices = meshes[0].vertices;
     model_uvs = meshes[0].uvs;
     model_normals = meshes[0].normals;
     model_faces = meshes[0].faces;
 
-    unsigned int diffuseMap = loader->loadTexture(path("/src/assets/container2.png").c_str());
+    unsigned int diffuseMap = materials[0].diffuse_ids[0];//loader->loadTexture(path("/src/assets/container2.png").c_str());
     unsigned int specularMap = loader->loadTexture(path("/src/assets/container2_specular.png").c_str());
 
     RenderDataInput model_pass_input;
