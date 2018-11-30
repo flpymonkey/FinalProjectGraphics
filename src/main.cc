@@ -465,7 +465,7 @@ int main(int argc, char* argv[])
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	// ===========================================================
 
-	// Setup hdr fragment shader for the quad ====================
+	// Setup brightness fragment shader for the quad ====================
 	GLuint screen_brightness_shader_id = 0;
 	const char* screen_brightness_source_pointer = screen_brightness_shader;
 	CHECK_GL_ERROR(screen_brightness_shader_id = glCreateShader(GL_FRAGMENT_SHADER));
@@ -780,7 +780,9 @@ int main(int argc, char* argv[])
 	CHECK_GL_ERROR(screen_blur2_projection_matrix_location =
 	glGetUniformLocation(screen_blur2_program_id, "screenTexture"));
 
-	float horizontal = 1.0f;
+	CHECK_GL_ERROR(glUseProgram(screen_blur2_program_id));
+
+	int horizontal = 1;
   glUniform1i(glGetUniformLocation(screen_blur2_program_id, "horizontal"), horizontal);
 	// ===========================================================
 
@@ -809,7 +811,7 @@ int main(int argc, char* argv[])
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	// ===========================================================
+	// // ===========================================================
 
 	// configure alternate geometry_framebuffer
 	unsigned int geometry_framebuffer;
@@ -987,8 +989,6 @@ int main(int argc, char* argv[])
 		glBindVertexArray(quadVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		printf("%s\n", "This is occuring");
-
 		// blur 2 multi pass
 		// 2. blur bright fragments with two-pass Gaussian Blur
     // --------------------------------------------------
@@ -1008,7 +1008,6 @@ int main(int argc, char* argv[])
 					first_iteration = false;
 				}
     }
-		printf("%s\n", "This is occuring2");
 
 		// Final default pass to create final screen quad
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
