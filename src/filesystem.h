@@ -37,7 +37,7 @@ std::string static cwd() {
         return s.substr(0, s.find("\\build\\src"));
     }
 
-    return s.substr(0, s.find("/build/src"));
+    return s.substr(0, s.find("/build"));
 }
 
 std::string static path(std::string file) {
