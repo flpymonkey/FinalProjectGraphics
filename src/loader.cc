@@ -15,7 +15,7 @@ void Loader::loadObj(const char* path, std::vector<Mesh>& meshes, std::vector<Ma
             
     Assimp::Importer importer;
 
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate);
+	const aiScene* scene = importer.ReadFile(path, 0); //aiProcess_Triangulate);
 	if (!scene) {
 		fprintf(stderr, importer.GetErrorString());
 		getchar();

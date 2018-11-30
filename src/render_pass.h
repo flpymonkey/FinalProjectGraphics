@@ -117,6 +117,7 @@ private:
 
 class RenderPass {
 public:
+    RenderPass();
 	/*
 	 * Constructor
 	 *      vao: the Vertex Array Object, pass -1 to create new

@@ -32,6 +32,10 @@ RenderDataInput::RenderDataInput()
 {
 }
 
+RenderPass::RenderPass() {
+    
+}
+
 RenderPass::RenderPass(int vao, // -1: create new VAO, otherwise use given VAO
 	   const RenderDataInput& input,
 	   const std::vector<const char*> shaders, // Order: VS, GS, FS 

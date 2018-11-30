@@ -26,6 +26,7 @@
 #include "mesh.h"
 #include "material.h"
 #include "filesystem.h"
+#include "object.h"
 
 
 
@@ -170,13 +171,14 @@ int main(int argc, char* argv[])
  	projection_matrix = glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
 	view_matrix = g_camera->get_view_matrix();
 	model_matrix = glm::mat4(1.0f);
+    
 	glm::vec4 light_position = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
 
-    //glm::vec4 light_position = glm::vec4(0.0f, 100.0f, 0.0f, 1.0f);
 	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
 	mats.projection = &projection_matrix[0][0];
 	mats.model= &model_matrix[0][0];
 	mats.view = &view_matrix[0][0];
+    
 	/*
 	 * In the following we are going to define several lambda functions to bind Uniforms.
 	 *
@@ -187,29 +189,10 @@ int main(int argc, char* argv[])
 	auto matrix_binder = [](int loc, const void* data) {
 		glUniformMatrix4fv(loc, 1, GL_FALSE, (const GLfloat*)data);
 	};
-	// auto bone_matrix_binder = [&mesh](int loc, const void* data) {
-	// 	auto nelem = mesh.getNumberOfBones();
-	// 	glUniformMatrix4fv(loc, nelem, GL_FALSE, (const GLfloat*)data);
-	// };
+
 	auto vector_binder = [](int loc, const void* data) {
 		glUniform4fv(loc, 1, (const GLfloat*)data);
 	};
-	// auto vector3_binder = [](int loc, const void* data) {
-	// 	glUniform3fv(loc, 1, (const GLfloat*)data);
-	// };
-	// auto float_binder = [](int loc, const void* data) {
-	// 	glUniform1fv(loc, 1, (const GLfloat*)data);
-	// };
-
- //    auto std_model_data = [&mats]() -> const void* {
-	// 	return mats.model;
-	// }; // This returns point to model matrix
-
-	glm::mat4 model_model_matrix = glm::mat4(1.0f);
-    model_model_matrix = glm::scale(model_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
-	auto model_model_data = [&model_model_matrix]() -> const void* {
-		return &model_model_matrix[0][0];
-	}; // This return model matrix for the menger.
 
 	glm::mat4 menger_model_matrix = glm::mat4(1.0f);
 	auto menger_model_data = [&menger_model_matrix]() -> const void* {
@@ -221,16 +204,18 @@ int main(int argc, char* argv[])
 		return &floor_model_matrix[0][0];
 	}; // This return model matrix for the floor.
 
-
+    auto std_model_data = [&mats]() -> const void* {
+		return mats.model;
+	};
+    
 	auto std_view_data = [&mats]() -> const void* {
 		return mats.view;
 	};
-	// auto std_camera_data  = [&gui]() -> const void* {
-	// 	return &gui.getCamera()[0];
-	// };
+
 	auto std_proj_data = [&mats]() -> const void* {
 		return mats.projection;
 	};
+    
 	auto std_light_data = [&light_position]() -> const void* {
 		return &light_position[0];
 	};
@@ -240,24 +225,14 @@ int main(int argc, char* argv[])
 	auto std_view_position_data = [&eye_position]() -> const void* {
 		return &eye_position[0];
 	};
-	// auto alpha_data  = [&gui]() -> const void* {
-	// 	static const float transparet = 0.5; // Alpha constant goes here
-	// 	static const float non_transparet = 1.0;
-	// 	if (gui.isTransparent())
-	// 		return &transparet;
-	// 	else
-	// 		return &non_transparet;
-	// };
 
-    ShaderUniform model_model = { "model", matrix_binder, model_model_data };
     ShaderUniform menger_model = { "model", matrix_binder, menger_model_data};
 	ShaderUniform floor_model = { "model", matrix_binder, floor_model_data};
 	ShaderUniform std_view = { "view", matrix_binder, std_view_data };
-	//ShaderUniform std_camera = { "camera_position", vector3_binder, std_camera_data };
+    ShaderUniform std_model = { "model", matrix_binder, std_model_data };
 	ShaderUniform std_proj = { "projection", matrix_binder, std_proj_data };
 	ShaderUniform std_light = { "light_position", vector_binder, std_light_data };
 	ShaderUniform std_view_position = { "view_position", vector_binder, std_view_position_data };
-	//ShaderUniform object_alpha = { "alpha", float_binder, alpha_data };
 	// <<<RenderPass Setup>>>
 
     // <<<Menger Data>>>
@@ -300,42 +275,28 @@ int main(int argc, char* argv[])
 			);
     // <<<Floor Renderpass>>>
     
-    // <<<Model>>>
-    std::vector<glm::vec4> model_vertices;
-    std::vector<glm::vec2> model_uvs;
-    std::vector<glm::vec4> model_normals;
-    std::vector<glm::uvec3> model_faces;
+    // <<<Object>>>
+    Object* object = new Object();
+    object->load("/src/assets/tankard/MaryRoseTankard_100kMesh.obj");
     
-    std::vector<Mesh> meshes;
-    std::vector<Material> materials;
+    glm::mat4 model_matrix = glm::mat4(1.0f);
     
-    Loader* loader;
-    loader = new Loader();
-    loader->loadObj(path("/src/assets/building/buildings.obj").c_str(), meshes, materials);
+    model_matrix = object->translate(model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
+    model_matrix = object->rotate(model_matrix, 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+    model_matrix = object->scale(model_matrix, glm::vec3(0.5f, 0.5f, 0.5f));
     
-    model_vertices = meshes[1].vertices;
-    model_uvs = meshes[1].uvs;
-    model_normals = meshes[1].normals;
-    model_faces = meshes[1].faces;
+    auto model_data = [&model_matrix]() -> const void* {
+		return &model_matrix[0][0];
+	};
+    
+    ShaderUniform model = {"model", matrix_binder, model_data};
+    
+    object->shaders(vertex_shader, NULL, fragment_shader);
+    object->uniforms(model, std_view, std_proj, std_light, std_view_position);
+    object->lights(directionalLights, pointLights, spotLights);
 
-    unsigned int diffuseMap = loader->loadTexture(path("/src/assets/container2.png").c_str());
-    unsigned int specularMap = loader->loadTexture(path("/src/assets/container2_specular.png").c_str());
-
-    RenderDataInput model_pass_input;
-	model_pass_input.assign(0, "vertex_position", model_vertices.data(), model_vertices.size(), 4, GL_FLOAT);
-	model_pass_input.assign(1, "normal", model_normals.data(), model_normals.size(), 4, GL_FLOAT);
-    model_pass_input.assign(2, "uv", model_uvs.data(), model_uvs.size(), 2, GL_FLOAT);
-	model_pass_input.assign_index(model_faces.data(), model_faces.size(), 3);
-	RenderPass model_pass(-1,
-			model_pass_input,
-			{ vertex_shader, NULL, fragment_shader},
-			{ model_model, std_view, std_proj, std_light, std_view_position},
-			{ "fragment_color" }
-			);
-
-	model_pass.loadLights(directionalLights, pointLights, spotLights);
-    model_pass.loadMaterials();
-    // <<<Model>>>
+    object->setup();
+    // <<<Object>>>
 
 	float theta = 0.0f;
 
@@ -455,6 +416,7 @@ int main(int argc, char* argv[])
 		view_matrix = g_camera->get_view_matrix();
 
 		// <<<Render Menger>>>
+        std::vector<glm::vec2> model_uvs;
 		RenderDataInput menger_pass_input;
 		menger_pass_input.assign(0, "vertex_position", menger_vertices.data(), menger_vertices.size(), 4, GL_FLOAT);
 		menger_pass_input.assign(1, "normal", menger_normals.data(), menger_normals.size(), 4, GL_FLOAT);
@@ -479,16 +441,9 @@ int main(int argc, char* argv[])
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Render Floor>>>
 
-		// <<<Model>>>
-		model_pass.setup();
-        // bind diffuse map
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
-        // bind specular map
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
-		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, model_faces.size() * 3, GL_UNSIGNED_INT, 0));
-		// <<<Model>>>
+        // <<<Object>>>
+        object->render();
+        // <<<Object>>>
 
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
