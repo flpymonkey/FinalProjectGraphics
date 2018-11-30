@@ -402,6 +402,11 @@ int main(int argc, char* argv[])
 	CHECK_GL_ERROR(screen_effect_projection_matrix_location =
 			glGetUniformLocation(screen_default_program_id, "lensEffect"));
 	glUniform1i(screen_effect_projection_matrix_location, 1);
+
+	GLint screen_effect2_projection_matrix_location = 0;
+	CHECK_GL_ERROR(screen_effect2_projection_matrix_location =
+			glGetUniformLocation(screen_default_program_id, "lensEffect2"));
+	glUniform1i(screen_effect2_projection_matrix_location, 2);
 	// ===========================================================
 
   // Setup hdr fragment shader for the quad ====================
@@ -781,36 +786,28 @@ int main(int argc, char* argv[])
 	glGetUniformLocation(screen_blur2_program_id, "screenTexture"));
 
 	CHECK_GL_ERROR(glUseProgram(screen_blur2_program_id));
-
-	int horizontal = 1;
-  glUniform1i(glGetUniformLocation(screen_blur2_program_id, "horizontal"), horizontal);
 	// ===========================================================
 
-	// configure blur2_framebuffer
-	unsigned int blur2_framebuffer;
-	glGenFramebuffers(1, &blur2_framebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, blur2_framebuffer);
-
-	// create a color attachment texture
-	unsigned int blur2_textureColorBuffer;
-	glGenTextures(1, &blur2_textureColorBuffer);
-	glBindTexture(GL_TEXTURE_2D, blur2_textureColorBuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_width, window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blur2_textureColorBuffer, 0);
-
-	unsigned int blur2_rbo;
-	glGenRenderbuffers(1, &blur2_rbo);
-	glBindRenderbuffer(GL_RENDERBUFFER, blur2_rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window_width, window_height); // use a single renderbuffer object for both a depth AND stencil buffer.
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, blur2_rbo); // now actually attach it
-
-	// Check that framebuffer is set up correctly
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
-		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	// configure blur2_framebuffer, THIS IS A WEIRD ASS FRAME BUFFER, A DOUBLE BUFFER WHAT THE HELL
+	unsigned int pingpongFBO[2];
+	unsigned int pingpongBuffer[2];
+	glGenFramebuffers(2, pingpongFBO);
+	glGenTextures(2, pingpongBuffer);
+	for (unsigned int i = 0; i < 2; i++)
+	{
+	    glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+	    glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+	    glTexImage2D(
+	        GL_TEXTURE_2D, 0, GL_RGB16F, window_width, window_height, 0, GL_RGB, GL_FLOAT, NULL
+	    );
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	    glFramebufferTexture2D(
+	        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffer[i], 0
+	    );
 	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	// // ===========================================================
 
 	// configure alternate geometry_framebuffer
@@ -993,14 +990,17 @@ int main(int argc, char* argv[])
 		// 2. blur bright fragments with two-pass Gaussian Blur
     // --------------------------------------------------
     bool horizontal = true, first_iteration = true;
-    unsigned int amount = 10;
+    unsigned int amount = 20;
     CHECK_GL_ERROR(glUseProgram(screen_blur2_program_id));
     for (unsigned int i = 0; i < amount; i++)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, blur2_framebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
         glUniform1i(glGetUniformLocation(screen_blur2_program_id, "horizontal"), horizontal);
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, brightness_colorBuffers[1]);	// use the color attachment texture as the texture of the quad plane
+				glBindTexture(
+			 		GL_TEXTURE_2D, first_iteration ? brightness_colorBuffers[1] : pingpongBuffer[!horizontal]
+	 			);
+				//glBindTexture(GL_TEXTURE_2D, brightness_colorBuffers[1]);	// use the color attachment texture as the texture of the quad plane
 				glBindVertexArray(quadVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
         horizontal = !horizontal;
@@ -1020,7 +1020,9 @@ int main(int argc, char* argv[])
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, brightness_colorBuffers[0]);	// use the color attachment texture as the texture of the quad plane
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, blur2_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+		glBindTexture(GL_TEXTURE_2D, pingpongBuffer[0]);	// use the color attachment texture as the texture of the quad plane
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, blur_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -1028,7 +1030,6 @@ int main(int argc, char* argv[])
 		// Poll and swap.
 		glfwPollEvents();
 		glfwSwapBuffers(window);
-		printf("%s\n", "This is occuring3");
 	}
 	glfwDestroyWindow(window);
 	glfwTerminate();
