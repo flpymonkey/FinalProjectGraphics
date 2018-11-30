@@ -32,6 +32,10 @@ RenderDataInput::RenderDataInput()
 {
 }
 
+RenderPass::RenderPass() {
+    
+}
+
 RenderPass::RenderPass(int vao, // -1: create new VAO, otherwise use given VAO
 	   const RenderDataInput& input,
 	   const std::vector<const char*> shaders, // Order: VS, GS, FS 
@@ -98,12 +102,15 @@ RenderPass::RenderPass(int vao, // -1: create new VAO, otherwise use given VAO
 	for (size_t i = 0; i < uniforms.size(); i++) {
 		CHECK_GL_ERROR(unilocs_[i] = glGetUniformLocation(sp_, uniforms[i].name.c_str()));
 	}
+    /*
 	if (input_.hasMaterial()) {
 		createMaterialTexture();
 		initMaterialUniform();
 	}
+    */
 }
 
+/*
 void RenderPass::initMaterialUniform()
 {
 	auto float_binder = [](int loc, const void* data) {
@@ -163,6 +170,7 @@ void RenderPass::initMaterialUniform()
 	CHECK_GL_ERROR(malocs_.emplace_back(glGetUniformLocation(sp_, "textureSampler")));
 	std::cerr << "textureSampler location: " << malocs_.back() << std::endl;
 }
+*/
 
 /*
  * Create textures to gltextures_
@@ -170,6 +178,7 @@ void RenderPass::initMaterialUniform()
  * 
  * Different materials may share textures
  */
+ /*
 void RenderPass::createMaterialTexture()
 {
 	CHECK_GL_ERROR(glActiveTexture(GL_TEXTURE0 + 0));
@@ -228,6 +237,7 @@ void RenderPass::createMaterialTexture()
 	CHECK_GL_ERROR(glSamplerParameteri(sampler2d_, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 	CHECK_GL_ERROR(glSamplerParameteri(sampler2d_, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
 }
+*/
 
 RenderPass::~RenderPass()
 {
@@ -263,6 +273,7 @@ void RenderPass::setup()
 	bind_uniforms(uniforms_, unilocs_);
 }
 
+/*
 bool RenderPass::renderWithMaterial(int mid)
 {
 	if (mid >= material_uniforms_.size() || mid < 0)
@@ -280,6 +291,7 @@ bool RenderPass::renderWithMaterial(int mid)
 	              );
 	return true;
 }
+*/
 
 void RenderPass::bind_uniforms(std::vector<ShaderUniform>& uniforms,
 		const std::vector<unsigned>& unilocs)
@@ -327,6 +339,7 @@ void RenderDataInput::assign_index(const void *data, size_t nelements, size_t el
 	index_meta_ = {-1, "", data, nelements, element_length, GL_UNSIGNED_INT};
 }
 
+/*
 void RenderDataInput::useMaterials(const std::vector<Material>& ms)
 {
 	materials_ = ms;
@@ -334,6 +347,7 @@ void RenderDataInput::useMaterials(const std::vector<Material>& ms)
 		std::cerr << "Use Material from " << ma.offset << " size: " << ma.nfaces << std::endl;
 	}
 }
+*/
 
 size_t RenderInputMeta::getElementSize() const
 {

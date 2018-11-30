@@ -1,9 +1,14 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-#include "image.h"
+//#include "image.h"
 #include <glm/glm.hpp>
 #include <memory>
+
+struct Material {
+    std::vector<unsigned int> diffuse_ids;
+    std::vector<unsigned int> specular_ids;
+};
 
 /*
  * PMD format groups faces according to their materials.
@@ -18,6 +23,7 @@
  * Alternatively in theory, you can also call textureSize in GLSL to check if
  * the texture size is non-zero. However this method doesn't work here...
  */
+ /*
 struct Material {
 	// Phong shading model
 	glm::vec4 diffuse, ambient, specular;
@@ -27,5 +33,5 @@ struct Material {
 	size_t offset; // This material applies to faces starting from offset.
 	size_t nfaces; // This material applies to nfaces faces.
 };
-
+*/
 #endif

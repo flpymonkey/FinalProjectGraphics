@@ -40,6 +40,7 @@ IF (EXISTS ${CMAKE_SOURCE_DIR}/external)
   set(ALL_LIBS
   	${OPENGL_LIBRARY}
   	glfw
+    assimp
   	GLEW_1130
   )
   add_definitions(
@@ -62,6 +63,7 @@ MESSAGE(STATUS "stdgl: ${stdgl_libraries}")
 
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(src/shaders)
+ADD_SUBDIRECTORY(src/assets)
 
 IF (EXISTS ${CMAKE_SOURCE_DIR}/sln/CMakeLists.txt)
 	ADD_SUBDIRECTORY(sln)
