@@ -32,6 +32,11 @@ make -j8
 
 When finished, the binary called ray will be placed at build/bin/ directory.
 
+```
+cd build
+./bin/lens
+```
+
 You can change build to any name you like, although "build" is the most
 commonly used one.
 

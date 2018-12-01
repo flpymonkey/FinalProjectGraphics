@@ -5,6 +5,7 @@
 #include <string.h>
 
 #ifdef _WIN32
+    #include <direct.h>
     #ifndef GetCurrentDir
         #define GetCurrentDir _getcwd
     #endif

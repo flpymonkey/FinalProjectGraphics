@@ -212,7 +212,12 @@ unsigned int Loader::loadTexture(char const* path) {
     return textureID;
 }
 
-unsigned char* loadImg(std::string path, int width, int height, int nrChannels) {
-    return stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+unsigned char* loadImg(std::string path, int& width, int& height, int& nrChannels) {
+    int w, h, n;
+    unsigned char* data = stbi_load(path.c_str(), &w, &h, &n, 0);
+    width = w;
+    height = h;
+    nrChannels = n;
+    return data;
 }
 

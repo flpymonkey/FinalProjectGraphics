@@ -27,7 +27,7 @@
 #include "material.h"
 #include "filesystem.h"
 
-unsigned char* loadImg(std::string path, int width, int height, int nrChannels);
+unsigned char* loadImg(std::string path, int& width, int& height, int& nrChannels);
 
 class Loader {
 public:

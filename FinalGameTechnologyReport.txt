@@ -1,0 +1,22 @@
+Final Game Technology Report
+
+Team: JJ Abrahams
+Members: Mitchell Marshe and Benjamin Johnson
+
+As of now, Mitchell is working on developing the framework of a game engine. He has implemented the following:
+filesystem - a small script to figure out which operating system we are using in order to format file paths. 
+lights - basic class that handles setting up lighting information to be loaded into shaders via uniforms.
+loader - a wrapper library around Assimp to load in single trimesh .obj files and textures.
+material - a basic struct to handle material data.
+mesh - a basic struct to handle mesh data.
+object - a class to handle loading, manipulating, and rendering .obj files. 
+
+Meanwhile, Ben is working on the graphic's pipeline for adding in post-processing shaders. He has implemened the following:
+Lens Flare - mirroring effect that a camera lens gives in high contrast lighting.
+Blur - image bluring and blending.
+Bloom - an effect where lights have a bright aura.
+
+What's to be done in the future?
+We need to refactor what we have so far to keep implementing new concepts. Our goal is to be able to create a simple scene,
+where our player can snap photos of the world and do postprocessing effects. We also need to add in a gui and create a scoring
+mechanic for taking a picture of certain objects.
