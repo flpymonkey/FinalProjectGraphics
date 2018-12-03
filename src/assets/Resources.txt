@@ -1,0 +1,16 @@
+Assets
+
+    Animals
+        Cat, https://free3d.com/3d-model/cat-95027.html
+        Dog, https://free3d.com/3d-model/dog-v1--722788.html
+        Deer, https://free3d.com/3d-model/low-poly-deer-72513.html
+        Monkey, Blender
+
+    Buildings
+        Buildings,
+        Flatiron, https://free3d.com/3d-model/flatiron-building-v1--594120.html
+        
+    Objects
+        Lamp, https://free3d.com/3d-model/older-lamp-28459.html
+        Truck, https://free3d.com/3d-model/pickup-69582.html
+
