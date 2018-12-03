@@ -189,11 +189,12 @@ int main(int argc, char* argv[])
 	DirectionalLight directionalLight = DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f));
 	directionalLights.push_back(directionalLight);
 
+	// FIXME: THESE POINT LIGHT POSITIONS ARE SET TO SAME POSITIONS AS CUBE LIGHTS
 	std::vector<PointLight> pointLights;
-	PointLight pointLight = PointLight(glm::vec3(5.0f, 5.0f, 5.0f));
-	//pointLights.push_back(pointLight);
-	pointLight = PointLight(glm::vec3(-5.0f, 5.0f, 5.0f));
-	//pointLights.push_back(pointLight);
+	PointLight pointLight = PointLight(glm::vec3(0.0f, 0.0f, -5.0f));
+	pointLights.push_back(pointLight);
+	pointLight = PointLight(glm::vec3(2.0f, 3.0f, -8.0f));
+	pointLights.push_back(pointLight);
 
 	std::vector<SpotLight> spotLights;
 	SpotLight spotLight = SpotLight(glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
@@ -204,14 +205,14 @@ int main(int argc, char* argv[])
  	projection_matrix = glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
 	view_matrix = g_camera->get_view_matrix();
 	model_matrix = glm::mat4(1.0f);
-    
+
 	glm::vec4 light_position = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
 
 	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
 	mats.projection = &projection_matrix[0][0];
 	mats.model= &model_matrix[0][0];
 	mats.view = &view_matrix[0][0];
-    
+
 	/*
 	 * In the following we are going to define several lambda functions to bind Uniforms.
 	 *
@@ -240,7 +241,7 @@ int main(int argc, char* argv[])
     auto std_model_data = [&mats]() -> const void* {
 		return mats.model;
 	};
-    
+
 	auto std_view_data = [&mats]() -> const void* {
 		return mats.view;
 	};
@@ -248,7 +249,7 @@ int main(int argc, char* argv[])
 	auto std_proj_data = [&mats]() -> const void* {
 		return mats.projection;
 	};
-    
+
 	auto std_light_data = [&light_position]() -> const void* {
 		return &light_position[0];
 	};
@@ -334,23 +335,23 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
     // <<<Floor Renderpass>>>
-    
+
     // <<<Object>>>
     Object* object = new Object();
     object->load("/src/assets/tankard/MaryRoseTankard_100kMesh.obj");
-    
+
     glm::mat4 model_matrix = glm::mat4(1.0f);
-    
+
     model_matrix = object->translate(model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
     model_matrix = object->rotate(model_matrix, 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
     model_matrix = object->scale(model_matrix, glm::vec3(0.5f, 0.5f, 0.5f));
-    
+
     auto model_data = [&model_matrix]() -> const void* {
 		return &model_matrix[0][0];
 	};
-    
+
     ShaderUniform model = {"model", matrix_binder, model_data};
-    
+
     object->shaders(object_vertex_shader, NULL, object_fragment_shader);
     object->uniforms(model, std_view, std_proj, std_light, std_view_position);
     object->lights(directionalLights, pointLights, spotLights);
@@ -814,7 +815,7 @@ int main(int argc, char* argv[])
 	CHECK_GL_ERROR(glUseProgram(screen_blur2_program_id));
 	// ===========================================================
 
-	// configure blur2_framebuffer, THIS IS A WEIRD ASS FRAME BUFFER, A DOUBLE BUFFER WHAT THE HELL
+	// configure blur2_framebuffer, FIXME A DOUBLE BUFFER, WHAT THE HELL
 	unsigned int pingpongFBO[2];
 	unsigned int pingpongBuffer[2];
 	glGenFramebuffers(2, pingpongFBO);
@@ -928,8 +929,8 @@ int main(int argc, char* argv[])
 		// <<<Render Floor>>>
 
 		// <<<Object>>>
-        object->render();
-        // <<<Object>>>
+    object->render();
+    // <<<Object>>>
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
