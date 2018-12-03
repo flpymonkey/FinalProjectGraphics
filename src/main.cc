@@ -40,8 +40,8 @@ glm::mat4 model_matrix;
 
 float aspect = 0.0f;
 
-int window_width = 1280;
-int window_height = 720;
+int window_width = 1920;
+int window_height = 1080;
 
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
@@ -204,14 +204,14 @@ int main(int argc, char* argv[])
  	projection_matrix = glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
 	view_matrix = g_camera->get_view_matrix();
 	model_matrix = glm::mat4(1.0f);
-    
+
 	glm::vec4 light_position = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
 
 	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
 	mats.projection = &projection_matrix[0][0];
 	mats.model= &model_matrix[0][0];
 	mats.view = &view_matrix[0][0];
-    
+
 	/*
 	 * In the following we are going to define several lambda functions to bind Uniforms.
 	 *
@@ -240,7 +240,7 @@ int main(int argc, char* argv[])
     auto std_model_data = [&mats]() -> const void* {
 		return mats.model;
 	};
-    
+
 	auto std_view_data = [&mats]() -> const void* {
 		return mats.view;
 	};
@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
 	auto std_proj_data = [&mats]() -> const void* {
 		return mats.projection;
 	};
-    
+
 	auto std_light_data = [&light_position]() -> const void* {
 		return &light_position[0];
 	};
@@ -313,6 +313,29 @@ int main(int argc, char* argv[])
 	std::cout << "max_bounds = " << glm::to_string(max_bounds2) << "\n";
 	// <<<Menger2 Data>>>
 
+	// <<<Menger3 Data>>>
+	Menger *menger3 = new Menger();
+
+	std::vector<glm::vec4> menger3_vertices;
+	std::vector<glm::vec4> menger3_normals;
+	std::vector<glm::uvec3> menger3_faces;
+
+	glm::vec4 menger3_pos = glm::vec4(-5.0f, 1.5f, -4.0f, 1.0f);
+
+	menger3->set_nesting_level(1);
+	menger3->generate_geometry(menger3_vertices, menger3_normals, menger3_faces, menger3_pos);
+	menger3->set_clean();
+
+	glm::vec4 min_bounds3 = glm::vec4(std::numeric_limits<float>::max());
+	glm::vec4 max_bounds3 = glm::vec4(-std::numeric_limits<float>::max());
+	for (int i = 0; i < menger3_vertices.size(); ++i) {
+		min_bounds3 = glm::min(menger3_vertices[i], min_bounds3);
+		max_bounds3 = glm::max(menger3_vertices[i], max_bounds3);
+	}
+	std::cout << "min_bounds = " << glm::to_string(min_bounds3) << "\n";
+	std::cout << "max_bounds = " << glm::to_string(max_bounds3) << "\n";
+	// <<<Menger3 Data>>>
+
 
     // <<<Floor Data>>>
     std::vector<glm::vec4> floor_vertices;
@@ -334,24 +357,24 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
     // <<<Floor Renderpass>>>
-    
+
     // <<<Object>>>
     /*
     Object* object = new Object();
     object->load("/src/assets/buildings/flatiron/13943_Flatiron_Building_v1_l1.obj");
-    
+
     glm::mat4 model_matrix = glm::mat4(1.0f);
-    
+
     model_matrix = object->translate(model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
     model_matrix = object->rotate(model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
     model_matrix = object->scale(model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
-    
+
     auto model_data = [&model_matrix]() -> const void* {
 		return &model_matrix[0][0];
 	};
-    
+
     ShaderUniform model = {"model", matrix_binder, model_data};
-    
+
     object->shaders(object_vertex_shader, NULL, object_fragment_shader);
     object->uniforms(model, std_view, std_proj, std_light, std_view_position);
     object->lights(directionalLights, pointLights, spotLights);
@@ -361,49 +384,49 @@ int main(int argc, char* argv[])
         //object->render(i);
     //}
     // <<<Object>>>
-    
-    // <<<Cat>>>
+
+    /* <<<Cat>>>
     Object* cat = new Object();
     cat->load("/src/assets/animals/cat/cat.obj");
-    
+
     glm::mat4 cat_model_matrix = glm::mat4(1.0f);
-    
-    //cat_model_matrix = cat->translate(cat_model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
-    //cat_model_matrix = cat->rotate(cat_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-    //cat_model_matrix = cat->scale(cat_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
-    
+
+    cat_model_matrix = cat->translate(cat_model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
+    cat_model_matrix = cat->rotate(cat_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+    cat_model_matrix = cat->scale(cat_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
+
     auto cat_model_data = [&cat_model_matrix]() -> const void* {
 		return &cat_model_matrix[0][0];
 	};
-    
+
     ShaderUniform cat_model = {"model", matrix_binder, cat_model_data};
-    
+
     cat->shaders(object_vertex_shader, NULL, object_fragment_shader);
     cat->uniforms(cat_model, std_view, std_proj, std_light, std_view_position);
     cat->lights(directionalLights, pointLights, spotLights);
 
-    //for (unsigned int i = 1; i < cat->meshes.size(); i++) {
-        //cat->setup(i);
-        //cat->render(i);
-    //}
-    // <<<Cat>>>
-    
+    for (unsigned int i = 1; i < cat->meshes.size(); i++) {
+        cat->setup(i);
+        cat->render(i);
+    }
+     <<<Cat>>>*/
+
     // <<<Dog>>>
     Object* dog = new Object();
     dog->load("/src/assets/animals/dog/dog.obj");
-    
+
     glm::mat4 dog_model_matrix = glm::mat4(1.0f);
-    
+
     dog_model_matrix = dog->translate(dog_model_matrix, glm::vec3(1.5f, 0.0f, 0.0f));
     dog_model_matrix = dog->rotate(dog_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
     dog_model_matrix = dog->scale(dog_model_matrix, glm::vec3(0.01f, 0.01f, 0.01f));
-    
+
     auto dog_model_data = [&dog_model_matrix]() -> const void* {
 		return &dog_model_matrix[0][0];
 	};
-    
+
     ShaderUniform dog_model = {"model", matrix_binder, dog_model_data};
-    
+
     dog->shaders(object_vertex_shader, NULL, object_fragment_shader);
     dog->uniforms(dog_model, std_view, std_proj, std_light, std_view_position);
     dog->lights(directionalLights, pointLights, spotLights);
@@ -955,6 +978,7 @@ int main(int argc, char* argv[])
 				);
 
 		menger_pass.loadLights(directionalLights, pointLights, spotLights);
+		menger_pass.loadLightColor(glm::vec4(3.0f, 3.0f, 3.0f, 1.0f));
 
 		menger_pass.setup();
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
@@ -973,10 +997,30 @@ int main(int argc, char* argv[])
 		);
 
 		menger2_pass.loadLights(directionalLights, pointLights, spotLights);
+		menger2_pass.loadLightColor(glm::vec4(3.0f, 3.0f, 3.0f, 1.0f));
 
 		menger2_pass.setup();
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger2_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Render Menger2>>>
+
+		// <<<Render Menger3>>>
+		RenderDataInput menger3_pass_input;
+		menger3_pass_input.assign(0, "vertex_position", menger3_vertices.data(), menger3_vertices.size(), 4, GL_FLOAT);
+		menger3_pass_input.assign(1, "normal", menger3_normals.data(), menger3_normals.size(), 4, GL_FLOAT);
+		menger3_pass_input.assign_index(menger3_faces.data(), menger3_faces.size(), 3);
+		RenderPass menger3_pass(-1,
+			menger3_pass_input,
+			{ vertex_shader, NULL, fragment_shader },
+			{ menger_model, std_view, std_proj, std_light, std_view_position },
+			{ "fragment_color" }
+		);
+
+		menger3_pass.loadLights(directionalLights, pointLights, spotLights);
+		menger3_pass.loadLightColor(glm::vec4(4.0f, 1.5f, 1.5f, 1.0f));
+
+		menger3_pass.setup();
+		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger3_faces.size() * 3, GL_UNSIGNED_INT, 0));
+		// <<<Render Menger3>>>
 
 		// <<<Render Floor>>>
 		floor_pass.setup();
@@ -989,14 +1033,14 @@ int main(int argc, char* argv[])
             //object->render(i);
         //}
         // <<<Object>>>
-        
-        // <<<Cat>>>
-        for (unsigned int i = 0; i < cat->meshes.size(); i++) {
-            cat->setup(i);
-            cat->render(i);
-        }
-        // <<<Cat>>>
-        
+
+        //// <<<Cat>>>
+        //for (unsigned int i = 0; i < cat->meshes.size(); i++) {
+        //    cat->setup(i);
+        //    cat->render(i);
+        //}
+        //// <<<Cat>>>
+
         // <<<Dog>>>
         for (unsigned int i = 0; i < dog->meshes.size(); i++) {
             dog->setup(i);
