@@ -61,27 +61,30 @@ glm::mat4 Object::scale(glm::mat4 model_matrix, glm::vec3 s) {
     return glm::scale(model_matrix, s);
 }
     
-void Object::setup() {
-    unsigned int i = 0;
-
-    diffuseMap = loader->loadTexture(path("/src/assets/container2.png").c_str());
-    specularMap = loader->loadTexture(path("/src/assets/container2_specular.png").c_str());
-
+void Object::setup(unsigned int i) {
+    //if (materials.size() == 0) {
+        //diffuseMap = loader->loadTexture(path("/src/assets/container2.png").c_str());
+        specularMap = loader->loadTexture(path("/src/assets/container2_specular.png").c_str());
+    //} else {  
+        diffuseMap = materials[0].diffuse_ids[0];
+        //specularMap = materials[0].specular_ids[0];
+    //}
+    
     RenderDataInput model_pass_input;
-	model_pass_input.assign(0, "vertex_position", meshes[i].vertices.data(), meshes[i].vertices.size(), 4, GL_FLOAT);
-	model_pass_input.assign(1, "normal", meshes[i].normals.data(), meshes[i].normals.size(), 4, GL_FLOAT);
+    model_pass_input.assign(0, "vertex_position", meshes[i].vertices.data(), meshes[i].vertices.size(), 4, GL_FLOAT);
+    model_pass_input.assign(1, "normal", meshes[i].normals.data(), meshes[i].normals.size(), 4, GL_FLOAT);
     model_pass_input.assign(2, "uv", meshes[i].uvs.data(), meshes[i].uvs.size(), 2, GL_FLOAT);
-	model_pass_input.assign_index(meshes[i].faces.data(), meshes[i].faces.size(), 3);
-	
+    model_pass_input.assign_index(meshes[i].faces.data(), meshes[i].faces.size(), 3);
+        
     model_pass = new RenderPass(
         -1,
-		model_pass_input,
-		{vertex_shader, geometry_shader, fragment_shader},
-		{std_model, std_view, std_projection, std_light, std_view_position},
-		{"fragment_color"}
-	);
+        model_pass_input,
+        {vertex_shader, geometry_shader, fragment_shader},
+        {std_model, std_view, std_projection, std_light, std_view_position},
+        {"fragment_color"}
+    );
 
-	model_pass->loadLights(directionalLights, pointLights, spotLights);
+    model_pass->loadLights(directionalLights, pointLights, spotLights);
     model_pass->loadMaterials();
 }
 
@@ -89,7 +92,7 @@ void Object::update() {
     
 }
 
-void Object::render() {
+void Object::render(unsigned int i) {
     model_pass->setup();
 
     glActiveTexture(GL_TEXTURE0);
@@ -98,5 +101,5 @@ void Object::render() {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, specularMap);
     
-	CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, meshes[0].faces.size() * 3, GL_UNSIGNED_INT, 0));
+	CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, meshes[i].faces.size() * 3, GL_UNSIGNED_INT, 0));
 }

@@ -27,6 +27,9 @@
 
 class Object {
 public:
+    std::vector<Mesh> meshes;
+    std::vector<Material> materials;
+    
     Object();
     ~Object();
     
@@ -53,15 +56,12 @@ public:
     glm::mat4 rotate(glm::mat4 model_matrix, float degrees, glm::vec3 axis);
     glm::mat4 scale(glm::mat4 model_matrix, glm::vec3 s);
     
-    void setup();
+    void setup(unsigned int i);
     void update();
-    void render();
+    void render(unsigned int i);
     
 private:
     Loader* loader;
-    
-    std::vector<Mesh> meshes;
-    std::vector<Material> materials;
     
     const char* vertex_shader;
     const char* geometry_shader;
@@ -80,7 +80,7 @@ private:
     
     unsigned int diffuseMap;
     unsigned int specularMap;
-    
+
     RenderPass* model_pass;
     
     bool initialized;
