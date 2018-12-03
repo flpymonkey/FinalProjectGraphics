@@ -1,5 +1,18 @@
 #include "controller.h"
 
+
+std::string get_str_timestamp()
+{
+  time_t t;
+	time (&t);
+  struct tm* timeinfo;
+  char str_bffr[80];
+  timeinfo = localtime(&t);
+  strftime(str_bffr,sizeof(str_bffr),"%d-%m-%Y::%H:%M:%S",timeinfo);
+  std::string time_str(str_bffr);
+  return time_str;
+}
+
 Controller::Controller(GLFWwindow* window, Camera* camera, Menger* menger, float* exposure) {
 	this->window = window;
 	this->camera = camera;
@@ -82,7 +95,9 @@ Controller::keyCallback(int key, int scancode, int action, int mods)
 	} else 	if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
 		GLubyte pixels[window_width * window_height * 3];
 		glReadPixels(0, 0, window_width, window_height, GL_RGB, GL_UNSIGNED_BYTE, &pixels[0]);
-		SaveJPEG("../screenshot", window_width, window_height, pixels);
+		std::string cur_timestamp = "../screenshots/Capture_";
+		cur_timestamp = cur_timestamp + get_str_timestamp();
+		SaveJPEG(cur_timestamp.c_str(), window_width, window_height, pixels);
 	}
 
 
