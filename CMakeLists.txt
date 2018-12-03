@@ -52,6 +52,7 @@ IF (EXISTS ${CMAKE_SOURCE_DIR}/external)
   )
 ELSE()
   MESSAGE ("Using standard Linux build.")
+  MESSAGE ("This will fail, need to use external dependencies!.")
 
   FILE(GLOB cmakes ${CMAKE_SOURCE_DIR}/cmake/*.cmake)
   FOREACH(cmake ${cmakes})

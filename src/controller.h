@@ -5,9 +5,11 @@
 #include <vector>
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <ctime>
 
 #include "camera.h"
 #include "menger.h"
+#include "jpegio.h"
 
 class Controller {
 public:
