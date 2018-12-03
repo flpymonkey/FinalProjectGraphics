@@ -46,6 +46,8 @@ int window_height = 1080;
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
 float exposure = 0.8f;
+bool showMeshes = false;
+bool lensEffects = false;
 
 Floor* g_floor;
 Menger *g_menger;
@@ -148,7 +150,7 @@ printVec4(const char* name, glm::vec4 data)
 
 int main(int argc, char* argv[])
 {
-	std::string window_title = "Menger";
+	std::string window_title = "LENSTIME";
 	if (!glfwInit()) exit(EXIT_FAILURE);
 
 	// Setup
@@ -171,7 +173,7 @@ int main(int argc, char* argv[])
 	glewExperimental = GL_TRUE;
 
 	// Controller
-	g_controller = new Controller(window, g_camera, g_menger, &exposure);
+	g_controller = new Controller(window, g_camera, g_menger, &exposure, &showMeshes, &lensEffects);
 
 	CHECK_SUCCESS(glewInit() == GLEW_OK);
 	glGetError();  // clear GLEW's error for it
@@ -385,19 +387,19 @@ int main(int argc, char* argv[])
     //}
     // <<<Object>>>
 
-    /* <<<Cat>>>
+    // <<<Cat>>>
     Object* cat = new Object();
     cat->load("/src/assets/animals/cat/cat.obj");
 
     glm::mat4 cat_model_matrix = glm::mat4(1.0f);
 
-    cat_model_matrix = cat->translate(cat_model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
-    cat_model_matrix = cat->rotate(cat_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-    cat_model_matrix = cat->scale(cat_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
+    //cat_model_matrix = cat->translate(cat_model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
+    //cat_model_matrix = cat->rotate(cat_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+    //cat_model_matrix = cat->scale(cat_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
 
     auto cat_model_data = [&cat_model_matrix]() -> const void* {
 		return &cat_model_matrix[0][0];
-	};
+	   };
 
     ShaderUniform cat_model = {"model", matrix_binder, cat_model_data};
 
@@ -405,11 +407,12 @@ int main(int argc, char* argv[])
     cat->uniforms(cat_model, std_view, std_proj, std_light, std_view_position);
     cat->lights(directionalLights, pointLights, spotLights);
 
-    for (unsigned int i = 1; i < cat->meshes.size(); i++) {
-        cat->setup(i);
-        cat->render(i);
-    }
-     <<<Cat>>>*/
+    cat->setup(0);
+     //for (unsigned int i = 1; i < cat->meshes.size(); i++) {
+        //cat->setup(i);
+        //cat->render(i);
+    //}
+    // <<<Cat>>>
 
     // <<<Dog>>>
     Object* dog = new Object();
@@ -423,13 +426,15 @@ int main(int argc, char* argv[])
 
     auto dog_model_data = [&dog_model_matrix]() -> const void* {
 		return &dog_model_matrix[0][0];
-	};
+	  };
 
     ShaderUniform dog_model = {"model", matrix_binder, dog_model_data};
 
     dog->shaders(object_vertex_shader, NULL, object_fragment_shader);
     dog->uniforms(dog_model, std_view, std_proj, std_light, std_view_position);
     dog->lights(directionalLights, pointLights, spotLights);
+
+    dog->setup(0);
 
     //for (unsigned int i = 1; i < dog->meshes.size(); i++) {
         //dog->setup(i);
@@ -1034,19 +1039,12 @@ int main(int argc, char* argv[])
         //}
         // <<<Object>>>
 
-        //// <<<Cat>>>
-        //for (unsigned int i = 0; i < cat->meshes.size(); i++) {
-        //    cat->setup(i);
-        //    cat->render(i);
-        //}
-        //// <<<Cat>>>
-
-        // <<<Dog>>>
-        for (unsigned int i = 0; i < dog->meshes.size(); i++) {
-            dog->setup(i);
-            dog->render(i);
-        }
-        // <<<Dog>>>
+    if (showMeshes){
+      // <<<Dog>>>
+      cat->render(0);
+      dog->render(0);
+      // <<<Dog>>>
+    }
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -1170,7 +1168,11 @@ int main(int argc, char* argv[])
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, pingpongBuffer[0]);	// use the color attachment texture as the texture of the quad plane
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, blur_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+    if (lensEffects){
+      	glBindTexture(GL_TEXTURE_2D, blur_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+    } else {
+        glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+    }
 
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
