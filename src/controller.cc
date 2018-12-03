@@ -1,7 +1,8 @@
 #include "controller.h"
 
 
-std::string get_str_timestamp(){
+std::string get_str_timestamp()
+{
   time_t t;
 	time (&t);
   struct tm* timeinfo;
