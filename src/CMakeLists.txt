@@ -6,3 +6,6 @@ message(STATUS "lens added")
 
 target_link_libraries(lens ${stdgl_libraries})
 target_link_libraries(lens ${ALL_LIBS})
+
+FIND_PACKAGE(JPEG REQUIRED)
+TARGET_LINK_LIBRARIES(lens ${JPEG_LIBRARIES})

@@ -79,6 +79,10 @@ Controller::keyCallback(int key, int scancode, int action, int mods)
 	} else if (key == GLFW_KEY_E && action != GLFW_RELEASE) {
 		// Adjust exposure up
 		*(this->exposure) += 0.02f;
+	} else 	if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
+		GLubyte pixels[window_width * window_height * 3];
+		glReadPixels(0, 0, window_width, window_height, GL_RGB, GL_UNSIGNED_BYTE, &pixels[0]);
+		SaveJPEG("../screenshot", window_width, window_height, pixels);
 	}
 
 

@@ -8,6 +8,7 @@
 
 #include "camera.h"
 #include "menger.h"
+#include "jpegio.h"
 
 class Controller {
 public:
