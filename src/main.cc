@@ -361,36 +361,6 @@ int main(int argc, char* argv[])
 			);
     // <<<Floor Renderpass>>>
 
-<<<<<<< HEAD
-=======
-    // <<<Object>>>
-    /*
-    Object* object = new Object();
-    object->load("/src/assets/buildings/flatiron/13943_Flatiron_Building_v1_l1.obj");
-
-    glm::mat4 model_matrix = glm::mat4(1.0f);
-
-    model_matrix = object->translate(model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
-    model_matrix = object->rotate(model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-    model_matrix = object->scale(model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
-
-    auto model_data = [&model_matrix]() -> const void* {
-		return &model_matrix[0][0];
-	};
-
-    ShaderUniform model = {"model", matrix_binder, model_data};
-
-    object->shaders(object_vertex_shader, NULL, object_fragment_shader);
-    object->uniforms(model, std_view, std_proj, std_light, std_view_position);
-    object->lights(directionalLights, pointLights, spotLights);
-    */
-    //for (unsigned int i = 1; i < object->meshes.size(); i++) {
-        //object->setup(i);
-        //object->render(i);
-    //}
-    // <<<Object>>>
-
->>>>>>> 2613ef264234deac5427f35f0a7fc01c44683601
     // <<<Cat>>>
     Object* cat = new Object();
     cat->load("/src/assets/animals/cat/cat.obj");
@@ -402,12 +372,8 @@ int main(int argc, char* argv[])
     //cat_model_matrix = cat->scale(cat_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
 
     auto cat_model_data = [&cat_model_matrix]() -> const void* {
-		return &cat_model_matrix[0][0];
-<<<<<<< HEAD
-	};
-=======
-	   };
->>>>>>> 2613ef264234deac5427f35f0a7fc01c44683601
+			return &cat_model_matrix[0][0];
+		};
 
     ShaderUniform cat_model = {"model", matrix_binder, cat_model_data};
 
@@ -433,12 +399,8 @@ int main(int argc, char* argv[])
     dog_model_matrix = dog->scale(dog_model_matrix, glm::vec3(0.01f, 0.01f, 0.01f));
 
     auto dog_model_data = [&dog_model_matrix]() -> const void* {
-		return &dog_model_matrix[0][0];
-<<<<<<< HEAD
-	};
-=======
-	  };
->>>>>>> 2613ef264234deac5427f35f0a7fc01c44683601
+			return &dog_model_matrix[0][0];
+		};
 
     ShaderUniform dog_model = {"model", matrix_binder, dog_model_data};
 
@@ -1044,27 +1006,6 @@ int main(int argc, char* argv[])
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Render Floor>>>
 
-<<<<<<< HEAD
-    //for (unsigned int i = 0; i < object->meshes.size(); i++) {
-        //object->setup(i);
-        //object->render(i);
-    //}
-    // <<<Object>>>
-
-    // <<<Cat>>>
-    for (unsigned int i = 0; i < cat->meshes.size(); i++) {
-        cat->setup(i);
-        cat->render(i);
-    }
-    // <<<Cat>>>
-
-    // <<<Dog>>>
-    for (unsigned int i = 0; i < dog->meshes.size(); i++) {
-        dog->setup(i);
-        dog->render(i);
-    }
-    // <<<Dog>>>
-=======
 		// <<<Object>>>
         //for (unsigned int i = 0; i < object->meshes.size(); i++) {
             //object->setup(i);
@@ -1078,7 +1019,6 @@ int main(int argc, char* argv[])
       dog->render(0);
       // <<<Dog>>>
     }
->>>>>>> 2613ef264234deac5427f35f0a7fc01c44683601
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
