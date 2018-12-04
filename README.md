@@ -1,4 +1,5 @@
 # Getting Started
+See the FinalGraphicsReport.txt for progress report information. 
 
 ## What is different
 
@@ -67,7 +68,7 @@ project to build, it is not a good practice to add random source files, say a
 errors due to multiple main functions.
 
 On the other hand, all files out of these directories will NOT be added to the
-project automatically. 
+project automatically.
 
 ## Tools that help you read the code
 
@@ -98,7 +99,7 @@ The build system will clone the 0.9.7.6 version from the official repository
 if glm does not present. Otherwise, the glm installed by the system (may be
 older) will be used.
 
-# Acknowledgement 
+# Acknowledgement
 
 This starter code is modified based on the bunny and menger project written by
 Randall Smith for 2015 Spring Graphics Course.

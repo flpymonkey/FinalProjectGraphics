@@ -1,0 +1,43 @@
+Final Graphics Report
+
+Team: JJ Abrahams
+Members: Mitchell Marshe and Benjamin Johnson
+
+How to run:
+mkdir build
+cd build
+cmake ..
+make -j8
+./bin/lens
+
+
+What has been accomplished (and by whom if working with a partner):
+Ben has completed the post-processing shader pipeline which includes bloom,
+high dynamic range, exposure control, lens flares, and lighting effects.
+Lens Flare - mirroring effect that a camera lens gives in high contrast lighting.
+Blur - image bluring and blending.
+Bloom - an effect where lights have a bright aura.
+
+Mitchell is working on developing the framework of a game engine. He has implemented the following:
+filesystem - a small script to figure out which operating system we are using in order to format file paths.
+lights - basic class that handles setting up lighting information to be loaded into shaders via uniforms.
+loader - a wrapper library around Assimp to load in single trimesh .obj files and textures.
+material - a basic struct to handle material data.
+mesh - a basic struct to handle mesh data.
+object - a class to handle loading, manipulating, and rendering .obj files.
+
+A high-level explanation of the paper/article you're using,
+as well as all specific technical details you're considering for your implementation:
+Ben has been using the advanced lighting tutorials on https://learnopengl.com as
+well as this tutorial for implementing lens flares:
+http://john-chapman-graphics.blogspot.com/2013/02/pseudo-lens-flare.html
+These articles discuss how to implement the desired effects in a post-processing
+fragment shader pipeline which allows for the stacking of shaders (allows for effects
+on top of effects) or the placement of shaders side-by-side, all of which contribute
+to a final screen image. We plan to refactor this code to encapsulate common shader
+and framebuffer logic to for easier creation of shaders.
+
+Additionally, we plan to implement more shader effects to simulate depth-of-field
+and fish-eye lenses.
+
+What the plan is for completing the project on time
