@@ -336,28 +336,57 @@ int main(int argc, char* argv[])
 			);
     // <<<Floor Renderpass>>>
 
-    // <<<Object>>>
-    Object* object = new Object();
-    object->load("/src/assets/tankard/MaryRoseTankard_100kMesh.obj");
+    // <<<Cat>>>
+    Object* cat = new Object();
+    cat->load("/src/assets/animals/cat/cat.obj");
 
-    glm::mat4 model_matrix = glm::mat4(1.0f);
+    glm::mat4 cat_model_matrix = glm::mat4(1.0f);
 
-    model_matrix = object->translate(model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
-    model_matrix = object->rotate(model_matrix, 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-    model_matrix = object->scale(model_matrix, glm::vec3(0.5f, 0.5f, 0.5f));
+    //cat_model_matrix = cat->translate(cat_model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
+    //cat_model_matrix = cat->rotate(cat_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+    //cat_model_matrix = cat->scale(cat_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
 
-    auto model_data = [&model_matrix]() -> const void* {
-		return &model_matrix[0][0];
+    auto cat_model_data = [&cat_model_matrix]() -> const void* {
+		return &cat_model_matrix[0][0];
 	};
 
-    ShaderUniform model = {"model", matrix_binder, model_data};
+    ShaderUniform cat_model = {"model", matrix_binder, cat_model_data};
 
-    object->shaders(object_vertex_shader, NULL, object_fragment_shader);
-    object->uniforms(model, std_view, std_proj, std_light, std_view_position);
-    object->lights(directionalLights, pointLights, spotLights);
+    cat->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    cat->uniforms(cat_model, std_view, std_proj, std_light, std_view_position);
+    cat->lights(directionalLights, pointLights, spotLights);
 
-    object->setup();
-    // <<<Object>>>
+    //for (unsigned int i = 1; i < cat->meshes.size(); i++) {
+        //cat->setup(i);
+        //cat->render(i);
+    //}
+    // <<<Cat>>>
+
+    // <<<Dog>>>
+    Object* dog = new Object();
+    dog->load("/src/assets/animals/dog/dog.obj");
+
+    glm::mat4 dog_model_matrix = glm::mat4(1.0f);
+
+    dog_model_matrix = dog->translate(dog_model_matrix, glm::vec3(1.5f, 0.0f, 0.0f));
+    dog_model_matrix = dog->rotate(dog_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+    dog_model_matrix = dog->scale(dog_model_matrix, glm::vec3(0.01f, 0.01f, 0.01f));
+
+    auto dog_model_data = [&dog_model_matrix]() -> const void* {
+		return &dog_model_matrix[0][0];
+	};
+
+    ShaderUniform dog_model = {"model", matrix_binder, dog_model_data};
+
+    dog->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    dog->uniforms(dog_model, std_view, std_proj, std_light, std_view_position);
+    dog->lights(directionalLights, pointLights, spotLights);
+
+    //for (unsigned int i = 1; i < dog->meshes.size(); i++) {
+        //dog->setup(i);
+        //dog->render(i);
+    //}
+    // <<<Dog>>>
 
 	float theta = 0.0f;
 
@@ -928,9 +957,25 @@ int main(int argc, char* argv[])
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Render Floor>>>
 
-		// <<<Object>>>
-    object->render();
+    //for (unsigned int i = 0; i < object->meshes.size(); i++) {
+        //object->setup(i);
+        //object->render(i);
+    //}
     // <<<Object>>>
+
+    // <<<Cat>>>
+    for (unsigned int i = 0; i < cat->meshes.size(); i++) {
+        cat->setup(i);
+        cat->render(i);
+    }
+    // <<<Cat>>>
+
+    // <<<Dog>>>
+    for (unsigned int i = 0; i < dog->meshes.size(); i++) {
+        dog->setup(i);
+        dog->render(i);
+    }
+    // <<<Dog>>>
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
