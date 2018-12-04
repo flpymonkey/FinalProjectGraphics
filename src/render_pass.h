@@ -156,8 +156,8 @@ public:
 	// <<<Lights>>>
 	// NOTE: Must be called when using default shaders.
 	// Source: https://learnopengl.com/Lighting/Multiple-lights
-	void loadLights(std::vector<DirectionalLight>& directionalLights, 
-		std::vector<PointLight>& pointLights, 
+	void loadLights(std::vector<DirectionalLight>& directionalLights,
+		std::vector<PointLight>& pointLights,
 		std::vector<SpotLight>& spotLights) {
 
 		int limit = 10; // Max Lights.
@@ -227,7 +227,7 @@ public:
     		}
 		}
 	}
-    
+
     void loadMaterials() {
         glUseProgram(sp_);
         setInt("material.diffuse", 0);
@@ -235,34 +235,39 @@ public:
         setFloat("material.shininess", 32.0f);
     }
 
+    void loadLightColor(glm::vec4 color) {
+        glUseProgram(sp_);
+        setVec4("light_color", color);
+    }
+
 	void setBool(const std::string &name, const bool value) const
-    {         
-        glUniform1i(glGetUniformLocation(sp_, name.c_str()), (int)value); 
+    {
+        glUniform1i(glGetUniformLocation(sp_, name.c_str()), (int)value);
     }
 
 	void setInt(const std::string &name, const int value) const
-    { 
-        glUniform1i(glGetUniformLocation(sp_, name.c_str()), value); 
+    {
+        glUniform1i(glGetUniformLocation(sp_, name.c_str()), value);
     }
 
 	void setFloat(const std::string &name, const float value) const
-    { 
-        glUniform1f(glGetUniformLocation(sp_, name.c_str()), value); 
+    {
+        glUniform1f(glGetUniformLocation(sp_, name.c_str()), value);
     }
 
     void setVec2(const std::string &name, const glm::vec2 &value) const
-    { 
-        glUniform2fv(glGetUniformLocation(sp_, name.c_str()), 1, &value[0]); 
+    {
+        glUniform2fv(glGetUniformLocation(sp_, name.c_str()), 1, &value[0]);
     }
 
 	void setVec3(const std::string &name, const glm::vec3 &value) const
-    { 
-        glUniform3fv(glGetUniformLocation(sp_, name.c_str()), 1, &value[0]); 
+    {
+        glUniform3fv(glGetUniformLocation(sp_, name.c_str()), 1, &value[0]);
     }
 
     void setVec4(const std::string &name, const glm::vec4 &value) const
-    { 
-        glUniform4fv(glGetUniformLocation(sp_, name.c_str()), 1, &value[0]); 
+    {
+        glUniform4fv(glGetUniformLocation(sp_, name.c_str()), 1, &value[0]);
     }
 
     void setMat2(const std::string &name, const glm::mat2 &mat) const

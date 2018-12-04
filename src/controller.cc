@@ -13,11 +13,13 @@ std::string get_str_timestamp()
   return time_str;
 }
 
-Controller::Controller(GLFWwindow* window, Camera* camera, Menger* menger, float* exposure) {
+Controller::Controller(GLFWwindow* window, Camera* camera, Menger* menger, float* exposure, bool* showMeshes, bool* lensEffects) {
 	this->window = window;
 	this->camera = camera;
 	this->menger = menger;
 
+	this->lensEffects = lensEffects;
+	this->showMeshes = showMeshes;
 	this->exposure = exposure;
 	this->fps_mode = true;
 	this->prev_x = 0.0;
@@ -113,9 +115,9 @@ Controller::keyCallback(int key, int scancode, int action, int mods)
 	} else if (key == GLFW_KEY_2 && action != GLFW_RELEASE) {
 		menger->set_nesting_level(2);
 	} else if (key == GLFW_KEY_3 && action != GLFW_RELEASE) {
-		menger->set_nesting_level(3);
+		*(this->showMeshes) = !*(this->showMeshes);
 	} else if (key == GLFW_KEY_4 && action != GLFW_RELEASE) {
-		menger->set_nesting_level(4);
+		*(this->lensEffects) = !*(this->lensEffects);
 	}
 }
 
