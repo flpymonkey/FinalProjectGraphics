@@ -37,11 +37,28 @@ IF (EXISTS ${CMAKE_SOURCE_DIR}/external)
 	external/bullet-2.81-rev2613/src/
 	.
   )
+
+  add_library(
+          ImGui STATIC
+          external/imgui/imconfig.h
+          external/imgui/imgui.cpp
+          external/imgui/imgui.h
+          external/imgui/imgui_demo.cpp
+          external/imgui/imgui_draw.cpp
+          external/imgui/imgui_impl_glfw_gl3.cpp
+          external/imgui/imgui_impl_glfw_gl3.h
+          external/imgui/imgui_internal.h
+          external/imgui/stb_rect_pack.h
+          external/imgui/stb_textedit.h
+          external/imgui/stb_truetype.h
+          )
+
   set(ALL_LIBS
   	${OPENGL_LIBRARY}
   	glfw
     assimp
   	GLEW_1130
+    ImGui
   )
   add_definitions(
   	-DTW_STATIC

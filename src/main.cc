@@ -30,6 +30,9 @@
 #include "filesystem.h"
 #include "object.h"
 
+//gui
+#include "gui.h"
+
 struct MatrixPointers {
 	const float *projection, *model, *view;
 };
@@ -920,6 +923,10 @@ int main(int argc, char* argv[])
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+
+	// Setup GUI
+	BasicGUI* gui = new BasicGUI(window);
+
 	clock_t last_frame_time = clock();
 	while (!glfwWindowShouldClose(window)) {
 		// render
@@ -1150,6 +1157,9 @@ int main(int argc, char* argv[])
 
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		// Render GUI
+		gui->render();
 
 		// Poll and swap.
 		glfwPollEvents();
