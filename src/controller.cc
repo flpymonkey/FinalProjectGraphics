@@ -1,6 +1,5 @@
 #include "controller.h"
 
-
 std::string get_str_timestamp()
 {
   time_t t;
@@ -8,7 +7,7 @@ std::string get_str_timestamp()
   struct tm* timeinfo;
   char str_bffr[80];
   timeinfo = localtime(&t);
-  strftime(str_bffr,sizeof(str_bffr),"%d-%m-%Y::%H:%M:%S",timeinfo);
+  strftime(str_bffr,sizeof(str_bffr),"%d-%m-%Y-%H-%M-%S",timeinfo);
   std::string time_str(str_bffr);
   return time_str;
 }
@@ -93,14 +92,23 @@ Controller::keyCallback(int key, int scancode, int action, int mods)
 		// Adjust exposure up
 		*(this->exposure) += 0.02f;
 	} else 	if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
-    // FIXME: currently screenshot functionality only works with linux
-    #ifdef __linux__
-  		GLubyte pixels[window_width * window_height * 3];
+        unsigned char* pixels = (unsigned char*)malloc(window_width * window_height * 3);
   		glReadPixels(0, 0, window_width, window_height, GL_RGB, GL_UNSIGNED_BYTE, &pixels[0]);
-  		std::string cur_timestamp = "../screenshots/Capture_";
-  		cur_timestamp = cur_timestamp + get_str_timestamp();
-  		SaveJPEG(cur_timestamp.c_str(), window_width, window_height, pixels);
-    #endif
+        
+  		std::string file_name = 
+            path("/screenshots/capture_") +
+            get_str_timestamp() +
+            std::string(".jpg");
+
+        int status = saveJPG(file_name.c_str(), window_width, window_height, 3, pixels, 0);
+        
+        if (status == 1) {
+            printf("Saved JPG: %s\n", file_name.c_str());
+        } else {
+            printf("Failed to save JPG: %s\n", file_name.c_str());
+        }
+        
+        free(pixels);
 	}
 
 

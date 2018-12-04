@@ -10,6 +10,8 @@
 #include "camera.h"
 #include "menger.h"
 #include "jpegio.h"
+#include "saver.h"
+#include "filesystem.h"
 
 class Controller {
 public:
