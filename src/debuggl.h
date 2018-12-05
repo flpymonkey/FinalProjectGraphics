@@ -1,6 +1,8 @@
 #ifndef DEBUGGL_H
 #define DEBUGGL_H
 
+#include <iostream>
+
 void debugglTerminate();
 
 #define CHECK_SUCCESS(x)   \

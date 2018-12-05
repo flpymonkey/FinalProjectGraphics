@@ -4,14 +4,22 @@
 // OpenGL library includes
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "debuggl.h"
+
 #include <string>
+
+// VBO and VAO descriptors.
+enum { kVertexBuffer, kNormalBuffer, kIndexBuffer, kNumVbos };
+
+// These are our VAOs.
+enum { kGeometryVao, kFloorVao, kScreenVao, kNumVaos };
 
 class ShaderProgram
 {
 public:
     // program ID
     unsigned int program_id;
-    ShaderProgram(const char* vertex_shader, const char* fragment_shader, GLuint& buffer_objects, int& vao, int& descriptor);
+    ShaderProgram(const char* vertex_shader, const char* fragment_shader, GLuint& buffer_objects);
 
     void useProgram();
 

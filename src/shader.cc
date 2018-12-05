@@ -1,6 +1,6 @@
 #include "shader.h"
 
-ShaderProgram::ShaderProgram(const char* vertex_shader, const char* fragment_shader, GLuint& buffer_objects, int& vao, int& descriptor){
+ShaderProgram::ShaderProgram(const char* vertex_shader, const char* fragment_shader, GLuint& buffer_objects){
   GLuint vertex_shader_id = 0;
   CHECK_GL_ERROR(vertex_shader_id = glCreateShader(GL_VERTEX_SHADER));
 	CHECK_GL_ERROR(glShaderSource(vertex_shader_id, 1,
@@ -20,7 +20,7 @@ ShaderProgram::ShaderProgram(const char* vertex_shader, const char* fragment_sha
 	CHECK_GL_ERROR(glAttachShader(this->program_id, vertex_shader_id));
 	CHECK_GL_ERROR(glAttachShader(this->program_id, fragment_shader_id));
 
-	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, buffer_objects[*vao][descriptor]));
+	CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, buffer_objects[kScreenVao][kVertexBuffer]));
 
 	// Bind attributes.
 	CHECK_GL_ERROR(glBindAttribLocation(this->program_id, 0, "vertex_position"));
