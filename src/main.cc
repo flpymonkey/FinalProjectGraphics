@@ -23,7 +23,7 @@
 #include "render_pass.h"
 #include "lights.h"
 #include "filesystem.h"
-
+#include "shader.h"
 #include "loader.h"
 #include "mesh.h"
 #include "material.h"
