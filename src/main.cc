@@ -29,6 +29,7 @@
 #include "material.h"
 #include "filesystem.h"
 #include "object.h"
+#include "picker.h"
 
 //gui
 #include "gui.h"
@@ -51,6 +52,9 @@ int window_height = 1080;
 float exposure = 0.8f;
 bool showMeshes = false;
 bool lensEffects = false;
+
+// Initialize static member of class Box
+int Object::object_count = 0;
 
 Floor* g_floor;
 Menger *g_menger;

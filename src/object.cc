@@ -2,6 +2,7 @@
 
 Object::Object() {
     loader = new Loader();
+    object_id = object_count++;
 }
 
 Object::~Object() {
@@ -17,7 +18,7 @@ void Object::shaders(
     const char* geometry_shader,
     const char* fragment_shader
     ) {
-        
+
     this->vertex_shader = vertex_shader;
     this->geometry_shader = geometry_shader;
     this->fragment_shader = fragment_shader;
@@ -30,7 +31,7 @@ void Object::uniforms(
     ShaderUniform std_light,
     ShaderUniform std_view_position
     ) {
-    
+
     this->std_model = std_model;
     this->std_view = std_view;
     this->std_projection = std_projection;
@@ -43,7 +44,7 @@ void Object::lights(
     std::vector<PointLight> pointLights,
     std::vector<SpotLight> spotLights
     ) {
-    
+
     this->directionalLights = directionalLights;
     this->pointLights = pointLights;
     this->spotLights = spotLights;
@@ -60,22 +61,22 @@ glm::mat4 Object::rotate(glm::mat4 model_matrix, float degrees, glm::vec3 axis) 
 glm::mat4 Object::scale(glm::mat4 model_matrix, glm::vec3 s) {
     return glm::scale(model_matrix, s);
 }
-    
+
 void Object::setup(unsigned int i) {
     //if (materials.size() == 0) {
         //diffuseMap = loader->loadTexture(path("/src/assets/container2.png").c_str());
         specularMap = loader->loadTexture(path("/src/assets/container2_specular.png").c_str());
-    //} else {  
+    //} else {
         diffuseMap = materials[0].diffuse_ids[0];
         //specularMap = materials[0].specular_ids[0];
     //}
-    
+
     RenderDataInput model_pass_input;
     model_pass_input.assign(0, "vertex_position", meshes[i].vertices.data(), meshes[i].vertices.size(), 4, GL_FLOAT);
     model_pass_input.assign(1, "normal", meshes[i].normals.data(), meshes[i].normals.size(), 4, GL_FLOAT);
     model_pass_input.assign(2, "uv", meshes[i].uvs.data(), meshes[i].uvs.size(), 2, GL_FLOAT);
     model_pass_input.assign_index(meshes[i].faces.data(), meshes[i].faces.size(), 3);
-        
+
     model_pass = new RenderPass(
         -1,
         model_pass_input,
@@ -89,7 +90,7 @@ void Object::setup(unsigned int i) {
 }
 
 void Object::update() {
-    
+
 }
 
 void Object::render(unsigned int i) {
@@ -100,6 +101,6 @@ void Object::render(unsigned int i) {
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, specularMap);
-    
+
 	CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, meshes[i].faces.size() * 3, GL_UNSIGNED_INT, 0));
 }
