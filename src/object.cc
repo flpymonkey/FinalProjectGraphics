@@ -129,6 +129,7 @@ void Object::update() {
 
 void Object::render(unsigned int i) {
     model_pass->setup();
+    model_pass->updateVBO(0, meshes[i].vertices.data(), meshes[i].vertices.size());
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, diffuseMap);
