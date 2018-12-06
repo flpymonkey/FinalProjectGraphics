@@ -4,11 +4,11 @@ R"zzz(#version 330 core
 out vec4 fragment_color;
 
 // Values that stay constant for the whole mesh.
-uniform vec4 PickingColor;
+uniform vec4 id_color;
 
 void main(){
 
-    fragment_color = PickingColor;
+    fragment_color = id_color;
 
 }
 )zzz"

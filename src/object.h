@@ -47,6 +47,7 @@ class Object {
   static int object_count;
 public:
     int object_id;
+    glm::vec4 color_id_vec;
     std::vector<Mesh> meshes;
     std::vector<Material> materials;
 

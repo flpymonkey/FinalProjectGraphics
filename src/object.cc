@@ -11,6 +11,8 @@ const char* picker_vertex_shader =
 Object::Object() {
     loader = new Loader();
     object_id = object_count++;
+    // fill with dummy white value
+    color_id_vec = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 Object::~Object() {
@@ -71,47 +73,37 @@ glm::mat4 Object::scale(glm::mat4 model_matrix, glm::vec3 s) {
 }
 
 void Object::setup(unsigned int i) {
-    //if (materials.size() == 0) {
-        //diffuseMap = loader->loadTexture(path("/src/assets/container2.png").c_str());
-        specularMap = loader->loadTexture(path("/src/assets/container2_specular.png").c_str());
-    //} else {
-        diffuseMap = materials[0].diffuse_ids[0];
-        //specularMap = materials[0].specular_ids[0];
-    //}
 
     // Create the ShaderUniform for this object_id
-    auto vector_binder = [](int loc, const void* data) {
-    	glUniform4fv(loc, 1, (const GLfloat*)data);
-    };
-    printf("iddddddddddddd%d\n", object_id);
-    int r = (object_id*100 & 0x000000FF) >>  0;
-    int g = (object_id*100 & 0x0000FF00) >>  8;
-    int b = (object_id*100 & 0x00FF0000) >> 16;
-    glm::vec4 color_id = glm::vec4(r/255.0f, g/255.0f, b/255.0f, 1.0f);
-    printf("r1%d\n", r);
-    printf("g1%d\n", g);
-    printf("b1%d\n", b);
-    printf("r%f\n", color_id[0]);
-    printf("g%f\n", color_id[1]);
-    printf("b%f\n", color_id[2]);
-    auto std_color_id_data = [&color_id]() -> const void* {
-  		return &color_id[0];
+    int r = (object_id & 0x000000FF) >>  0;
+    int g = (object_id & 0x0000FF00) >>  8;
+    int b = (object_id & 0x00FF0000) >> 16;
+    color_id_vec = glm::vec4(r/255.0f, g/255.0f, b/255.0f, 1.0f);
+    // this is a weird hack I had to do to keep this in scope and not get garbage collected
+    auto& id_capture = color_id_vec;
+    auto std_color_id_data = [&id_capture]() -> const void* {
+  		return &id_capture[0];
   	};
-    ShaderUniform color_id_uniform = { "PickingColor", vector_binder, std_color_id_data };
+    auto vector4_binder = [](int loc, const void* data) {
+      glUniform4fv(loc, 1, (const GLfloat*)data);
+    };
+    ShaderUniform color_id_uniform = { "id_color", vector4_binder, std_color_id_data };
 
     RenderDataInput id_pass_input;
     id_pass_input.assign(0, "vertex_position", meshes[i].vertices.data(), meshes[i].vertices.size(), 4, GL_FLOAT);
-    id_pass_input.assign(1, "normal", meshes[i].normals.data(), meshes[i].normals.size(), 4, GL_FLOAT);
-    id_pass_input.assign(2, "uv", meshes[i].uvs.data(), meshes[i].uvs.size(), 2, GL_FLOAT);
     id_pass_input.assign_index(meshes[i].faces.data(), meshes[i].faces.size(), 3);
 
     id_pass = new RenderPass(
         -1,
         id_pass_input,
         {picker_vertex_shader, geometry_shader, picker_fragment_shader},
-        {std_model, std_view, std_projection, std_light, std_view_position, color_id_uniform},
+        {std_model, std_view, std_projection, color_id_uniform},
         {"fragment_color"}
     );
+
+    // model render pass
+    specularMap = loader->loadTexture(path("/src/assets/container2_specular.png").c_str());
+    diffuseMap = materials[0].diffuse_ids[0];
 
     RenderDataInput model_pass_input;
     model_pass_input.assign(0, "vertex_position", meshes[i].vertices.data(), meshes[i].vertices.size(), 4, GL_FLOAT);
@@ -149,6 +141,6 @@ void Object::render(unsigned int i) {
 
 void Object::render_id(unsigned int i) {
     id_pass->setup();
-
+    id_pass->updateVBO(0, meshes[i].vertices.data(), meshes[i].vertices.size());
 	  CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, meshes[i].faces.size() * 3, GL_UNSIGNED_INT, 0));
 }

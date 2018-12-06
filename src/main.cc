@@ -428,6 +428,34 @@ int main(int argc, char* argv[])
     //}
     // <<<Dog>>>
 
+		// <<<Dog2>>>
+    Object* dog2 = new Object();
+    dog2->load("/src/assets/animals/dog/dog.obj");
+
+    glm::mat4 dog2_model_matrix = glm::mat4(1.0f);
+
+    dog2_model_matrix = dog2->translate(dog2_model_matrix, glm::vec3(-1.5f, 0.0f, 0.0f));
+    dog2_model_matrix = dog->rotate(dog2_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+    dog2_model_matrix = dog->scale(dog2_model_matrix, glm::vec3(0.01f, 0.01f, 0.01f));
+
+    auto dog2_model_data = [&dog2_model_matrix]() -> const void* {
+			return &dog2_model_matrix[0][0];
+		};
+
+    ShaderUniform dog2_model = {"model", matrix_binder, dog2_model_data};
+
+    dog2->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    dog2->uniforms(dog2_model, std_view, std_proj, std_light, std_view_position);
+    dog2->lights(directionalLights, pointLights, spotLights);
+
+    dog2->setup(0);
+
+    //for (unsigned int i = 1; i < dog->meshes.size(); i++) {
+        //dog->setup(i);
+        //dog->render(i);
+    //}
+    // <<<Dog2>>>
+
 	float theta = 0.0f;
 
 	// screen quad VAO, for displaying game as a texture
@@ -984,6 +1012,7 @@ int main(int argc, char* argv[])
 			// every object with an id needs to be rendered here
       cat->render_id(0);
       dog->render_id(0);
+			dog2->render_id(0);
 
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	    glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
@@ -1020,11 +1049,9 @@ int main(int argc, char* argv[])
         	data[1] * 256 +
         	data[2] * 256*256;
 
-			printf("outputdata%f\n", data[0]);
-			printf("outputdata1%f\n", data[1]* 256);
-			printf("outputdata2%f\n", data[2]* 256 * 256);
-
-      printf("%d\n", pickedID);
+			// FIXME: ObjectID is calculated by a multiple of 3 for some reason???
+			// FIXME: Added /3 to hack a fix, may break math above 255 objects
+      printf("%d\n", pickedID / 3);
 
       //captureImage = false;
     }
