@@ -49,6 +49,11 @@ void Object::lights(
     this->spotLights = spotLights;
 }
 
+void Object::textures(const char* diffuse, const char* specular) {
+    diffuseMap = loader->loadTexture(path(std::string(diffuse)).c_str());
+    specularMap = loader->loadTexture(path(std::string(specular)).c_str());
+}
+
 glm::mat4 Object::translate(glm::mat4 model_matrix, glm::vec3 t) {
     return glm::translate(model_matrix, t);
 }
@@ -61,14 +66,8 @@ glm::mat4 Object::scale(glm::mat4 model_matrix, glm::vec3 s) {
     return glm::scale(model_matrix, s);
 }
     
-void Object::setup(unsigned int i) {
-    //if (materials.size() == 0) {
-        //diffuseMap = loader->loadTexture(path("/src/assets/container2.png").c_str());
-        specularMap = loader->loadTexture(path("/src/assets/container2_specular.png").c_str());
-    //} else {  
-        diffuseMap = materials[0].diffuse_ids[0];
-        //specularMap = materials[0].specular_ids[0];
-    //}
+void Object::setup() {
+    unsigned int i = 0;
     
     RenderDataInput model_pass_input;
     model_pass_input.assign(0, "vertex_position", meshes[i].vertices.data(), meshes[i].vertices.size(), 4, GL_FLOAT);
@@ -89,10 +88,12 @@ void Object::setup(unsigned int i) {
 }
 
 void Object::update() {
-    
+    // TODO:
 }
 
-void Object::render(unsigned int i) {
+void Object::render() {
+    unsigned int i = 0;
+    
     model_pass->setup();
 
     glActiveTexture(GL_TEXTURE0);

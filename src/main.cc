@@ -43,8 +43,8 @@ glm::mat4 model_matrix;
 
 float aspect = 0.0f;
 
-int window_width = 1920;
-int window_height = 1080;
+int window_width = 800;
+int window_height = 600;
 
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
@@ -363,32 +363,198 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
     // <<<Floor Renderpass>>>
+    
+    // <<<Scene>>>
+    // <<<Cube>>>
+    Object* cube = new Object();
+    cube->load("/src/assets/primitives/cube.obj");
 
+    glm::mat4 cube_model_matrix = glm::mat4(1.0f);
+
+    //cube_model_matrix = cube->translate(cube_model_matrix, glm::vec3(0.0f, 0.0f, 0.0f));
+    //cube_model_matrix = cube->rotate(cube_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    //cube_model_matrix = cube->scale(cube_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    auto cube_model_data = [&cube_model_matrix]() -> const void* {
+		return &cube_model_matrix[0][0];
+    };
+
+    ShaderUniform cube_model = {"model", matrix_binder, cube_model_data};
+
+    cube->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    cube->uniforms(cube_model, std_view, std_proj, std_light, std_view_position);
+    cube->lights(directionalLights, pointLights, spotLights);
+    cube->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    
+    cube->setup();
+    // <<<Cube>>>
+    
+    // <<<Cone>>>
+    Object* cone = new Object();
+    cone->load("/src/assets/primitives/cone.obj");
+
+    glm::mat4 cone_model_matrix = glm::mat4(1.0f);
+
+    cone_model_matrix = cone->translate(cone_model_matrix, glm::vec3(2.0f, 0.0f, 0.0f));
+    //cone_model_matrix = cone->rotate(cone_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    //cone_model_matrix = cone->scale(cone_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    auto cone_model_data = [&cone_model_matrix]() -> const void* {
+		return &cone_model_matrix[0][0];
+    };
+
+    ShaderUniform cone_model = {"model", matrix_binder, cone_model_data};
+
+    cone->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    cone->uniforms(cone_model, std_view, std_proj, std_light, std_view_position);
+    cone->lights(directionalLights, pointLights, spotLights);
+    cone->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    
+    cone->setup();
+    // <<<Cone>>>
+    
+    // <<<Sphere>>>
+    Object* sphere = new Object();
+    sphere->load("/src/assets/primitives/sphere.obj");
+
+    glm::mat4 sphere_model_matrix = glm::mat4(1.0f);
+
+    sphere_model_matrix = sphere->translate(sphere_model_matrix, glm::vec3(4.0f, 0.0f, 0.0f));
+    //sphere_model_matrix = sphere->rotate(sphere_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    //sphere_model_matrix = sphere->scale(sphere_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    auto sphere_model_data = [&sphere_model_matrix]() -> const void* {
+		return &sphere_model_matrix[0][0];
+    };
+
+    ShaderUniform sphere_model = {"model", matrix_binder, sphere_model_data};
+
+    sphere->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    sphere->uniforms(sphere_model, std_view, std_proj, std_light, std_view_position);
+    sphere->lights(directionalLights, pointLights, spotLights);
+    sphere->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    
+    sphere->setup();
+    // <<<Sphere>>>
+    
+    // <<<Sphere2>>>
+    Object* sphere2 = new Object();
+    sphere2->load("/src/assets/primitives/sphere2.obj");
+
+    glm::mat4 sphere2_model_matrix = glm::mat4(1.0f);
+
+    sphere2_model_matrix = sphere2->translate(sphere2_model_matrix, glm::vec3(6.0f, 0.0f, 0.0f));
+    //sphere2_model_matrix = sphere2->rotate(sphere2_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    //sphere2_model_matrix = sphere2->scale(sphere2_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    auto sphere2_model_data = [&sphere2_model_matrix]() -> const void* {
+		return &sphere2_model_matrix[0][0];
+    };
+
+    ShaderUniform sphere2_model = {"model", matrix_binder, sphere2_model_data};
+
+    sphere2->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    sphere2->uniforms(sphere2_model, std_view, std_proj, std_light, std_view_position);
+    sphere2->lights(directionalLights, pointLights, spotLights);
+    sphere2->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    
+    sphere2->setup();
+    // <<<Sphere2>>>
+    
+    // <<<Cylinder>>>
+    Object* cylinder = new Object();
+    cylinder->load("/src/assets/primitives/cylinder.obj");
+
+    glm::mat4 cylinder_model_matrix = glm::mat4(1.0f);
+
+    cylinder_model_matrix = cylinder->translate(cylinder_model_matrix, glm::vec3(8.0f, 0.0f, 0.0f));
+    //cylinder_model_matrix = cylinder->rotate(cylinder_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    //cylinder_model_matrix = cylinder->scale(cylinder_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    auto cylinder_model_data = [&cylinder_model_matrix]() -> const void* {
+		return &cylinder_model_matrix[0][0];
+    };
+
+    ShaderUniform cylinder_model = {"model", matrix_binder, cylinder_model_data};
+
+    cylinder->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    cylinder->uniforms(cylinder_model, std_view, std_proj, std_light, std_view_position);
+    cylinder->lights(directionalLights, pointLights, spotLights);
+    cylinder->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    
+    cylinder->setup();
+    // <<<Cylinder>>>
+    
+    // <<<Torus>>>
+    Object* torus = new Object();
+    torus->load("/src/assets/primitives/torus.obj");
+
+    glm::mat4 torus_model_matrix = glm::mat4(1.0f);
+
+    torus_model_matrix = torus->translate(torus_model_matrix, glm::vec3(12.0f, 0.0f, 0.0f));
+    //torus_model_matrix = torus->rotate(torus_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    //torus_model_matrix = torus->scale(torus_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    auto torus_model_data = [&torus_model_matrix]() -> const void* {
+		return &torus_model_matrix[0][0];
+    };
+
+    ShaderUniform torus_model = {"model", matrix_binder, torus_model_data};
+
+    torus->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    torus->uniforms(torus_model, std_view, std_proj, std_light, std_view_position);
+    torus->lights(directionalLights, pointLights, spotLights);
+    torus->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    
+    torus->setup();
+    // <<<Torus>>>
+    
+    // <<<Monkey>>>
+    Object* monkey = new Object();
+    monkey->load("/src/assets/primitives/monkey.obj");
+
+    glm::mat4 monkey_model_matrix = glm::mat4(1.0f);
+
+    monkey_model_matrix = monkey->translate(monkey_model_matrix, glm::vec3(16.0f, 0.0f, 0.0f));
+    //monkey_model_matrix = monkey->rotate(monkey_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    //monkey_model_matrix = monkey->scale(monkey_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    auto monkey_model_data = [&monkey_model_matrix]() -> const void* {
+		return &monkey_model_matrix[0][0];
+    };
+
+    ShaderUniform monkey_model = {"model", matrix_binder, monkey_model_data};
+
+    monkey->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    monkey->uniforms(monkey_model, std_view, std_proj, std_light, std_view_position);
+    monkey->lights(directionalLights, pointLights, spotLights);
+    monkey->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    
+    monkey->setup();
+    // <<<Monkey>>>
+    
     // <<<Cat>>>
     Object* cat = new Object();
     cat->load("/src/assets/animals/cat/cat.obj");
 
     glm::mat4 cat_model_matrix = glm::mat4(1.0f);
 
-    //cat_model_matrix = cat->translate(cat_model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
+    cat_model_matrix = cat->translate(cat_model_matrix, glm::vec3(20.0f, 1.0f, 0.0f));
     //cat_model_matrix = cat->rotate(cat_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
     //cat_model_matrix = cat->scale(cat_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
 
     auto cat_model_data = [&cat_model_matrix]() -> const void* {
-			return &cat_model_matrix[0][0];
-		};
+		return &cat_model_matrix[0][0];
+	};
 
     ShaderUniform cat_model = {"model", matrix_binder, cat_model_data};
 
     cat->shaders(object_vertex_shader, NULL, object_fragment_shader);
     cat->uniforms(cat_model, std_view, std_proj, std_light, std_view_position);
     cat->lights(directionalLights, pointLights, spotLights);
-
-    cat->setup(0);
-     //for (unsigned int i = 1; i < cat->meshes.size(); i++) {
-        //cat->setup(i);
-        //cat->render(i);
-    //}
+    cat->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    
+    cat->setup();
     // <<<Cat>>>
 
     // <<<Dog>>>
@@ -397,27 +563,48 @@ int main(int argc, char* argv[])
 
     glm::mat4 dog_model_matrix = glm::mat4(1.0f);
 
-    dog_model_matrix = dog->translate(dog_model_matrix, glm::vec3(1.5f, 0.0f, 0.0f));
+    dog_model_matrix = dog->translate(dog_model_matrix, glm::vec3(24.0f, 0.0f, 0.0f));
     dog_model_matrix = dog->rotate(dog_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-    dog_model_matrix = dog->scale(dog_model_matrix, glm::vec3(0.01f, 0.01f, 0.01f));
+    dog_model_matrix = dog->scale(dog_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
 
     auto dog_model_data = [&dog_model_matrix]() -> const void* {
-			return &dog_model_matrix[0][0];
-		};
+		return &dog_model_matrix[0][0];
+	};
 
     ShaderUniform dog_model = {"model", matrix_binder, dog_model_data};
 
     dog->shaders(object_vertex_shader, NULL, object_fragment_shader);
     dog->uniforms(dog_model, std_view, std_proj, std_light, std_view_position);
     dog->lights(directionalLights, pointLights, spotLights);
+    dog->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
 
-    dog->setup(0);
-
-    //for (unsigned int i = 1; i < dog->meshes.size(); i++) {
-        //dog->setup(i);
-        //dog->render(i);
-    //}
+    dog->setup();
     // <<<Dog>>>
+    
+    // <<<Deer>>>
+    Object* deer = new Object();
+    deer->load("/src/assets/animals/deer.obj");
+
+    glm::mat4 deer_model_matrix = glm::mat4(1.0f);
+
+    deer_model_matrix = deer->translate(deer_model_matrix, glm::vec3(28.0f, 0.0f, 0.0f));
+    //deer_model_matrix = deer->rotate(deer_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+    deer_model_matrix = deer->scale(deer_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
+
+    auto deer_model_data = [&deer_model_matrix]() -> const void* {
+		return &deer_model_matrix[0][0];
+	};
+
+    ShaderUniform deer_model = {"model", matrix_binder, deer_model_data};
+
+    deer->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    deer->uniforms(deer_model, std_view, std_proj, std_light, std_view_position);
+    deer->lights(directionalLights, pointLights, spotLights);
+    deer->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+
+    deer->setup();
+    // <<<Deer>>>
+    // <<<Scene>>>
 
 	float theta = 0.0f;
 
@@ -1013,19 +1200,22 @@ int main(int argc, char* argv[])
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Render Floor>>>
 
-		// <<<Object>>>
-        //for (unsigned int i = 0; i < object->meshes.size(); i++) {
-            //object->setup(i);
-            //object->render(i);
-        //}
-        // <<<Object>>>
+        // <<<Scene>>>
+        if (showMeshes){
+          cube->render();
+          cone->render();
+          sphere->render();
+          sphere2->render();
+          cylinder->render();
+          torus->render();
+          monkey->render();
+          
+          cat->render();
+          dog->render();
+          deer->render();
 
-    if (showMeshes){
-      // <<<Dog>>>
-      cat->render(0);
-      dog->render(0);
-      // <<<Dog>>>
-    }
+        }
+        // <<<Scene>>>
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

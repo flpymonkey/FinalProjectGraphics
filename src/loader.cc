@@ -41,7 +41,7 @@ void Loader::loadObj(const char* path, std::vector<Mesh>& meshes, std::vector<Ma
     }
     
     if (scene->HasMaterials()) {
-        getMaterials(path, scene, meshes, materials);
+        //getMaterials(path, scene, meshes, materials);
     } else {
         printf("Loader::loadObj(): warning scene does not contain materials!\n");
     }

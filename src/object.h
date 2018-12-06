@@ -51,14 +51,15 @@ public:
         std::vector<PointLight> pointLights,
         std::vector<SpotLight> spotLights
     );
+    void textures(const char* diffuse, const char* specular);
     
     glm::mat4 translate(glm::mat4 model_matrix, glm::vec3 t);
     glm::mat4 rotate(glm::mat4 model_matrix, float degrees, glm::vec3 axis);
     glm::mat4 scale(glm::mat4 model_matrix, glm::vec3 s);
     
-    void setup(unsigned int i);
+    void setup();
     void update();
-    void render(unsigned int i);
+    void render();
     
 private:
     Loader* loader;
