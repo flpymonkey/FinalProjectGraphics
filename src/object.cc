@@ -84,11 +84,16 @@ void Object::setup(unsigned int i) {
     	glUniform4fv(loc, 1, (const GLfloat*)data);
     };
     printf("iddddddddddddd%d\n", object_id);
-    int r = (object_id & 0x000000FF) >>  0;
-    int g = (object_id & 0x0000FF00) >>  8;
-    int b = (object_id & 0x00FF0000) >> 16;
+    int r = (object_id*100 & 0x000000FF) >>  0;
+    int g = (object_id*100 & 0x0000FF00) >>  8;
+    int b = (object_id*100 & 0x00FF0000) >> 16;
     glm::vec4 color_id = glm::vec4(r/255.0f, g/255.0f, b/255.0f, 1.0f);
-    color_id = glm::vec4(120.0f, 120.0f, 120.0f, 1.0f);
+    printf("r1%d\n", r);
+    printf("g1%d\n", g);
+    printf("b1%d\n", b);
+    printf("r%f\n", color_id[0]);
+    printf("g%f\n", color_id[1]);
+    printf("b%f\n", color_id[2]);
     auto std_color_id_data = [&color_id]() -> const void* {
   		return &color_id[0];
   	};
