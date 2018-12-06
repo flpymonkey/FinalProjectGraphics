@@ -49,7 +49,7 @@ int window_height = 720;
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
 float exposure = 0.8f;
-bool showMeshes = false;
+bool showMeshes = true;
 bool lensEffects = false;
 
 bool captureImage = true;
@@ -567,6 +567,31 @@ int main(int argc, char* argv[])
 	glUniform1i(screen_texture_matrix_location, 0);
 	// ===========================================================
 
+	// configure alternate geometry_framebuffer
+	unsigned int id_tracking_framebuffer;
+	glGenFramebuffers(1, &id_tracking_framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, id_tracking_framebuffer);
+
+	// create a color attachment texture
+	unsigned int id_tracking_textureColorBuffer;
+	glGenTextures(1, &id_tracking_textureColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, id_tracking_textureColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_width, window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, id_tracking_textureColorBuffer, 0);
+
+	unsigned int id_tracking_rbo;
+	glGenRenderbuffers(1, &id_tracking_rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, id_tracking_rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window_width, window_height); // use a single renderbuffer object for both a depth AND stencil buffer.
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, id_tracking_rbo); // now actually attach it
+
+	// Check that framebuffer is set up correctly
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	}
+
   // Setup hdr fragment shader for the quad ====================
 	GLuint screen_hdr_shader_id = 0;
 	const char* screen_hdr_source_pointer = screen_hdr_shader;
@@ -1000,70 +1025,6 @@ int main(int argc, char* argv[])
 
 	clock_t last_frame_time = clock();
 	while (!glfwWindowShouldClose(window)) {
-    if (captureImage){
-      //  color id pass
-    	glBindFramebuffer(GL_FRAMEBUFFER, geometry_framebuffer);
-  		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
-
-  		// make sure we clear the geometry_framebuffer's content
-  		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-  		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			// every object with an id needs to be rendered here
-      cat->render_id(0);
-      dog->render_id(0);
-			dog2->render_id(0);
-
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	    glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-	    // clear all relevant buffers
-	    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
-	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			// draw to the quad:
-			CHECK_GL_ERROR(glUseProgram(screen_single_program_id));
-			glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
-
-			glBindVertexArray(quadVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
-      // Wait until all the pending drawing commands are really done.
-      // Ultra-mega-over slow !
-      // There are usually a long time between glDrawElements() and
-      // all the fragments completely rasterized.
-      glFlush();
-      glFinish();
-
-      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-      // Read the pixel at the center of the screen.
-      // You can also use glfwGetMousePos().
-      // Ultra-mega-over slow too, even for 1 pixel,
-      // because the framebuffer is on the GPU.
-      unsigned char data[4];
-      glReadPixels(window_width/2, window_height/2,1,1, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-      // retrieve the picked id
-      int pickedID =
-        	data[0] +
-        	data[1] * 256 +
-        	data[2] * 256*256;
-
-			// FIXME: ObjectID is calculated by a multiple of 3 for some reason???
-			// FIXME: Added /3 to hack a fix, may break math above 255 objects
-      printf("%d\n", pickedID / 3);
-
-      //captureImage = false;
-    }
-    // end of color id pass ===========================================================
-
-		// Compute the projection matrix.
-		aspect = static_cast<float>(window_width) / window_height;
-		projection_matrix =
-			glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
-
-		view_matrix = g_camera->get_view_matrix();
-
 		// // render
 		// // ------
 		// // bind to geometry_framebuffer and draw scene as we normally would to color texture
@@ -1073,6 +1034,7 @@ int main(int argc, char* argv[])
 		// // make sure we clear the geometry_framebuffer's content
 		// glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //
     //
 		// if (g_menger && g_menger->is_dirty()) {
 		//   	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces, menger_pos);
@@ -1141,18 +1103,11 @@ int main(int argc, char* argv[])
 		// CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// // <<<Render Floor>>>
     //
-		// // <<<Object>>>
-    //     //for (unsigned int i = 0; i < object->meshes.size(); i++) {
-    //         //object->setup(i);
-    //         //object->render(i);
-    //     //}
-    //     // <<<Object>>>
-    //
     // if (showMeshes){
-    //   // <<<Dog>>>
+    //
     //   cat->render(0);
     //   dog->render(0);
-    //   // <<<Dog>>>
+		// 	dog2->render(0);
     // }
     //
 		// glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1268,7 +1223,6 @@ int main(int argc, char* argv[])
 		// glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
     // // clear all relevant buffers
-    // glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
     // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //
 		// CHECK_GL_ERROR(glUseProgram(screen_default_program_id));
@@ -1288,6 +1242,72 @@ int main(int argc, char* argv[])
     //
 		// // Render GUI
 		// gui->render();
+
+		if (captureImage){
+      //  color id pass
+    	glBindFramebuffer(GL_FRAMEBUFFER, id_tracking_framebuffer);
+  		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+
+  		// make sure we clear the id_tracking_framebuffer's content
+  		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			// every object with an id needs to be rendered here
+			if (showMeshes){
+	      cat->render_id(0);
+	      dog->render_id(0);
+				dog2->render_id(0);
+			}
+
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	    glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+	    // clear all relevant buffers
+	    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			// draw to the quad:
+			CHECK_GL_ERROR(glUseProgram(screen_single_program_id));
+			glBindTexture(GL_TEXTURE_2D, id_tracking_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+			glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+      // Wait until all the pending drawing commands are really done.
+      // Ultra-mega-over slow !
+      // There are usually a long time between glDrawElements() and
+      // all the fragments completely rasterized.
+      glFlush();
+      glFinish();
+
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+      // Read the pixel at the center of the screen.
+      // You can also use glfwGetMousePos().
+      // Ultra-mega-over slow too, even for 1 pixel,
+      // because the framebuffer is on the GPU.
+      unsigned char data[4];
+      glReadPixels(window_width/2, window_height/2,1,1, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+      // retrieve the picked id
+      int pickedID =
+        	data[0] +
+        	data[1] * 256 +
+        	data[2] * 256*256;
+
+			// FIXME: ObjectID is calculated by a multiple of 3 for some reason???
+			// FIXME: Added /3 to hack a fix, may break math above 255 objects
+      printf("%d\n", pickedID / 3);
+
+      captureImage = false;
+			// end of color id pass ===========================================================
+    }
+
+		// Compute the projection matrix.
+		aspect = static_cast<float>(window_width) / window_height;
+		projection_matrix =
+			glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
+
+		view_matrix = g_camera->get_view_matrix();
 
 		// Poll and swap.
 		glfwPollEvents();
