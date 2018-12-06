@@ -1,4 +1,4 @@
-#version 330 core
+R"zzz(#version 330 core
 
 // Ouput data
 out vec4 fragment_color;
@@ -11,3 +11,4 @@ void main(){
     fragment_color = PickingColor;
 
 }
+)zzz"

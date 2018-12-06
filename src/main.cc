@@ -29,7 +29,6 @@
 #include "material.h"
 #include "filesystem.h"
 #include "object.h"
-#include "picker.h"
 
 //gui
 #include "gui.h"

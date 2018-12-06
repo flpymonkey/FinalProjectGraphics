@@ -25,6 +25,23 @@
 #include "render_pass.h"
 #include "lights.h"
 
+// glm::vec4 get_color_from_id(int i){
+//   // Convert "i", the integer mesh ID, into an RGB color
+//   int r = (i & 0x000000FF) >>  0;
+//   int g = (i & 0x0000FF00) >>  8;
+//   int b = (i & 0x00FF0000) >> 16;
+//   return glm::vec4(r, g, b, 1.0f);
+// }
+//
+// int get_id_from_color_data(char* data){
+//   // Convert the color back to an integer ID
+//   int pickedID =
+//   	data[0] +
+//   	data[1] * 256 +
+//   	data[2] * 256*256;
+//   return pickedID;
+// };
+
 class Object {
   // the number of objects generated (total)
   static int object_count;
@@ -62,6 +79,7 @@ public:
     void setup(unsigned int i);
     void update();
     void render(unsigned int i);
+    void render_id(unsigned int i);
 
 private:
     Loader* loader;
@@ -85,6 +103,7 @@ private:
     unsigned int specularMap;
 
     RenderPass* model_pass;
+    RenderPass* id_pass;
 
     bool initialized;
 };

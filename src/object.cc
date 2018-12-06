@@ -1,5 +1,13 @@
 #include "object.h"
 
+const char* picker_fragment_shader =
+#include "shaders/picker.frag"
+;
+
+const char* picker_vertex_shader =
+#include "shaders/picker.vert"
+;
+
 Object::Object() {
     loader = new Loader();
     object_id = object_count++;
@@ -71,6 +79,33 @@ void Object::setup(unsigned int i) {
         //specularMap = materials[0].specular_ids[0];
     //}
 
+    // Create the ShaderUniform for this object_id
+    auto vector_binder = [](int loc, const void* data) {
+    	glUniform4fv(loc, 1, (const GLfloat*)data);
+    };
+    int r = (object_id & 0x000000FF) >>  0;
+    int g = (object_id & 0x0000FF00) >>  8;
+    int b = (object_id & 0x00FF0000) >> 16;
+    glm::vec4 color_id = glm::vec4(r, g, b, 1.0f);
+    auto std_color_id_data = [&color_id]() -> const void* {
+  		return &color_id[0];
+  	};
+    ShaderUniform color_id_uniform = { "PickingColor", vector_binder, std_color_id_data };
+
+    RenderDataInput id_pass_input;
+    id_pass_input.assign(0, "vertex_position", meshes[i].vertices.data(), meshes[i].vertices.size(), 4, GL_FLOAT);
+    id_pass_input.assign(1, "normal", meshes[i].normals.data(), meshes[i].normals.size(), 4, GL_FLOAT);
+    id_pass_input.assign(2, "uv", meshes[i].uvs.data(), meshes[i].uvs.size(), 2, GL_FLOAT);
+    id_pass_input.assign_index(meshes[i].faces.data(), meshes[i].faces.size(), 3);
+
+    id_pass = new RenderPass(
+        -1,
+        id_pass_input,
+        {picker_vertex_shader, geometry_shader, picker_fragment_shader},
+        {std_model, std_view, std_projection, std_light, std_view_position, color_id_uniform},
+        {"fragment_color"}
+    );
+
     RenderDataInput model_pass_input;
     model_pass_input.assign(0, "vertex_position", meshes[i].vertices.data(), meshes[i].vertices.size(), 4, GL_FLOAT);
     model_pass_input.assign(1, "normal", meshes[i].normals.data(), meshes[i].normals.size(), 4, GL_FLOAT);
@@ -102,5 +137,11 @@ void Object::render(unsigned int i) {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, specularMap);
 
-	CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, meshes[i].faces.size() * 3, GL_UNSIGNED_INT, 0));
+	  CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, meshes[i].faces.size() * 3, GL_UNSIGNED_INT, 0));
+}
+
+void Object::render_id(unsigned int i) {
+    id_pass->setup();
+
+	  CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, meshes[i].faces.size() * 3, GL_UNSIGNED_INT, 0));
 }

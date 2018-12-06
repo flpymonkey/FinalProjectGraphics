@@ -1,4 +1,4 @@
-#version 330 core
+R"zzz(#version 330 core
 
 // Input vertex data, different for all executions of this shader.
 in vec4 vertex_position;
@@ -11,6 +11,7 @@ uniform mat4 projection;
 void main(){
 
     // Output position of the vertex, in clip space : MVP * position
-    gl_Position =  projection * view * model * vertexPosition;
+    gl_Position =  projection * view * model * vertex_position;
 
 }
+)zzz"
