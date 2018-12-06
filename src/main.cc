@@ -52,6 +52,8 @@ float exposure = 0.8f;
 bool showMeshes = false;
 bool lensEffects = false;
 
+bool captureImage = false;
+
 // Initialize static member of class Box
 int Object::object_count = 0;
 
@@ -179,7 +181,7 @@ int main(int argc, char* argv[])
 	glewExperimental = GL_TRUE;
 
 	// Controller
-	g_controller = new Controller(window, g_camera, g_menger, &exposure, &showMeshes, &lensEffects);
+	g_controller = new Controller(window, g_camera, g_menger, &exposure, &showMeshes, &lensEffects, &captureImage);
 
 	CHECK_SUCCESS(glewInit() == GLEW_OK);
 	glGetError();  // clear GLEW's error for it
@@ -932,6 +934,48 @@ int main(int argc, char* argv[])
 
 	clock_t last_frame_time = clock();
 	while (!glfwWindowShouldClose(window)) {
+    if (captureImage){
+      //  color id pass
+    	glBindFramebuffer(GL_FRAMEBUFFER, geometry_framebuffer);
+  		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+
+  		// make sure we clear the geometry_framebuffer's content
+  		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      cat->render_id(0);
+      dog->render_id(0);
+
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+      // Wait until all the pending drawing commands are really done.
+      // Ultra-mega-over slow !
+      // There are usually a long time between glDrawElements() and
+      // all the fragments completely rasterized.
+      glFlush();
+      glFinish();
+
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+      // Read the pixel at the center of the screen.
+      // You can also use glfwGetMousePos().
+      // Ultra-mega-over slow too, even for 1 pixel,
+      // because the framebuffer is on the GPU.
+      unsigned char data[4];
+      glReadPixels(1024/2, 768/2,1,1, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+      // retrieve the picked id
+      int pickedID =
+        	data[0] +
+        	data[1] * 256 +
+        	data[2] * 256*256;
+
+      printf("%d\n", pickedID);
+      
+      captureImage = false;
+    }
+    // end of color id pass ===========================================================
+
 		// render
 		// ------
 		// bind to geometry_framebuffer and draw scene as we normally would to color texture

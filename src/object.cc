@@ -83,10 +83,12 @@ void Object::setup(unsigned int i) {
     auto vector_binder = [](int loc, const void* data) {
     	glUniform4fv(loc, 1, (const GLfloat*)data);
     };
+    printf("iddddddddddddd%d\n", object_id);
     int r = (object_id & 0x000000FF) >>  0;
     int g = (object_id & 0x0000FF00) >>  8;
     int b = (object_id & 0x00FF0000) >> 16;
-    glm::vec4 color_id = glm::vec4(r, g, b, 1.0f);
+    glm::vec4 color_id = glm::vec4(r/255.0f, g/255.0f, b/255.0f, 1.0f);
+    color_id = glm::vec4(120.0f, 120.0f, 120.0f, 1.0f);
     auto std_color_id_data = [&color_id]() -> const void* {
   		return &color_id[0];
   	};
