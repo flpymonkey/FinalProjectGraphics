@@ -49,7 +49,7 @@ int window_height = 600;
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
 float exposure = 0.8f;
-bool showMeshes = false;
+bool showMeshes = true;
 bool lensEffects = false;
 
 Floor* g_floor;
@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
 
 	std::vector<PointLight> pointLights;
 	PointLight pointLight = PointLight(glm::vec3(0.0f, 25.0f, 10.0f));
-	pointLights.push_back(pointLight); 
+	pointLights.push_back(pointLight);
     pointLight = PointLight(glm::vec3(-20.0f, 50.0f, -20.0f));
     pointLights.push_back(pointLight);
 
@@ -314,7 +314,7 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
     // <<<Floor Renderpass>>>
-    
+
     // <<<Scene>>>
     // <<<Cone>>>
     Object* cone = new Object();
@@ -336,10 +336,10 @@ int main(int argc, char* argv[])
     cone->uniforms(cone_model, std_view, std_proj, std_light, std_view_position);
     cone->lights(directionalLights, pointLights, spotLights);
     cone->textures("/src/assets/textures/grass.png", "/src/assets/textures/wall_s.jpg");
-    
+
     cone->setup();
     // <<<Cone>>>
-    
+
     // <<<Sphere>>>
     Object* sphere = new Object();
     sphere->load("/src/assets/primitives/sphere.obj");
@@ -359,12 +359,12 @@ int main(int argc, char* argv[])
     sphere->shaders(object_vertex_shader, NULL, object_fragment_shader);
     sphere->uniforms(sphere_model, std_view, std_proj, std_light, std_view_position);
     sphere->lights(directionalLights, pointLights, spotLights);
-    sphere->lightColor(glm::vec4(5.0f, 5.0f, 5.0f, 1.0f));
+    sphere->lightColor(glm::vec4(1.3f, 1.3f, 1.3f, 1.0f));
     sphere->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
-    
+
     sphere->setup();
     // <<<Sphere>>>
-    
+
     // <<<Sphere2>>>
     Object* sphere2 = new Object();
     sphere2->load("/src/assets/primitives/sphere2.obj");
@@ -385,10 +385,260 @@ int main(int argc, char* argv[])
     sphere2->uniforms(sphere2_model, std_view, std_proj, std_light, std_view_position);
     sphere2->lights(directionalLights, pointLights, spotLights);
     sphere2->textures("/src/assets/textures/wood2.png", "/src/assets/textures/wood_s.jpg");
-    
+
     sphere2->setup();
     // <<<Sphere2>>>
-    
+
+		// <<<TreeLight>>>
+		Object* treelight = new Object();
+		treelight->load("/src/assets/primitives/sphere.obj");
+
+		glm::mat4 treelight_model_matrix = glm::mat4(1.0f);
+
+		treelight_model_matrix = treelight->translate(treelight_model_matrix, glm::vec3(0.0f, 5.0f, 5.0f));
+		//treelight_model_matrix = treelight->rotate(treelight_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		treelight_model_matrix = treelight->scale(treelight_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+		auto treelight_model_data = [&treelight_model_matrix]() -> const void* {
+		return &treelight_model_matrix[0][0];
+		};
+
+		ShaderUniform treelight_model = {"model", matrix_binder, treelight_model_data};
+
+		treelight->shaders(object_vertex_shader, NULL, object_fragment_shader);
+		treelight->uniforms(treelight_model, std_view, std_proj, std_light, std_view_position);
+		treelight->lights(directionalLights, pointLights, spotLights);
+		treelight->lightColor(glm::vec4(1.0f, 1.0f, 1.5f, 1.0f));
+		treelight->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
+
+		treelight->setup();
+		// <<<TreeLight>>>
+
+		// <<<TreeLight2>>>
+		Object* treelight2 = new Object();
+		treelight2->load("/src/assets/primitives/sphere.obj");
+
+		glm::mat4 treelight2_model_matrix = glm::mat4(1.0f);
+
+		treelight2_model_matrix = treelight2->translate(treelight2_model_matrix, glm::vec3(2.0f, 7.0f, 6.0f));
+		//treelight2_model_matrix = treelight2->rotate(treelight2_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		treelight2_model_matrix = treelight2->scale(treelight2_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+		auto treelight2_model_data = [&treelight2_model_matrix]() -> const void* {
+		return &treelight2_model_matrix[0][0];
+		};
+
+		ShaderUniform treelight2_model = {"model", matrix_binder, treelight2_model_data};
+
+		treelight2->shaders(object_vertex_shader, NULL, object_fragment_shader);
+		treelight2->uniforms(treelight2_model, std_view, std_proj, std_light, std_view_position);
+		treelight2->lights(directionalLights, pointLights, spotLights);
+		treelight2->lightColor(glm::vec4(1.0f, 1.0f, 1.5f, 1.0f));
+		treelight2->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
+
+		treelight2->setup();
+		// <<<TreeLight2>>>
+
+		// <<<TreeLight3>>>
+		Object* treelight3 = new Object();
+		treelight3->load("/src/assets/primitives/sphere.obj");
+
+		glm::mat4 treelight3_model_matrix = glm::mat4(1.0f);
+
+		treelight3_model_matrix = treelight3->translate(treelight3_model_matrix, glm::vec3(-2.0f, 9.0f, 6.5f));
+		//treelight3_model_matrix = treelight3->rotate(treelight3_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		treelight3_model_matrix = treelight3->scale(treelight3_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+		auto treelight3_model_data = [&treelight3_model_matrix]() -> const void* {
+		return &treelight3_model_matrix[0][0];
+		};
+
+		ShaderUniform treelight3_model = {"model", matrix_binder, treelight3_model_data};
+
+		treelight3->shaders(object_vertex_shader, NULL, object_fragment_shader);
+		treelight3->uniforms(treelight3_model, std_view, std_proj, std_light, std_view_position);
+		treelight3->lights(directionalLights, pointLights, spotLights);
+		treelight3->lightColor(glm::vec4(1.0f, 1.0f, 1.5f, 1.0f));
+		treelight3->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
+
+		treelight3->setup();
+		// <<<TreeLight3>>>
+
+		// <<<TreeLight4>>>
+		Object* treelight4 = new Object();
+		treelight4->load("/src/assets/primitives/sphere.obj");
+
+		glm::mat4 treelight4_model_matrix = glm::mat4(1.0f);
+
+		treelight4_model_matrix = treelight4->translate(treelight4_model_matrix, glm::vec3(0.5f, 11.0f, 6.5f));
+		//treelight4_model_matrix = treelight4->rotate(treelight4_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		treelight4_model_matrix = treelight4->scale(treelight4_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+		auto treelight4_model_data = [&treelight4_model_matrix]() -> const void* {
+		return &treelight4_model_matrix[0][0];
+		};
+
+		ShaderUniform treelight4_model = {"model", matrix_binder, treelight4_model_data};
+
+		treelight4->shaders(object_vertex_shader, NULL, object_fragment_shader);
+		treelight4->uniforms(treelight4_model, std_view, std_proj, std_light, std_view_position);
+		treelight4->lights(directionalLights, pointLights, spotLights);
+		treelight4->lightColor(glm::vec4(1.0f, 1.0f, 1.5f, 1.0f));
+		treelight4->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
+
+		treelight4->setup();
+		// <<<TreeLight4>>>
+
+		// <<<TreeLight5>>>
+		Object* treelight5 = new Object();
+		treelight5->load("/src/assets/primitives/sphere.obj");
+
+		glm::mat4 treelight5_model_matrix = glm::mat4(1.0f);
+
+		treelight5_model_matrix = treelight5->translate(treelight5_model_matrix, glm::vec3(2.0f, 15.0f, 8.5f));
+		//treelight5_model_matrix = treelight5->rotate(treelight5_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		treelight5_model_matrix = treelight5->scale(treelight5_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+		auto treelight5_model_data = [&treelight5_model_matrix]() -> const void* {
+		return &treelight5_model_matrix[0][0];
+		};
+
+		ShaderUniform treelight5_model = {"model", matrix_binder, treelight5_model_data};
+
+		treelight5->shaders(object_vertex_shader, NULL, object_fragment_shader);
+		treelight5->uniforms(treelight5_model, std_view, std_proj, std_light, std_view_position);
+		treelight5->lights(directionalLights, pointLights, spotLights);
+		treelight5->lightColor(glm::vec4(1.0f, 1.0f, 1.5f, 1.0f));
+		treelight5->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
+
+		treelight5->setup();
+		// <<<TreeLight5>>>
+
+		// <<<TreeLight6>>>
+		Object* treelight6 = new Object();
+		treelight6->load("/src/assets/primitives/sphere.obj");
+
+		glm::mat4 treelight6_model_matrix = glm::mat4(1.0f);
+
+		treelight6_model_matrix = treelight6->translate(treelight6_model_matrix, glm::vec3(-1.0f, 17.0f, 8.1f));
+		//treelight6_model_matrix = treelight6->rotate(treelight6_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		treelight6_model_matrix = treelight6->scale(treelight6_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+		auto treelight6_model_data = [&treelight6_model_matrix]() -> const void* {
+		return &treelight6_model_matrix[0][0];
+		};
+
+		ShaderUniform treelight6_model = {"model", matrix_binder, treelight6_model_data};
+
+		treelight6->shaders(object_vertex_shader, NULL, object_fragment_shader);
+		treelight6->uniforms(treelight6_model, std_view, std_proj, std_light, std_view_position);
+		treelight6->lights(directionalLights, pointLights, spotLights);
+		treelight6->lightColor(glm::vec4(1.0f, 1.0f, 1.5f, 1.0f));
+		treelight6->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
+
+		treelight6->setup();
+		// <<<TreeLight6>>>
+
+		// <<<TreeLight7>>>
+		Object* treelight7 = new Object();
+		treelight7->load("/src/assets/primitives/sphere.obj");
+
+		glm::mat4 treelight7_model_matrix = glm::mat4(1.0f);
+
+		treelight7_model_matrix = treelight7->translate(treelight7_model_matrix, glm::vec3(0.2f, 19.5f, 8.3f));
+		//treelight7_model_matrix = treelight7->rotate(treelight7_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		treelight7_model_matrix = treelight7->scale(treelight7_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+		auto treelight7_model_data = [&treelight7_model_matrix]() -> const void* {
+		return &treelight7_model_matrix[0][0];
+		};
+
+		ShaderUniform treelight7_model = {"model", matrix_binder, treelight7_model_data};
+
+		treelight7->shaders(object_vertex_shader, NULL, object_fragment_shader);
+		treelight7->uniforms(treelight7_model, std_view, std_proj, std_light, std_view_position);
+		treelight7->lights(directionalLights, pointLights, spotLights);
+		treelight7->lightColor(glm::vec4(1.0f, 1.0f, 1.5f, 1.0f));
+		treelight7->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
+
+		treelight7->setup();
+		// <<<TreeLight7>>>
+
+		// <<<TreeLight8>>>
+		Object* treelight8 = new Object();
+		treelight8->load("/src/assets/primitives/sphere.obj");
+
+		glm::mat4 treelight8_model_matrix = glm::mat4(1.0f);
+
+		treelight8_model_matrix = treelight8->translate(treelight8_model_matrix, glm::vec3(4.0f, 5.0f, 7.0f));
+		//treelight8_model_matrix = treelight8->rotate(treelight8_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		treelight8_model_matrix = treelight8->scale(treelight8_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+		auto treelight8_model_data = [&treelight8_model_matrix]() -> const void* {
+		return &treelight8_model_matrix[0][0];
+		};
+
+		ShaderUniform treelight8_model = {"model", matrix_binder, treelight8_model_data};
+
+		treelight8->shaders(object_vertex_shader, NULL, object_fragment_shader);
+		treelight8->uniforms(treelight8_model, std_view, std_proj, std_light, std_view_position);
+		treelight8->lights(directionalLights, pointLights, spotLights);
+		treelight8->lightColor(glm::vec4(1.0f, 1.0f, 1.5f, 1.0f));
+		treelight8->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
+
+		treelight8->setup();
+		// <<<TreeLight8>>>
+
+		// <<<TreeLight9>>>
+		Object* treelight9 = new Object();
+		treelight9->load("/src/assets/primitives/sphere.obj");
+
+		glm::mat4 treelight9_model_matrix = glm::mat4(1.0f);
+
+		treelight9_model_matrix = treelight9->translate(treelight9_model_matrix, glm::vec3(-4.0f, 5.0f, 7.0f));
+		//treelight9_model_matrix = treelight9->rotate(treelight9_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		treelight9_model_matrix = treelight9->scale(treelight9_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+		auto treelight9_model_data = [&treelight9_model_matrix]() -> const void* {
+		return &treelight9_model_matrix[0][0];
+		};
+
+		ShaderUniform treelight9_model = {"model", matrix_binder, treelight9_model_data};
+
+		treelight9->shaders(object_vertex_shader, NULL, object_fragment_shader);
+		treelight9->uniforms(treelight9_model, std_view, std_proj, std_light, std_view_position);
+		treelight9->lights(directionalLights, pointLights, spotLights);
+		treelight9->lightColor(glm::vec4(1.0f, 1.0f, 1.5f, 1.0f));
+		treelight9->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
+
+		treelight9->setup();
+		// <<<TreeLight9>>>
+
+		// <<<TreeLight10>>>
+		Object* treelight10 = new Object();
+		treelight10->load("/src/assets/primitives/sphere.obj");
+
+		glm::mat4 treelight10_model_matrix = glm::mat4(1.0f);
+
+		treelight10_model_matrix = treelight10->translate(treelight10_model_matrix, glm::vec3(-2.0f, 6.8f, 5.9f));
+		//treelight10_model_matrix = treelight10->rotate(treelight10_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+		treelight10_model_matrix = treelight10->scale(treelight10_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+		auto treelight10_model_data = [&treelight10_model_matrix]() -> const void* {
+		return &treelight10_model_matrix[0][0];
+		};
+
+		ShaderUniform treelight10_model = {"model", matrix_binder, treelight10_model_data};
+
+		treelight10->shaders(object_vertex_shader, NULL, object_fragment_shader);
+		treelight10->uniforms(treelight10_model, std_view, std_proj, std_light, std_view_position);
+		treelight10->lights(directionalLights, pointLights, spotLights);
+		treelight10->lightColor(glm::vec4(1.0f, 1.0f, 1.5f, 1.0f));
+		treelight10->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
+
+		treelight10->setup();
+		// <<<TreeLight10>>>
+
     // <<<Cylinder>>>
     Object* cylinder = new Object();
     cylinder->load("/src/assets/primitives/cylinder.obj");
@@ -409,10 +659,10 @@ int main(int argc, char* argv[])
     cylinder->uniforms(cylinder_model, std_view, std_proj, std_light, std_view_position);
     cylinder->lights(directionalLights, pointLights, spotLights);
     cylinder->textures("/src/assets/textures/wood.jpg", "/src/assets/textures/wood_s.jpg");
-    
+
     cylinder->setup();
     // <<<Cylinder>>>
-    
+
     // <<<Torus>>>
     Object* torus = new Object();
     torus->load("/src/assets/primitives/torus.obj");
@@ -433,10 +683,10 @@ int main(int argc, char* argv[])
     torus->uniforms(torus_model, std_view, std_proj, std_light, std_view_position);
     torus->lights(directionalLights, pointLights, spotLights);
     torus->textures("/src/assets/textures/metal2.jpg", "/src/assets/textures/metal2_s.jpg");
-    
+
     torus->setup();
     // <<<Torus>>>
-    
+
     // <<<Monkey>>>
     Object* monkey = new Object();
     monkey->load("/src/assets/primitives/monkey.obj");
@@ -456,12 +706,12 @@ int main(int argc, char* argv[])
     monkey->shaders(object_vertex_shader, NULL, object_fragment_shader);
     monkey->uniforms(monkey_model, std_view, std_proj, std_light, std_view_position);
     monkey->lights(directionalLights, pointLights, spotLights);
-    monkey->lightColor(glm::vec4(1.5f, 1.5f, 3.0f, 1.0f));
+    monkey->lightColor(glm::vec4(1.1f, 1.1f, 1.5f, 1.0f));
     monkey->textures("/src/assets/textures/black.jpg", "/src/assets/textures/wall_s.jpg");
-    
+
     monkey->setup();
     // <<<Monkey>>>
-    
+
     // <<<Cat>>>
     Object* cat = new Object();
     cat->load("/src/assets/animals/cat/cat.obj");
@@ -482,7 +732,7 @@ int main(int argc, char* argv[])
     cat->uniforms(cat_model, std_view, std_proj, std_light, std_view_position);
     cat->lights(directionalLights, pointLights, spotLights);
     cat->textures("/src/assets/textures/wood3.png", "/src/assets/textures/wall_s.jpg");
-    
+
     cat->setup();
     // <<<Cat>>>
 
@@ -509,7 +759,7 @@ int main(int argc, char* argv[])
 
     dog->setup();
     // <<<Dog>>>
-    
+
     // <<<Deer>>>
     Object* deer = new Object();
     deer->load("/src/assets/animals/deer.obj");
@@ -533,7 +783,7 @@ int main(int argc, char* argv[])
 
     deer->setup();
     // <<<Deer>>>
-    
+
     // <<<Building>>>
     Object* building = new Object();
     building->load("/src/assets/buildings/flatiron/13943_Flatiron_Building_v1_l1.obj");
@@ -557,7 +807,7 @@ int main(int argc, char* argv[])
 
     building->setup();
     // <<<Building>>>
-    
+
     // <<<Grass>>>
     Object* grass = new Object();
     grass->load("/src/assets/primitives/cube.obj");
@@ -578,10 +828,10 @@ int main(int argc, char* argv[])
     grass->uniforms(grass_model, std_view, std_proj, std_light, std_view_position);
     grass->lights(directionalLights, pointLights, spotLights);
     grass->textures("/src/assets/textures/grass.png", "/src/assets/textures/wall_s.jpg");
-    
+
     grass->setup();
     // <<<Grass>>>
-    
+
     // <<<Wall>>>
     Object* wall = new Object();
     wall->load("/src/assets/primitives/cube.obj");
@@ -602,10 +852,10 @@ int main(int argc, char* argv[])
     wall->uniforms(wall_model, std_view, std_proj, std_light, std_view_position);
     wall->lights(directionalLights, pointLights, spotLights);
     wall->textures("/src/assets/textures/wall.png", "/src/assets/textures/wall_s.jpg");
-    
+
     wall->setup();
     // <<<Wall>>>
-    
+
     // <<<Wall2>>>
     Object* wall2 = new Object();
     wall2->load("/src/assets/primitives/cube.obj");
@@ -626,10 +876,10 @@ int main(int argc, char* argv[])
     wall2->uniforms(wall2_model, std_view, std_proj, std_light, std_view_position);
     wall2->lights(directionalLights, pointLights, spotLights);
     wall2->textures("/src/assets/textures/wall.png", "/src/assets/textures/wall_s.jpg");
-    
+
     wall2->setup();
     // <<<Wall2>>>
-    
+
     // <<<Wall3>>>
     Object* wall3 = new Object();
     wall3->load("/src/assets/primitives/cube.obj");
@@ -650,10 +900,10 @@ int main(int argc, char* argv[])
     wall3->uniforms(wall3_model, std_view, std_proj, std_light, std_view_position);
     wall3->lights(directionalLights, pointLights, spotLights);
     wall3->textures("/src/assets/textures/wall.png", "/src/assets/textures/wall_s.jpg");
-    
+
     wall3->setup();
     // <<<Wall3>>>
-    
+
     // <<<Wall4>>>
     Object* wall4 = new Object();
     wall4->load("/src/assets/primitives/cube.obj");
@@ -674,7 +924,7 @@ int main(int argc, char* argv[])
     wall4->uniforms(wall4_model, std_view, std_proj, std_light, std_view_position);
     wall4->lights(directionalLights, pointLights, spotLights);
     wall4->textures("/src/assets/textures/wall.png", "/src/assets/textures/wall_s.jpg");
-    
+
     wall4->setup();
     // <<<Wall4>>>
     // <<<Scene>>>
@@ -1196,7 +1446,7 @@ int main(int argc, char* argv[])
 		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
 
 		// make sure we clear the geometry_framebuffer's content
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		if (g_menger && g_menger->is_dirty()) {
@@ -1237,17 +1487,29 @@ int main(int argc, char* argv[])
 
         // <<<Scene>>>
         if (showMeshes){
+					//tree lights
+					treelight->render();
+					treelight2->render();
+					treelight3->render();
+					treelight4->render();
+					treelight5->render();
+					treelight6->render();
+					treelight7->render();
+					treelight8->render();
+					treelight9->render();
+					treelight10->render();
+					// ==========
           cone->render();
           sphere->render();
           sphere2->render();
           cylinder->render();
           torus->render();
           monkey->render();
-          
+
           cat->render();
           dog->render();
           deer->render();
-          
+
           building->render();
           grass->render();
           wall->render();

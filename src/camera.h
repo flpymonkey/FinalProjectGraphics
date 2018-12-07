@@ -46,9 +46,9 @@ private:
 	float camera_distance_ = 3.0f; // 3
 	glm::vec3 look_ = glm::vec3(0.0f, 0.0f, -1.0f); //0, 0, -1
 	glm::vec3 up_ = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec3 eye_ = glm::vec3(0.0f, 0.0f, camera_distance_); // 0, 0, c
+	glm::vec3 eye_ = glm::vec3(0.0f, 3.0f, camera_distance_); // 0, 0, c
 
-	glm::vec3 center_ = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 center_ = glm::vec3(0.0f, 3.0f, 0.0f);
 	glm::vec3 right_ = glm::cross( up_, look_ );
 	// Note: you may need additional member variables
 	float verticalAngle = 0;
