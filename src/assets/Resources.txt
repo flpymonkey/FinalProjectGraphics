@@ -4,13 +4,39 @@ Assets
         Cat, https://free3d.com/3d-model/cat-95027.html
         Dog, https://free3d.com/3d-model/dog-v1--722788.html
         Deer, https://free3d.com/3d-model/low-poly-deer-72513.html
-        Monkey, Blender
 
     Buildings
-        Buildings,
+        Bina, https://free3d.com/3d-model/historic-buildings-13655.html
         Flatiron, https://free3d.com/3d-model/flatiron-building-v1--594120.html
         
     Objects
         Lamp, https://free3d.com/3d-model/older-lamp-28459.html
         Truck, https://free3d.com/3d-model/pickup-69582.html
+        
+    Primitives
+        Cone, Blender
+        Cube, Blender
+        Cylinder, Blender
+        Monkey, Blender
+        Sphere, Blender
+        Sphere2, Blender
+        Torus, Blender
+        
+    Textures
+        black, https://hiveminer.com/Tags/black%2Ctileable/Timeline
+        concrete, https://opengameart.org/content/seamless-brickconcrete-textures
+        grass, https://opengameart.org/content/grass-textureseamless-2d
+        gold, https://www.3dxo.com/textures/4969_gold_5
+        metal, http://cadhatch.moonfruit.com/seamless-metal-textures/4571526861
+        metal_s, https://www.pinterest.com/wjrodel/3d-game-textures/
+        metal2, http://www.3dlinks.com/Textures.cfm?Texture=Metal
+        metal2_s, https://gamedev.stackexchange.com/questions/88353/why-are-normal-maps-predominantly-blue
+        wall, http://www.art.eonworks.com/free/textures/free-textures-05.html
+        wall_s, https://www.pinterest.com/pin/365143482268524943/
+        wood, http://psdcollector.blogspot.com/2010/02/200-great-collection-of-wood-textures.html
+        wood2, https://opengameart.org/content/5-wood-textures
+        wood3, https://opengameart.org/content/5-wood-textures
+        wood_s, https://nomeradona.wordpress.com/resources/resources-and-download/nomeradona_wood_normal/
+
+        
 

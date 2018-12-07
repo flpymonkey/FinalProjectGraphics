@@ -51,6 +51,7 @@ public:
         std::vector<PointLight> pointLights,
         std::vector<SpotLight> spotLights
     );
+    void lightColor(glm::vec4 c);
     void textures(const char* diffuse, const char* specular);
     
     glm::mat4 translate(glm::mat4 model_matrix, glm::vec3 t);
@@ -78,6 +79,8 @@ private:
     std::vector<DirectionalLight> directionalLights;
 	std::vector<PointLight> pointLights;
 	std::vector<SpotLight> spotLights;
+    
+    glm::vec4 color;
     
     unsigned int diffuseMap;
     unsigned int specularMap;

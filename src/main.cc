@@ -194,16 +194,15 @@ int main(int argc, char* argv[])
 	DirectionalLight directionalLight = DirectionalLight(glm::vec3(-1.0f, -1.0f, -1.0f));
 	directionalLights.push_back(directionalLight);
 
-	// FIXME: THESE POINT LIGHT POSITIONS ARE SET TO SAME POSITIONS AS CUBE LIGHTS
 	std::vector<PointLight> pointLights;
-	PointLight pointLight = PointLight(glm::vec3(0.0f, 0.0f, -5.0f));
-	pointLights.push_back(pointLight);
-	pointLight = PointLight(glm::vec3(2.0f, 3.0f, -8.0f));
-	pointLights.push_back(pointLight);
+	PointLight pointLight = PointLight(glm::vec3(0.0f, 25.0f, 10.0f));
+	pointLights.push_back(pointLight); 
+    pointLight = PointLight(glm::vec3(-20.0f, 50.0f, -20.0f));
+    pointLights.push_back(pointLight);
 
 	std::vector<SpotLight> spotLights;
-	SpotLight spotLight = SpotLight(glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-	//spotLights.push_back(spotLight);
+	SpotLight spotLight = SpotLight(glm::vec3(12.0f, 20.0f, 0.0f), glm::vec3(-1.0f, -1.0f, 0.0f));
+	spotLights.push_back(spotLight);
 	// <<<Lights>>>
 
 	// <<<Renderpass Setup>>>
@@ -274,12 +273,12 @@ int main(int argc, char* argv[])
 	ShaderUniform std_view_position = { "view_position", vector_binder, std_view_position_data };
 	// <<<RenderPass Setup>>>
 
-  // <<<Menger Data>>>
-  std::vector<glm::vec4> menger_vertices;
-  std::vector<glm::vec4> menger_normals;
-  std::vector<glm::uvec3> menger_faces;
+    // <<<Menger Data>>>
+    std::vector<glm::vec4> menger_vertices;
+    std::vector<glm::vec4> menger_normals;
+    std::vector<glm::uvec3> menger_faces;
 
-  glm::vec4 menger_pos = glm::vec4(0.0f, 0.0f, -5.0f, 1.0f);
+    glm::vec4 menger_pos = glm::vec4(0.0f, 25.0f, 10.0f, 1.0f);
 
 	g_menger->set_nesting_level(1);
 	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces, menger_pos);
@@ -294,54 +293,6 @@ int main(int argc, char* argv[])
 	std::cout << "min_bounds = " << glm::to_string(min_bounds) << "\n";
 	std::cout << "max_bounds = " << glm::to_string(max_bounds) << "\n";
 	// <<<Menger Data>>>
-
-
-	// <<<Menger2 Data>>>
-	Menger *menger2 = new Menger();
-
-	std::vector<glm::vec4> menger2_vertices;
-	std::vector<glm::vec4> menger2_normals;
-	std::vector<glm::uvec3> menger2_faces;
-
-	glm::vec4 menger2_pos = glm::vec4(2.0f, 3.0f, -8.0f, 1.0f);
-
-	menger2->set_nesting_level(1);
-	menger2->generate_geometry(menger2_vertices, menger2_normals, menger2_faces, menger2_pos);
-	menger2->set_clean();
-
-	glm::vec4 min_bounds2 = glm::vec4(std::numeric_limits<float>::max());
-	glm::vec4 max_bounds2 = glm::vec4(-std::numeric_limits<float>::max());
-	for (int i = 0; i < menger2_vertices.size(); ++i) {
-		min_bounds2 = glm::min(menger2_vertices[i], min_bounds2);
-		max_bounds2 = glm::max(menger2_vertices[i], max_bounds2);
-	}
-	std::cout << "min_bounds = " << glm::to_string(min_bounds2) << "\n";
-	std::cout << "max_bounds = " << glm::to_string(max_bounds2) << "\n";
-	// <<<Menger2 Data>>>
-
-	// <<<Menger3 Data>>>
-	Menger *menger3 = new Menger();
-
-	std::vector<glm::vec4> menger3_vertices;
-	std::vector<glm::vec4> menger3_normals;
-	std::vector<glm::uvec3> menger3_faces;
-
-	glm::vec4 menger3_pos = glm::vec4(-5.0f, 1.5f, -4.0f, 1.0f);
-
-	menger3->set_nesting_level(1);
-	menger3->generate_geometry(menger3_vertices, menger3_normals, menger3_faces, menger3_pos);
-	menger3->set_clean();
-
-	glm::vec4 min_bounds3 = glm::vec4(std::numeric_limits<float>::max());
-	glm::vec4 max_bounds3 = glm::vec4(-std::numeric_limits<float>::max());
-	for (int i = 0; i < menger3_vertices.size(); ++i) {
-		min_bounds3 = glm::min(menger3_vertices[i], min_bounds3);
-		max_bounds3 = glm::max(menger3_vertices[i], max_bounds3);
-	}
-	std::cout << "min_bounds = " << glm::to_string(min_bounds3) << "\n";
-	std::cout << "max_bounds = " << glm::to_string(max_bounds3) << "\n";
-	// <<<Menger3 Data>>>
-
 
     // <<<Floor Data>>>
     std::vector<glm::vec4> floor_vertices;
@@ -365,39 +316,15 @@ int main(int argc, char* argv[])
     // <<<Floor Renderpass>>>
     
     // <<<Scene>>>
-    // <<<Cube>>>
-    Object* cube = new Object();
-    cube->load("/src/assets/primitives/cube.obj");
-
-    glm::mat4 cube_model_matrix = glm::mat4(1.0f);
-
-    //cube_model_matrix = cube->translate(cube_model_matrix, glm::vec3(0.0f, 0.0f, 0.0f));
-    //cube_model_matrix = cube->rotate(cube_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
-    //cube_model_matrix = cube->scale(cube_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
-
-    auto cube_model_data = [&cube_model_matrix]() -> const void* {
-		return &cube_model_matrix[0][0];
-    };
-
-    ShaderUniform cube_model = {"model", matrix_binder, cube_model_data};
-
-    cube->shaders(object_vertex_shader, NULL, object_fragment_shader);
-    cube->uniforms(cube_model, std_view, std_proj, std_light, std_view_position);
-    cube->lights(directionalLights, pointLights, spotLights);
-    cube->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
-    
-    cube->setup();
-    // <<<Cube>>>
-    
     // <<<Cone>>>
     Object* cone = new Object();
     cone->load("/src/assets/primitives/cone.obj");
 
     glm::mat4 cone_model_matrix = glm::mat4(1.0f);
 
-    cone_model_matrix = cone->translate(cone_model_matrix, glm::vec3(2.0f, 0.0f, 0.0f));
+    cone_model_matrix = cone->translate(cone_model_matrix, glm::vec3(0.0f, 15.0f, 10.0f));
     //cone_model_matrix = cone->rotate(cone_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
-    //cone_model_matrix = cone->scale(cone_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+    cone_model_matrix = cone->scale(cone_model_matrix, glm::vec3(5.0f, 10.0f, 5.0f));
 
     auto cone_model_data = [&cone_model_matrix]() -> const void* {
 		return &cone_model_matrix[0][0];
@@ -408,7 +335,7 @@ int main(int argc, char* argv[])
     cone->shaders(object_vertex_shader, NULL, object_fragment_shader);
     cone->uniforms(cone_model, std_view, std_proj, std_light, std_view_position);
     cone->lights(directionalLights, pointLights, spotLights);
-    cone->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    cone->textures("/src/assets/textures/grass.png", "/src/assets/textures/wall_s.jpg");
     
     cone->setup();
     // <<<Cone>>>
@@ -419,9 +346,9 @@ int main(int argc, char* argv[])
 
     glm::mat4 sphere_model_matrix = glm::mat4(1.0f);
 
-    sphere_model_matrix = sphere->translate(sphere_model_matrix, glm::vec3(4.0f, 0.0f, 0.0f));
+    sphere_model_matrix = sphere->translate(sphere_model_matrix, glm::vec3(-20.0f, 50.0f, -20.0f));
     //sphere_model_matrix = sphere->rotate(sphere_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
-    //sphere_model_matrix = sphere->scale(sphere_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+    sphere_model_matrix = sphere->scale(sphere_model_matrix, glm::vec3(5.0f, 5.0f, 5.0f));
 
     auto sphere_model_data = [&sphere_model_matrix]() -> const void* {
 		return &sphere_model_matrix[0][0];
@@ -432,7 +359,8 @@ int main(int argc, char* argv[])
     sphere->shaders(object_vertex_shader, NULL, object_fragment_shader);
     sphere->uniforms(sphere_model, std_view, std_proj, std_light, std_view_position);
     sphere->lights(directionalLights, pointLights, spotLights);
-    sphere->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    sphere->lightColor(glm::vec4(5.0f, 5.0f, 5.0f, 1.0f));
+    sphere->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
     
     sphere->setup();
     // <<<Sphere>>>
@@ -443,9 +371,9 @@ int main(int argc, char* argv[])
 
     glm::mat4 sphere2_model_matrix = glm::mat4(1.0f);
 
-    sphere2_model_matrix = sphere2->translate(sphere2_model_matrix, glm::vec3(6.0f, 0.0f, 0.0f));
+    sphere2_model_matrix = sphere2->translate(sphere2_model_matrix, glm::vec3(3.0f, 2.0f, 13.0f));
     //sphere2_model_matrix = sphere2->rotate(sphere2_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
-    //sphere2_model_matrix = sphere2->scale(sphere2_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+    sphere2_model_matrix = sphere2->scale(sphere2_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
 
     auto sphere2_model_data = [&sphere2_model_matrix]() -> const void* {
 		return &sphere2_model_matrix[0][0];
@@ -456,7 +384,7 @@ int main(int argc, char* argv[])
     sphere2->shaders(object_vertex_shader, NULL, object_fragment_shader);
     sphere2->uniforms(sphere2_model, std_view, std_proj, std_light, std_view_position);
     sphere2->lights(directionalLights, pointLights, spotLights);
-    sphere2->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    sphere2->textures("/src/assets/textures/wood2.png", "/src/assets/textures/wood_s.jpg");
     
     sphere2->setup();
     // <<<Sphere2>>>
@@ -467,9 +395,9 @@ int main(int argc, char* argv[])
 
     glm::mat4 cylinder_model_matrix = glm::mat4(1.0f);
 
-    cylinder_model_matrix = cylinder->translate(cylinder_model_matrix, glm::vec3(8.0f, 0.0f, 0.0f));
+    cylinder_model_matrix = cylinder->translate(cylinder_model_matrix, glm::vec3(0.0f, 1.0f, 10.0f));
     //cylinder_model_matrix = cylinder->rotate(cylinder_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
-    //cylinder_model_matrix = cylinder->scale(cylinder_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+    cylinder_model_matrix = cylinder->scale(cylinder_model_matrix, glm::vec3(1.0f, 5.0f, 1.0f));
 
     auto cylinder_model_data = [&cylinder_model_matrix]() -> const void* {
 		return &cylinder_model_matrix[0][0];
@@ -480,7 +408,7 @@ int main(int argc, char* argv[])
     cylinder->shaders(object_vertex_shader, NULL, object_fragment_shader);
     cylinder->uniforms(cylinder_model, std_view, std_proj, std_light, std_view_position);
     cylinder->lights(directionalLights, pointLights, spotLights);
-    cylinder->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    cylinder->textures("/src/assets/textures/wood.jpg", "/src/assets/textures/wood_s.jpg");
     
     cylinder->setup();
     // <<<Cylinder>>>
@@ -491,9 +419,9 @@ int main(int argc, char* argv[])
 
     glm::mat4 torus_model_matrix = glm::mat4(1.0f);
 
-    torus_model_matrix = torus->translate(torus_model_matrix, glm::vec3(12.0f, 0.0f, 0.0f));
-    //torus_model_matrix = torus->rotate(torus_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
-    //torus_model_matrix = torus->scale(torus_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+    torus_model_matrix = torus->translate(torus_model_matrix, glm::vec3(-10.0f, 2.5f, -10.0f));
+    torus_model_matrix = torus->rotate(torus_model_matrix, 0.7854f, glm::vec3(1.0f, 0.0f, 1.0f));
+    torus_model_matrix = torus->scale(torus_model_matrix, glm::vec3(10.0f, 10.0f, 5.0f));
 
     auto torus_model_data = [&torus_model_matrix]() -> const void* {
 		return &torus_model_matrix[0][0];
@@ -504,7 +432,7 @@ int main(int argc, char* argv[])
     torus->shaders(object_vertex_shader, NULL, object_fragment_shader);
     torus->uniforms(torus_model, std_view, std_proj, std_light, std_view_position);
     torus->lights(directionalLights, pointLights, spotLights);
-    torus->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    torus->textures("/src/assets/textures/metal2.jpg", "/src/assets/textures/metal2_s.jpg");
     
     torus->setup();
     // <<<Torus>>>
@@ -515,9 +443,9 @@ int main(int argc, char* argv[])
 
     glm::mat4 monkey_model_matrix = glm::mat4(1.0f);
 
-    monkey_model_matrix = monkey->translate(monkey_model_matrix, glm::vec3(16.0f, 0.0f, 0.0f));
-    //monkey_model_matrix = monkey->rotate(monkey_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
-    //monkey_model_matrix = monkey->scale(monkey_model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
+    monkey_model_matrix = monkey->translate(monkey_model_matrix, glm::vec3(12.0f, 20.0f, 0.0f));
+    monkey_model_matrix = monkey->rotate(monkey_model_matrix, -1.5708f, glm::vec3(0.0f, 1.0f, 0.0f));
+    monkey_model_matrix = monkey->scale(monkey_model_matrix, glm::vec3(2.0f, 2.0f, 2.0f));
 
     auto monkey_model_data = [&monkey_model_matrix]() -> const void* {
 		return &monkey_model_matrix[0][0];
@@ -528,7 +456,8 @@ int main(int argc, char* argv[])
     monkey->shaders(object_vertex_shader, NULL, object_fragment_shader);
     monkey->uniforms(monkey_model, std_view, std_proj, std_light, std_view_position);
     monkey->lights(directionalLights, pointLights, spotLights);
-    monkey->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    monkey->lightColor(glm::vec4(1.5f, 1.5f, 3.0f, 1.0f));
+    monkey->textures("/src/assets/textures/black.jpg", "/src/assets/textures/wall_s.jpg");
     
     monkey->setup();
     // <<<Monkey>>>
@@ -539,8 +468,8 @@ int main(int argc, char* argv[])
 
     glm::mat4 cat_model_matrix = glm::mat4(1.0f);
 
-    cat_model_matrix = cat->translate(cat_model_matrix, glm::vec3(20.0f, 1.0f, 0.0f));
-    //cat_model_matrix = cat->rotate(cat_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+    cat_model_matrix = cat->translate(cat_model_matrix, glm::vec3(1.0f, 1.0f, 12.0f));
+    cat_model_matrix = cat->rotate(cat_model_matrix, 0.7854f, glm::vec3(0.0f, 1.0f, 0.0f));
     //cat_model_matrix = cat->scale(cat_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
 
     auto cat_model_data = [&cat_model_matrix]() -> const void* {
@@ -552,7 +481,7 @@ int main(int argc, char* argv[])
     cat->shaders(object_vertex_shader, NULL, object_fragment_shader);
     cat->uniforms(cat_model, std_view, std_proj, std_light, std_view_position);
     cat->lights(directionalLights, pointLights, spotLights);
-    cat->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    cat->textures("/src/assets/textures/wood3.png", "/src/assets/textures/wall_s.jpg");
     
     cat->setup();
     // <<<Cat>>>
@@ -563,9 +492,9 @@ int main(int argc, char* argv[])
 
     glm::mat4 dog_model_matrix = glm::mat4(1.0f);
 
-    dog_model_matrix = dog->translate(dog_model_matrix, glm::vec3(24.0f, 0.0f, 0.0f));
+    dog_model_matrix = dog->translate(dog_model_matrix, glm::vec3(0.0f, 1.0f, 6.0f));
     dog_model_matrix = dog->rotate(dog_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-    dog_model_matrix = dog->scale(dog_model_matrix, glm::vec3(0.1f, 0.1f, 0.1f));
+    dog_model_matrix = dog->scale(dog_model_matrix, glm::vec3(0.05f, 0.05f, 0.05f));
 
     auto dog_model_data = [&dog_model_matrix]() -> const void* {
 		return &dog_model_matrix[0][0];
@@ -576,7 +505,7 @@ int main(int argc, char* argv[])
     dog->shaders(object_vertex_shader, NULL, object_fragment_shader);
     dog->uniforms(dog_model, std_view, std_proj, std_light, std_view_position);
     dog->lights(directionalLights, pointLights, spotLights);
-    dog->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    dog->textures("/src/assets/animals/dog/Dog_diffuse.jpg", "/src/assets/textures/wall_s.jpg");
 
     dog->setup();
     // <<<Dog>>>
@@ -587,7 +516,7 @@ int main(int argc, char* argv[])
 
     glm::mat4 deer_model_matrix = glm::mat4(1.0f);
 
-    deer_model_matrix = deer->translate(deer_model_matrix, glm::vec3(28.0f, 0.0f, 0.0f));
+    deer_model_matrix = deer->translate(deer_model_matrix, glm::vec3(-10.0f, 1.0f, -10.0f));
     //deer_model_matrix = deer->rotate(deer_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
     deer_model_matrix = deer->scale(deer_model_matrix, glm::vec3(0.001f, 0.001f, 0.001f));
 
@@ -600,10 +529,154 @@ int main(int argc, char* argv[])
     deer->shaders(object_vertex_shader, NULL, object_fragment_shader);
     deer->uniforms(deer_model, std_view, std_proj, std_light, std_view_position);
     deer->lights(directionalLights, pointLights, spotLights);
-    deer->textures("/src/assets/container2.png", "/src/assets/container2_specular.png");
+    deer->textures("/src/assets/textures/metal.jpg", "/src/assets/textures/metal_s.jpg");
 
     deer->setup();
     // <<<Deer>>>
+    
+    // <<<Building>>>
+    Object* building = new Object();
+    building->load("/src/assets/buildings/flatiron/13943_Flatiron_Building_v1_l1.obj");
+
+    glm::mat4 building_model_matrix = glm::mat4(1.0f);
+
+    building_model_matrix = building->translate(building_model_matrix, glm::vec3(15.0f, 10.0f, 0.0f));
+    building_model_matrix = building->rotate(building_model_matrix, -1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+    building_model_matrix = building->scale(building_model_matrix, glm::vec3(0.0025f, 0.0025f, 0.0025f));
+
+    auto building_model_data = [&building_model_matrix]() -> const void* {
+		return &building_model_matrix[0][0];
+	};
+
+    ShaderUniform building_model = {"model", matrix_binder, building_model_data};
+
+    building->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    building->uniforms(building_model, std_view, std_proj, std_light, std_view_position);
+    building->lights(directionalLights, pointLights, spotLights);
+    building->textures("/src/assets/textures/concrete.png", "/src/assets/textures/wall_s.jpg");
+
+    building->setup();
+    // <<<Building>>>
+    
+    // <<<Grass>>>
+    Object* grass = new Object();
+    grass->load("/src/assets/primitives/cube.obj");
+
+    glm::mat4 grass_model_matrix = glm::mat4(1.0f);
+
+    //grass_model_matrix = grass->translate(grass_model_matrix, glm::vec3(0.0f, 0.0f, 0.0f));
+    //grass_model_matrix = grass->rotate(grass_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    grass_model_matrix = grass->scale(grass_model_matrix, glm::vec3(20.0f, 1.0f, 20.0f));
+
+    auto grass_model_data = [&grass_model_matrix]() -> const void* {
+		return &grass_model_matrix[0][0];
+    };
+
+    ShaderUniform grass_model = {"model", matrix_binder, grass_model_data};
+
+    grass->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    grass->uniforms(grass_model, std_view, std_proj, std_light, std_view_position);
+    grass->lights(directionalLights, pointLights, spotLights);
+    grass->textures("/src/assets/textures/grass.png", "/src/assets/textures/wall_s.jpg");
+    
+    grass->setup();
+    // <<<Grass>>>
+    
+    // <<<Wall>>>
+    Object* wall = new Object();
+    wall->load("/src/assets/primitives/cube.obj");
+
+    glm::mat4 wall_model_matrix = glm::mat4(1.0f);
+
+    wall_model_matrix = wall->translate(wall_model_matrix, glm::vec3(0.0f, 0.0f, 20.0f));
+    //wall_model_matrix = wall->rotate(wall_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    wall_model_matrix = wall->scale(wall_model_matrix, glm::vec3(20.0f, 4.0f, 1.0f));
+
+    auto wall_model_data = [&wall_model_matrix]() -> const void* {
+		return &wall_model_matrix[0][0];
+    };
+
+    ShaderUniform wall_model = {"model", matrix_binder, wall_model_data};
+
+    wall->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    wall->uniforms(wall_model, std_view, std_proj, std_light, std_view_position);
+    wall->lights(directionalLights, pointLights, spotLights);
+    wall->textures("/src/assets/textures/wall.png", "/src/assets/textures/wall_s.jpg");
+    
+    wall->setup();
+    // <<<Wall>>>
+    
+    // <<<Wall2>>>
+    Object* wall2 = new Object();
+    wall2->load("/src/assets/primitives/cube.obj");
+
+    glm::mat4 wall2_model_matrix = glm::mat4(1.0f);
+
+    wall2_model_matrix = wall2->translate(wall2_model_matrix, glm::vec3(0.0f, 0.0f, -20.0f));
+    //wall2_model_matrix = wall2->rotate(wall2_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    wall2_model_matrix = wall2->scale(wall2_model_matrix, glm::vec3(20.0f, 4.0f, 1.0f));
+
+    auto wall2_model_data = [&wall2_model_matrix]() -> const void* {
+		return &wall2_model_matrix[0][0];
+    };
+
+    ShaderUniform wall2_model = {"model", matrix_binder, wall2_model_data};
+
+    wall2->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    wall2->uniforms(wall2_model, std_view, std_proj, std_light, std_view_position);
+    wall2->lights(directionalLights, pointLights, spotLights);
+    wall2->textures("/src/assets/textures/wall.png", "/src/assets/textures/wall_s.jpg");
+    
+    wall2->setup();
+    // <<<Wall2>>>
+    
+    // <<<Wall3>>>
+    Object* wall3 = new Object();
+    wall3->load("/src/assets/primitives/cube.obj");
+
+    glm::mat4 wall3_model_matrix = glm::mat4(1.0f);
+
+    wall3_model_matrix = wall3->translate(wall3_model_matrix, glm::vec3(20.0f, 0.0f, 0.0f));
+    //wall3_model_matrix = wall3->rotate(wall3_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    wall3_model_matrix = wall3->scale(wall3_model_matrix, glm::vec3(1.0f, 4.0f, 20.0f));
+
+    auto wall3_model_data = [&wall3_model_matrix]() -> const void* {
+		return &wall3_model_matrix[0][0];
+    };
+
+    ShaderUniform wall3_model = {"model", matrix_binder, wall3_model_data};
+
+    wall3->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    wall3->uniforms(wall3_model, std_view, std_proj, std_light, std_view_position);
+    wall3->lights(directionalLights, pointLights, spotLights);
+    wall3->textures("/src/assets/textures/wall.png", "/src/assets/textures/wall_s.jpg");
+    
+    wall3->setup();
+    // <<<Wall3>>>
+    
+    // <<<Wall4>>>
+    Object* wall4 = new Object();
+    wall4->load("/src/assets/primitives/cube.obj");
+
+    glm::mat4 wall4_model_matrix = glm::mat4(1.0f);
+
+    wall4_model_matrix = wall4->translate(wall4_model_matrix, glm::vec3(-20.0f, 0.0f, 0.0f));
+    //wall4_model_matrix = wall4->rotate(wall4_model_matrix, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+    wall4_model_matrix = wall4->scale(wall4_model_matrix, glm::vec3(1.0f, 4.0f, 20.0f));
+
+    auto wall4_model_data = [&wall4_model_matrix]() -> const void* {
+		return &wall4_model_matrix[0][0];
+    };
+
+    ShaderUniform wall4_model = {"model", matrix_binder, wall4_model_data};
+
+    wall4->shaders(object_vertex_shader, NULL, object_fragment_shader);
+    wall4->uniforms(wall4_model, std_view, std_proj, std_light, std_view_position);
+    wall4->lights(directionalLights, pointLights, spotLights);
+    wall4->textures("/src/assets/textures/wall.png", "/src/assets/textures/wall_s.jpg");
+    
+    wall4->setup();
+    // <<<Wall4>>>
     // <<<Scene>>>
 
 	float theta = 0.0f;
@@ -1151,49 +1224,11 @@ int main(int argc, char* argv[])
 				);
 
 		menger_pass.loadLights(directionalLights, pointLights, spotLights);
-		menger_pass.loadLightColor(glm::vec4(3.0f, 3.0f, 3.0f, 1.0f));
+		menger_pass.loadLightColor(glm::vec4(5.0f, 1.5f, 1.5f, 1.0f));
 
 		menger_pass.setup();
 		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		// <<<Render Menger>>>
-
-		// <<<Render Menger2>>>
-		RenderDataInput menger2_pass_input;
-		menger2_pass_input.assign(0, "vertex_position", menger2_vertices.data(), menger2_vertices.size(), 4, GL_FLOAT);
-		menger2_pass_input.assign(1, "normal", menger2_normals.data(), menger2_normals.size(), 4, GL_FLOAT);
-		menger2_pass_input.assign_index(menger2_faces.data(), menger2_faces.size(), 3);
-		RenderPass menger2_pass(-1,
-			menger2_pass_input,
-			{ vertex_shader, NULL, fragment_shader },
-			{ menger_model, std_view, std_proj, std_light, std_view_position },
-			{ "fragment_color" }
-		);
-
-		menger2_pass.loadLights(directionalLights, pointLights, spotLights);
-		menger2_pass.loadLightColor(glm::vec4(3.0f, 3.0f, 3.0f, 1.0f));
-
-		menger2_pass.setup();
-		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger2_faces.size() * 3, GL_UNSIGNED_INT, 0));
-		// <<<Render Menger2>>>
-
-		// <<<Render Menger3>>>
-		RenderDataInput menger3_pass_input;
-		menger3_pass_input.assign(0, "vertex_position", menger3_vertices.data(), menger3_vertices.size(), 4, GL_FLOAT);
-		menger3_pass_input.assign(1, "normal", menger3_normals.data(), menger3_normals.size(), 4, GL_FLOAT);
-		menger3_pass_input.assign_index(menger3_faces.data(), menger3_faces.size(), 3);
-		RenderPass menger3_pass(-1,
-			menger3_pass_input,
-			{ vertex_shader, NULL, fragment_shader },
-			{ menger_model, std_view, std_proj, std_light, std_view_position },
-			{ "fragment_color" }
-		);
-
-		menger3_pass.loadLights(directionalLights, pointLights, spotLights);
-		menger3_pass.loadLightColor(glm::vec4(4.0f, 1.5f, 1.5f, 1.0f));
-
-		menger3_pass.setup();
-		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger3_faces.size() * 3, GL_UNSIGNED_INT, 0));
-		// <<<Render Menger3>>>
 
 		// <<<Render Floor>>>
 		floor_pass.setup();
@@ -1202,7 +1237,6 @@ int main(int argc, char* argv[])
 
         // <<<Scene>>>
         if (showMeshes){
-          cube->render();
           cone->render();
           sphere->render();
           sphere2->render();
@@ -1213,7 +1247,13 @@ int main(int argc, char* argv[])
           cat->render();
           dog->render();
           deer->render();
-
+          
+          building->render();
+          grass->render();
+          wall->render();
+          wall2->render();
+          wall3->render();
+          wall4->render();
         }
         // <<<Scene>>>
 

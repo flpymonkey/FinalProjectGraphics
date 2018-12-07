@@ -2,6 +2,7 @@
 
 Object::Object() {
     loader = new Loader();
+    this->color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 Object::~Object() {
@@ -49,6 +50,10 @@ void Object::lights(
     this->spotLights = spotLights;
 }
 
+void Object::lightColor(glm::vec4 c) {
+    this->color = c;
+}
+
 void Object::textures(const char* diffuse, const char* specular) {
     diffuseMap = loader->loadTexture(path(std::string(diffuse)).c_str());
     specularMap = loader->loadTexture(path(std::string(specular)).c_str());
@@ -84,6 +89,7 @@ void Object::setup() {
     );
 
     model_pass->loadLights(directionalLights, pointLights, spotLights);
+    model_pass->loadLightColor(this->color);
     model_pass->loadMaterials();
 }
 

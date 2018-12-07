@@ -45,6 +45,7 @@ in vec4 world_position;
 in vec2 uv;
 
 uniform vec4 view_position;
+uniform vec4 light_color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
 uniform int dLights;
 uniform int pLights;
@@ -123,7 +124,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 
 void main()
 {
-	vec4 color = abs(normalize(world_normal)) + vec4(0.0, 0.0, 0.0, 1.0);
+	//vec4 color = abs(normalize(world_normal)) + light_color;
 
 	vec3 norm = vec3(normalize(normal));
 	vec3 viewDir = normalize(vec3(view_position) - vec3(world_position));
@@ -140,6 +141,6 @@ void main()
         fragment_color += vec4(CalcSpotLight(spotLights[sLight], norm, vec3(world_position), viewDir), 1.0);
     }
 
-    //fragment_color *= color;
+    fragment_color += light_color;
 }
 )zzz"
