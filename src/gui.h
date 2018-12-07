@@ -11,9 +11,10 @@
 
 class BasicGUI {
   GLFWwindow* window;
+  int* score;
 
   public:
-    BasicGUI(GLFWwindow* window);
+    BasicGUI(GLFWwindow* window, int* score);
     void render();
 };
 

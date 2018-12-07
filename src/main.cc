@@ -52,6 +52,9 @@ float exposure = 0.8f;
 bool showMeshes = true;
 bool lensEffects = false;
 
+// gui variables
+int score = 15;
+
 Floor* g_floor;
 Menger *g_menger;
 Camera* g_camera;
@@ -1435,7 +1438,7 @@ int main(int argc, char* argv[])
 
 
 	// Setup GUI
-	BasicGUI* gui = new BasicGUI(window);
+	BasicGUI* gui = new BasicGUI(window, &score);
 
 	clock_t last_frame_time = clock();
 	while (!glfwWindowShouldClose(window)) {
