@@ -15,7 +15,7 @@
 
 class Controller {
 public:
-	Controller(GLFWwindow* window, Camera* camera, Menger* menger, float* exposure, bool* showMeshes, bool* lensEffects);
+	Controller(GLFWwindow* window, Camera* camera, Menger* menger, float* exposure, bool* showMeshes, bool* lensEffects, bool* captureImage);
 	~Controller();
 
 	void keyCallback(int key, int scancode, int action, int mods);
@@ -37,6 +37,7 @@ private:
 	float* exposure;
   bool* showMeshes;
   bool* lensEffects;
+  bool* captureImage;
 	bool fps_mode;
 	double prev_x;
 	double prev_y;

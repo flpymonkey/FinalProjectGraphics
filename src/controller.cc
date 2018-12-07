@@ -12,7 +12,7 @@ std::string get_str_timestamp()
   return time_str;
 }
 
-Controller::Controller(GLFWwindow* window, Camera* camera, Menger* menger, float* exposure, bool* showMeshes, bool* lensEffects) {
+Controller::Controller(GLFWwindow* window, Camera* camera, Menger* menger, float* exposure, bool* showMeshes, bool* lensEffects, bool* captureImage) {
 	this->window = window;
 	this->camera = camera;
 	this->menger = menger;
@@ -20,6 +20,7 @@ Controller::Controller(GLFWwindow* window, Camera* camera, Menger* menger, float
 	this->lensEffects = lensEffects;
 	this->showMeshes = showMeshes;
 	this->exposure = exposure;
+  this->captureImage = captureImage;
 	this->fps_mode = true;
 	this->prev_x = 0.0;
 	this->prev_y = 0.0;
@@ -96,22 +97,24 @@ Controller::keyCallback(int key, int scancode, int action, int mods)
 	} else 	if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
         unsigned char* pixels = (unsigned char*)malloc(window_width * window_height * 3);
   		glReadPixels(0, 0, window_width, window_height, GL_RGB, GL_UNSIGNED_BYTE, &pixels[0]);
-        
-  		std::string file_name = 
+
+  		std::string file_name =
             path("/screenshots/capture_") +
             get_str_timestamp() +
             std::string(".jpg");
 
         int status = saveJPG(file_name.c_str(), window_width, window_height, 3, pixels, 0);
-        
+
         if (status == 1) {
             printf("Saved JPG: %s\n", file_name.c_str());
         } else {
             printf("Failed to save JPG: %s\n", file_name.c_str());
         }
-        
+
         free(pixels);
-	}
+	} else if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE){
+    *(this->captureImage) = true;
+  }
 
 
 	if (!menger)
