@@ -30,11 +30,12 @@ class Object {
   static int object_count;
 public:
     int object_id;
+    std::string name;
     glm::vec4 color_id_vec;
     std::vector<Mesh> meshes;
     std::vector<Material> materials;
 
-    Object();
+    Object(std::string name);
     ~Object();
 
     void load(std::string file);

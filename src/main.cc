@@ -62,7 +62,8 @@ bool captureImage = false;
 int Object::object_count = 0;
 
 // gui variables
-int score = 15;
+int score = 0;
+std::string object_goal = "doggie";
 
 Floor* g_floor;
 Menger *g_menger;
@@ -189,6 +190,9 @@ int main(int argc, char* argv[])
 
 	// Controller
 	g_controller = new Controller(window, g_camera, g_menger, &exposure, &showMeshes, &lensEffects, &captureImage);
+
+	// Setup GUI
+	BasicGUI* gui = new BasicGUI(window, &score, &object_goal);
 
 	CHECK_SUCCESS(glewInit() == GLEW_OK);
 	glGetError();  // clear GLEW's error for it
@@ -329,7 +333,7 @@ int main(int argc, char* argv[])
 
     // <<<Scene>>>
     // <<<Cone>>>
-    Object* cone = new Object();
+    Object* cone = new Object("Christmas Tree");
     cone->load("/src/assets/primitives/cone.obj");
 
     glm::mat4 cone_model_matrix = glm::mat4(1.0f);
@@ -353,7 +357,7 @@ int main(int argc, char* argv[])
     // <<<Cone>>>
 
     // <<<Sphere>>>
-    Object* sphere = new Object();
+    Object* sphere = new Object("Sphere");
     sphere->load("/src/assets/primitives/sphere.obj");
 
     glm::mat4 sphere_model_matrix = glm::mat4(1.0f);
@@ -378,7 +382,7 @@ int main(int argc, char* argv[])
     // <<<Sphere>>>
 
     // <<<Sphere2>>>
-    Object* sphere2 = new Object();
+    Object* sphere2 = new Object("Sphere 2");
     sphere2->load("/src/assets/primitives/sphere2.obj");
 
     glm::mat4 sphere2_model_matrix = glm::mat4(1.0f);
@@ -402,7 +406,7 @@ int main(int argc, char* argv[])
     // <<<Sphere2>>>
 
 		// <<<TreeLight>>>
-		Object* treelight = new Object();
+		Object* treelight = new Object("treelight");
 		treelight->load("/src/assets/primitives/sphere.obj");
 
 		glm::mat4 treelight_model_matrix = glm::mat4(1.0f);
@@ -427,7 +431,7 @@ int main(int argc, char* argv[])
 		// <<<TreeLight>>>
 
 		// <<<TreeLight2>>>
-		Object* treelight2 = new Object();
+		Object* treelight2 = new Object("treelight2");
 		treelight2->load("/src/assets/primitives/sphere.obj");
 
 		glm::mat4 treelight2_model_matrix = glm::mat4(1.0f);
@@ -452,7 +456,7 @@ int main(int argc, char* argv[])
 		// <<<TreeLight2>>>
 
 		// <<<TreeLight3>>>
-		Object* treelight3 = new Object();
+		Object* treelight3 = new Object("treelight3");
 		treelight3->load("/src/assets/primitives/sphere.obj");
 
 		glm::mat4 treelight3_model_matrix = glm::mat4(1.0f);
@@ -477,7 +481,7 @@ int main(int argc, char* argv[])
 		// <<<TreeLight3>>>
 
 		// <<<TreeLight4>>>
-		Object* treelight4 = new Object();
+		Object* treelight4 = new Object("treelight4");
 		treelight4->load("/src/assets/primitives/sphere.obj");
 
 		glm::mat4 treelight4_model_matrix = glm::mat4(1.0f);
@@ -502,7 +506,7 @@ int main(int argc, char* argv[])
 		// <<<TreeLight4>>>
 
 		// <<<TreeLight5>>>
-		Object* treelight5 = new Object();
+		Object* treelight5 = new Object("treelight5");
 		treelight5->load("/src/assets/primitives/sphere.obj");
 
 		glm::mat4 treelight5_model_matrix = glm::mat4(1.0f);
@@ -527,7 +531,7 @@ int main(int argc, char* argv[])
 		// <<<TreeLight5>>>
 
 		// <<<TreeLight6>>>
-		Object* treelight6 = new Object();
+		Object* treelight6 = new Object("treelight6");
 		treelight6->load("/src/assets/primitives/sphere.obj");
 
 		glm::mat4 treelight6_model_matrix = glm::mat4(1.0f);
@@ -552,7 +556,7 @@ int main(int argc, char* argv[])
 		// <<<TreeLight6>>>
 
 		// <<<TreeLight7>>>
-		Object* treelight7 = new Object();
+		Object* treelight7 = new Object("treelight7");
 		treelight7->load("/src/assets/primitives/sphere.obj");
 
 		glm::mat4 treelight7_model_matrix = glm::mat4(1.0f);
@@ -577,7 +581,7 @@ int main(int argc, char* argv[])
 		// <<<TreeLight7>>>
 
 		// <<<TreeLight8>>>
-		Object* treelight8 = new Object();
+		Object* treelight8 = new Object("treelight8");
 		treelight8->load("/src/assets/primitives/sphere.obj");
 
 		glm::mat4 treelight8_model_matrix = glm::mat4(1.0f);
@@ -602,7 +606,7 @@ int main(int argc, char* argv[])
 		// <<<TreeLight8>>>
 
 		// <<<TreeLight9>>>
-		Object* treelight9 = new Object();
+		Object* treelight9 = new Object("treelight9");
 		treelight9->load("/src/assets/primitives/sphere.obj");
 
 		glm::mat4 treelight9_model_matrix = glm::mat4(1.0f);
@@ -627,7 +631,7 @@ int main(int argc, char* argv[])
 		// <<<TreeLight9>>>
 
 		// <<<TreeLight10>>>
-		Object* treelight10 = new Object();
+		Object* treelight10 = new Object("treelight10");
 		treelight10->load("/src/assets/primitives/sphere.obj");
 
 		glm::mat4 treelight10_model_matrix = glm::mat4(1.0f);
@@ -652,7 +656,7 @@ int main(int argc, char* argv[])
 		// <<<TreeLight10>>>
 
     // <<<Cylinder>>>
-    Object* cylinder = new Object();
+    Object* cylinder = new Object("Cyl");
     cylinder->load("/src/assets/primitives/cylinder.obj");
 
     glm::mat4 cylinder_model_matrix = glm::mat4(1.0f);
@@ -676,7 +680,7 @@ int main(int argc, char* argv[])
     // <<<Cylinder>>>
 
     // <<<Torus>>>
-    Object* torus = new Object();
+    Object* torus = new Object("The Grand Torus!");
     torus->load("/src/assets/primitives/torus.obj");
 
     glm::mat4 torus_model_matrix = glm::mat4(1.0f);
@@ -700,7 +704,7 @@ int main(int argc, char* argv[])
     // <<<Torus>>>
 
     // <<<Monkey>>>
-    Object* monkey = new Object();
+    Object* monkey = new Object("Monkey Light");
     monkey->load("/src/assets/primitives/monkey.obj");
 
     glm::mat4 monkey_model_matrix = glm::mat4(1.0f);
@@ -725,7 +729,7 @@ int main(int argc, char* argv[])
     // <<<Monkey>>>
 
     // <<<Cat>>>
-    Object* cat = new Object();
+    Object* cat = new Object("The Cat");
     cat->load("/src/assets/animals/cat/cat.obj");
 
     glm::mat4 cat_model_matrix = glm::mat4(1.0f);
@@ -749,7 +753,7 @@ int main(int argc, char* argv[])
     // <<<Cat>>>
 
     // <<<Dog>>>
-    Object* dog = new Object();
+    Object* dog = new Object("The Dog");
     dog->load("/src/assets/animals/dog/dog.obj");
 
     glm::mat4 dog_model_matrix = glm::mat4(1.0f);
@@ -773,7 +777,7 @@ int main(int argc, char* argv[])
     // <<<Dog>>>
 
     // <<<Deer>>>
-    Object* deer = new Object();
+    Object* deer = new Object("The Deer");
     deer->load("/src/assets/animals/deer.obj");
 
     glm::mat4 deer_model_matrix = glm::mat4(1.0f);
@@ -797,7 +801,7 @@ int main(int argc, char* argv[])
     // <<<Deer>>>
 
     // <<<Building>>>
-    Object* building = new Object();
+    Object* building = new Object("Large Building");
     building->load("/src/assets/buildings/flatiron/13943_Flatiron_Building_v1_l1.obj");
 
     glm::mat4 building_model_matrix = glm::mat4(1.0f);
@@ -821,7 +825,7 @@ int main(int argc, char* argv[])
     // <<<Building>>>
 
     // <<<Grass>>>
-    Object* grass = new Object();
+    Object* grass = new Object("Grass");
     grass->load("/src/assets/primitives/cube.obj");
 
     glm::mat4 grass_model_matrix = glm::mat4(1.0f);
@@ -845,7 +849,7 @@ int main(int argc, char* argv[])
     // <<<Grass>>>
 
     // <<<Wall>>>
-    Object* wall = new Object();
+    Object* wall = new Object("Wall");
     wall->load("/src/assets/primitives/cube.obj");
 
     glm::mat4 wall_model_matrix = glm::mat4(1.0f);
@@ -869,7 +873,7 @@ int main(int argc, char* argv[])
     // <<<Wall>>>
 
     // <<<Wall2>>>
-    Object* wall2 = new Object();
+    Object* wall2 = new Object("Wall 2");
     wall2->load("/src/assets/primitives/cube.obj");
 
     glm::mat4 wall2_model_matrix = glm::mat4(1.0f);
@@ -893,7 +897,7 @@ int main(int argc, char* argv[])
     // <<<Wall2>>>
 
     // <<<Wall3>>>
-    Object* wall3 = new Object();
+    Object* wall3 = new Object("Wall 3");
     wall3->load("/src/assets/primitives/cube.obj");
 
     glm::mat4 wall3_model_matrix = glm::mat4(1.0f);
@@ -917,7 +921,7 @@ int main(int argc, char* argv[])
     // <<<Wall3>>>
 
     // <<<Wall4>>>
-    Object* wall4 = new Object();
+    Object* wall4 = new Object("Wall 4");
     wall4->load("/src/assets/primitives/cube.obj");
 
     glm::mat4 wall4_model_matrix = glm::mat4(1.0f);
@@ -1493,10 +1497,6 @@ int main(int argc, char* argv[])
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-	// Setup GUI
-	BasicGUI* gui = new BasicGUI(window, &score);
 
 	clock_t last_frame_time = clock();
 	while (!glfwWindowShouldClose(window)) {

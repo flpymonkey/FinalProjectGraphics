@@ -8,7 +8,8 @@ const char* picker_vertex_shader =
 #include "shaders/picker.vert"
 ;
 
-Object::Object() {
+Object::Object(std::string name) {
+    this->name = name;
     loader = new Loader();
     this->color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     object_id = object_count++;

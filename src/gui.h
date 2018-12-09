@@ -11,10 +11,11 @@
 
 class BasicGUI {
   GLFWwindow* window;
-  int* score;
+    int* score;
+    std::string* object_goal;
 
   public:
-    BasicGUI(GLFWwindow* window, int* score);
+    BasicGUI(GLFWwindow* window, int* score, std::string* object_goal);
     void render();
 };
 
