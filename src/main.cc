@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <ctime>
+#include <random>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -55,7 +56,7 @@ int window_height = 1440;
 // https://learnopengl.com/Advanced-Lighting/HDR
 float exposure = 0.8f;
 bool showMeshes = true;
-bool lensEffects = false;
+bool lensEffects = true;
 bool captureImage = false;
 
 // Initialize static member of class Box
@@ -64,6 +65,22 @@ int Object::object_count = 0;
 // gui variables
 int score = 0;
 std::string object_goal = "doggie";
+
+// Game logic
+// List of objects which will be photographable
+std::vector<Object *> photo_objects;
+int goal_id;
+
+// Chooses a random object and sets goal_id and object_goal;
+void
+choose_photo_object() {
+	std::random_device rd;
+	std::mt19937 rng(rd());
+	std::uniform_int_distribution<int> uni(0, photo_objects.size() - 1); 
+	int i = uni(rng);
+	object_goal = photo_objects[i]->name;
+	goal_id = photo_objects[i]->object_id;
+}
 
 Floor* g_floor;
 Menger *g_menger;
@@ -354,10 +371,12 @@ int main(int argc, char* argv[])
     cone->textures("/src/assets/textures/grass.png", "/src/assets/textures/wall_s.jpg");
 
     cone->setup();
+
+	photo_objects.push_back(cone);
     // <<<Cone>>>
 
     // <<<Sphere>>>
-    Object* sphere = new Object("Sphere");
+    Object* sphere = new Object("The Sun");
     sphere->load("/src/assets/primitives/sphere.obj");
 
     glm::mat4 sphere_model_matrix = glm::mat4(1.0f);
@@ -375,10 +394,12 @@ int main(int argc, char* argv[])
     sphere->shaders(object_vertex_shader, NULL, object_fragment_shader);
     sphere->uniforms(sphere_model, std_view, std_proj, std_light, std_view_position);
     sphere->lights(directionalLights, pointLights, spotLights);
-    sphere->lightColor(glm::vec4(1.3f, 1.3f, 1.3f, 1.0f));
+    sphere->lightColor(glm::vec4(1.9f, 1.9f, 1.9f, 1.0f));
     sphere->textures("/src/assets/textures/gold.jpg", "/src/assets/textures/wall_s.jpg");
 
     sphere->setup();
+
+	photo_objects.push_back(sphere);
     // <<<Sphere>>>
 
     // <<<Sphere2>>>
@@ -701,6 +722,7 @@ int main(int argc, char* argv[])
     torus->textures("/src/assets/textures/metal2.jpg", "/src/assets/textures/metal2_s.jpg");
 
     torus->setup();
+	photo_objects.push_back(torus);
     // <<<Torus>>>
 
     // <<<Monkey>>>
@@ -750,6 +772,7 @@ int main(int argc, char* argv[])
     cat->textures("/src/assets/textures/wood3.png", "/src/assets/textures/wall_s.jpg");
 
     cat->setup();
+	photo_objects.push_back(cat);
     // <<<Cat>>>
 
     // <<<Dog>>>
@@ -774,6 +797,7 @@ int main(int argc, char* argv[])
     dog->textures("/src/assets/animals/dog/Dog_diffuse.jpg", "/src/assets/textures/wall_s.jpg");
 
     dog->setup();
+	photo_objects.push_back(dog);
     // <<<Dog>>>
 
     // <<<Deer>>>
@@ -798,6 +822,7 @@ int main(int argc, char* argv[])
     deer->textures("/src/assets/textures/metal.jpg", "/src/assets/textures/metal_s.jpg");
 
     deer->setup();
+	photo_objects.push_back(deer);
     // <<<Deer>>>
 
     // <<<Building>>>
@@ -846,6 +871,7 @@ int main(int argc, char* argv[])
     grass->textures("/src/assets/textures/grass.png", "/src/assets/textures/wall_s.jpg");
 
     grass->setup();
+	photo_objects.push_back(grass);
     // <<<Grass>>>
 
     // <<<Wall>>>
@@ -1498,6 +1524,8 @@ int main(int argc, char* argv[])
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	choose_photo_object();
+
 	clock_t last_frame_time = clock();
 	while (!glfwWindowShouldClose(window)) {
 		if(showGeometry){
@@ -1788,6 +1816,10 @@ int main(int argc, char* argv[])
 			// FIXME: ObjectID is calculated by a multiple of 3 for some reason???
 			// FIXME: Added /3 to hack a fix, may break math above 255 objects
       printf("%d\n", pickedID / 3);
+	  if ((pickedID / 3) == goal_id) {
+		  score += 5;
+		  choose_photo_object();
+	  }
 
       captureImage = false;
 			// end of color id pass ===========================================================
