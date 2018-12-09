@@ -34,7 +34,7 @@
 #include "gui.h"
 
 // game state booleans:
-bool showGeometry = true;
+bool showGeometry = false;
 bool showGui = true;
 // ====================
 
@@ -48,8 +48,8 @@ glm::mat4 model_matrix;
 
 float aspect = 0.0f;
 
-int window_width = 1080;
-int window_height = 720;
+int window_width = 2560;
+int window_height = 1440;
 
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
