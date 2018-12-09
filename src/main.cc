@@ -34,7 +34,7 @@
 #include "gui.h"
 
 // game state booleans:
-bool showGeometry = false;
+bool showGeometry = true;
 bool showGui = true;
 // ====================
 
@@ -1707,7 +1707,7 @@ int main(int argc, char* argv[])
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 
-		if (captureImage && !showGeometry){
+		if (captureImage){
       //  color id pass
     	glBindFramebuffer(GL_FRAMEBUFFER, id_tracking_framebuffer);
   		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
@@ -1757,6 +1757,7 @@ int main(int argc, char* argv[])
 
 			// draw to the quad:
 			CHECK_GL_ERROR(glUseProgram(screen_single_program_id));
+			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, id_tracking_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 
 			glBindVertexArray(quadVAO);
@@ -1788,7 +1789,7 @@ int main(int argc, char* argv[])
 			// FIXME: Added /3 to hack a fix, may break math above 255 objects
       printf("%d\n", pickedID / 3);
 
-      //captureImage = false;
+      captureImage = false;
 			// end of color id pass ===========================================================
     }
 
