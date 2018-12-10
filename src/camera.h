@@ -41,8 +41,6 @@ public:
 		return eye_;
 	}
 
-
-private:
 	float camera_distance_ = 3.0f; // 3
 	glm::vec3 look_ = glm::vec3(0.0f, 0.0f, -1.0f); //0, 0, -1
 	glm::vec3 up_ = glm::vec3(0.0f, 1.0f, 0.0f);
