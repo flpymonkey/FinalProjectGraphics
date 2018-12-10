@@ -36,8 +36,23 @@
 //gui
 #include "gui.h"
 
-// game state booleans:
+// game state variables:
+// ====================
+int window_width = 1080;
+int window_height = 720;
 bool showGui = true;
+
+// Depth of field controls
+bool drunkMode = false;
+int light_rays_for_bokeh = 1; // number of light rays
+float aperture = 0.05;
+
+// Used to brighten hdr exposure shader as described in this tutorial:
+// https://learnopengl.com/Advanced-Lighting/HDR
+float exposure = 0.8f;
+bool showMeshes = true;
+bool lensEffects = true;
+bool captureImage = false;
 // ====================
 
 struct MatrixPointers {
@@ -49,20 +64,6 @@ glm::mat4 view_matrix;
 glm::mat4 model_matrix;
 
 float aspect = 0.0f;
-
-int window_width = 2560;
-int window_height = 1440;
-
-// Depth of field controls
-int n = 10; // number of light rays
-float aperture = 0.05;
-
-// Used to brighten hdr exposure shader as described in this tutorial:
-// https://learnopengl.com/Advanced-Lighting/HDR
-float exposure = 0.8f;
-bool showMeshes = true;
-bool lensEffects = true;
-bool captureImage = false;
 
 // Initialize static member of class Box
 int Object::object_count = 0;
@@ -1077,7 +1078,7 @@ int main(int argc, char* argv[])
 	glUniform1i(screen_texture_matrix_location, 0);
 	// ===========================================================
 
-	// configure alternate geometry_framebuffer
+	// configure alternate id_framebuffer
 	unsigned int id_tracking_framebuffer;
 	glGenFramebuffers(1, &id_tracking_framebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, id_tracking_framebuffer);
@@ -1502,7 +1503,31 @@ int main(int argc, char* argv[])
 	    );
 	}
 	// // ===========================================================
+	// configure MSAA framebuffer
+  // --------------------------
+  unsigned int msaa_framebuffer;
+  glGenFramebuffers(1, &msaa_framebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, msaa_framebuffer);
+  // create a multisampled color attachment texture
+  unsigned int textureColorBufferMultiSampled;
+  glGenTextures(1, &textureColorBufferMultiSampled);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled);
+  glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA, window_width, window_height, GL_TRUE);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled, 0);
+  // create a (also multisampled) renderbuffer object for depth and stencil attachments
+  unsigned int msaa_rbo;
+  glGenRenderbuffers(1, &msaa_rbo);
+  glBindRenderbuffer(GL_RENDERBUFFER, msaa_rbo);
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, window_width, window_height);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, msaa_rbo);
 
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+      std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Regular geometry buffer ====================================
 	// configure alternate geometry_framebuffer
 	unsigned int geometry_framebuffer;
 	glGenFramebuffers(1, &geometry_framebuffer);
@@ -1540,21 +1565,22 @@ int main(int argc, char* argv[])
 
     // Calculate for depth of field pass
     // FIXME: may be able to just use camera variables here instead of recalculating
-    glm::vec3 right = glm::normalize(glm::cross(g_camera->center_ - g_camera->eye_, g_camera->up_));
+    glm::vec3 right = glm::normalize(glm::cross(g_camera->up_, g_camera->center_ - g_camera->eye_));
     glm::vec3 p_up = glm::normalize(glm::cross(g_camera->center_ - g_camera->eye_, right));
 
 		// render
 		// ------
 		// bind to geometry_framebuffer and draw scene as we normally would to color texture
-		glBindFramebuffer(GL_FRAMEBUFFER, geometry_framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, msaa_framebuffer);
 		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
 
 		// make sure we clear the geometry_framebuffer's content
 		glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//glClear(GL_ACCUM_BUFFER_BIT);
 
-    for(int i = 0; i < n; i++) {
-      glm::vec3 bokeh = right * cosf(i * 2 * M_PI / n) + p_up * sinf(i * 2 * M_PI / n);
+    for(int i = 0; i < light_rays_for_bokeh; i++) {
+      glm::vec3 bokeh = right * cosf(i * 2 * M_PI / light_rays_for_bokeh) + p_up * sinf(i * 2 * M_PI / light_rays_for_bokeh);
       // TODO: Switch back to using our custom get_view_matrix function
   		view_matrix = glm::lookAt(g_camera->eye_ + aperture * bokeh, g_camera->center_, p_up);
 
@@ -1621,12 +1647,70 @@ int main(int argc, char* argv[])
   				}
   				// <<<Scene>>>
   		// End of geometry pass ====================================================
-      //glAccum(i ? GL_ACCUM : GL_LOAD, 1.0 / n);
+      //glAccum(GL_ACCUM, 0.25);
     }
+		// 2. now blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, msaa_framebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, geometry_framebuffer);
+    glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
+
+		//glAccum(GL_RETURN, 1);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		// Use our post processing programs ========================================
+		if (drunkMode){
+			// Use our post processing programs ========================================
+			// post lensflair blur pass
+			glBindFramebuffer(GL_FRAMEBUFFER, blur_framebuffer);
+			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+			// clear all relevant buffers
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			CHECK_GL_ERROR(glUseProgram(screen_blur_program_id));
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+			glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			// HDR pass between geometry pass and final pass, (not dependent on lensflair passes)
+			glBindFramebuffer(GL_FRAMEBUFFER, hdr_framebuffer);
+			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+			// clear all relevant buffers
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			CHECK_GL_ERROR(glUseProgram(screen_hdr_program_id));
+
+			// Adjust exposure for controls
+			glUniform1f(glGetUniformLocation(screen_hdr_program_id, "exposure"), exposure);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, blur_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+			glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		} else {
+			// HDR pass between geometry pass and final pass, (not dependent on lensflair passes)
+			glBindFramebuffer(GL_FRAMEBUFFER, hdr_framebuffer);
+			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+			// clear all relevant buffers
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			CHECK_GL_ERROR(glUseProgram(screen_hdr_program_id));
+
+			// Adjust exposure for controls
+			glUniform1f(glGetUniformLocation(screen_hdr_program_id, "exposure"), exposure);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+			glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+
 		// downsampling pass for lensflair effect
 		glBindFramebuffer(GL_FRAMEBUFFER, downsample_framebuffer);
 		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
@@ -1670,25 +1754,6 @@ int main(int argc, char* argv[])
 		CHECK_GL_ERROR(glUseProgram(screen_blur_program_id));
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, lensflare_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
-
-		glBindVertexArray(quadVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-
-		// HDR pass between geometry pass and final pass, (not dependent on lensflair passes)
-		glBindFramebuffer(GL_FRAMEBUFFER, hdr_framebuffer);
-		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-		// clear all relevant buffers
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		CHECK_GL_ERROR(glUseProgram(screen_hdr_program_id));
-
-		// Adjust exposure for controls
-		glUniform1f(glGetUniformLocation(screen_hdr_program_id, "exposure"), exposure);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 
 		glBindVertexArray(quadVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -1850,8 +1915,6 @@ int main(int argc, char* argv[])
 
 		// Poll and swap.
 		glfwPollEvents();
-
-    //glAccum(GL_RETURN, 1);
 		glfwSwapBuffers(window);
 	}
 	glfwDestroyWindow(window);
