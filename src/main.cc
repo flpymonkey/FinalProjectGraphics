@@ -31,12 +31,28 @@
 #include "filesystem.h"
 #include "object.h"
 
+# define M_PI           3.14159265358979323846  /* pi */
+
 //gui
 #include "gui.h"
 
-// game state booleans:
-bool showGeometry = true;
+// game state variables:
+// ====================
+int window_width = 1080;
+int window_height = 720;
 bool showGui = true;
+
+// Depth of field controls
+bool drunkMode = false;
+int light_rays_for_bokeh = 1; // number of light rays
+float aperture = 0.05;
+
+// Used to brighten hdr exposure shader as described in this tutorial:
+// https://learnopengl.com/Advanced-Lighting/HDR
+float exposure = 0.8f;
+bool showMeshes = true;
+bool lensEffects = true;
+bool captureImage = false;
 // ====================
 
 struct MatrixPointers {
@@ -48,16 +64,6 @@ glm::mat4 view_matrix;
 glm::mat4 model_matrix;
 
 float aspect = 0.0f;
-
-int window_width = 1080;
-int window_height = 720;
-
-// Used to brighten hdr exposure shader as described in this tutorial:
-// https://learnopengl.com/Advanced-Lighting/HDR
-float exposure = 0.8f;
-bool showMeshes = true;
-bool lensEffects = true;
-bool captureImage = false;
 
 // Initialize static member of class Box
 int Object::object_count = 0;
@@ -1072,7 +1078,7 @@ int main(int argc, char* argv[])
 	glUniform1i(screen_texture_matrix_location, 0);
 	// ===========================================================
 
-	// configure alternate geometry_framebuffer
+	// configure alternate id_framebuffer
 	unsigned int id_tracking_framebuffer;
 	glGenFramebuffers(1, &id_tracking_framebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, id_tracking_framebuffer);
@@ -1497,7 +1503,31 @@ int main(int argc, char* argv[])
 	    );
 	}
 	// // ===========================================================
+	// configure MSAA framebuffer
+  // --------------------------
+  unsigned int msaa_framebuffer;
+  glGenFramebuffers(1, &msaa_framebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, msaa_framebuffer);
+  // create a multisampled color attachment texture
+  unsigned int textureColorBufferMultiSampled;
+  glGenTextures(1, &textureColorBufferMultiSampled);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled);
+  glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA, window_width, window_height, GL_TRUE);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled, 0);
+  // create a (also multisampled) renderbuffer object for depth and stencil attachments
+  unsigned int msaa_rbo;
+  glGenRenderbuffers(1, &msaa_rbo);
+  glBindRenderbuffer(GL_RENDERBUFFER, msaa_rbo);
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, window_width, window_height);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, msaa_rbo);
 
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+      std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Regular geometry buffer ====================================
 	// configure alternate geometry_framebuffer
 	unsigned int geometry_framebuffer;
 	glGenFramebuffers(1, &geometry_framebuffer);
@@ -1528,119 +1558,108 @@ int main(int argc, char* argv[])
 
 	clock_t last_frame_time = clock();
 	while (!glfwWindowShouldClose(window)) {
-		if(showGeometry){
-			// render
-			// ------
-			// bind to geometry_framebuffer and draw scene as we normally would to color texture
-			glBindFramebuffer(GL_FRAMEBUFFER, geometry_framebuffer);
-			glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+		// Compute the projection matrix.
+		aspect = static_cast<float>(window_width) / window_height;
+		projection_matrix =
+			glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
 
-			// make sure we clear the geometry_framebuffer's content
-			glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Calculate for depth of field pass
+    // FIXME: may be able to just use camera variables here instead of recalculating
+    glm::vec3 right = glm::normalize(glm::cross(g_camera->up_, g_camera->center_ - g_camera->eye_));
+    glm::vec3 p_up = glm::normalize(glm::cross(g_camera->center_ - g_camera->eye_, right));
+
+		// render
+		// ------
+		// bind to geometry_framebuffer and draw scene as we normally would to color texture
+		glBindFramebuffer(GL_FRAMEBUFFER, msaa_framebuffer);
+		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+
+		// make sure we clear the geometry_framebuffer's content
+		glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//glClear(GL_ACCUM_BUFFER_BIT);
+
+    for(int i = 0; i < light_rays_for_bokeh; i++) {
+      glm::vec3 bokeh = right * cosf(i * 2 * M_PI / light_rays_for_bokeh) + p_up * sinf(i * 2 * M_PI / light_rays_for_bokeh);
+      // TODO: Switch back to using our custom get_view_matrix function
+  		view_matrix = glm::lookAt(g_camera->eye_ + aperture * bokeh, g_camera->center_, p_up);
+
+  		if (g_menger && g_menger->is_dirty()) {
+  		  	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces, menger_pos);
+  			g_menger->set_clean();
+  		}
+
+  		// <<<Render Menger>>>
+  		RenderDataInput menger_pass_input;
+  		menger_pass_input.assign(0, "vertex_position", menger_vertices.data(), menger_vertices.size(), 4, GL_FLOAT);
+  		menger_pass_input.assign(1, "normal", menger_normals.data(), menger_normals.size(), 4, GL_FLOAT);
+  		menger_pass_input.assign_index(menger_faces.data(), menger_faces.size(), 3);
+  		RenderPass menger_pass(-1,
+  				menger_pass_input,
+  				{ vertex_shader, NULL, fragment_shader},
+  				{ menger_model, std_view, std_proj, std_light, std_view_position },
+  				{ "fragment_color" }
+  				);
+
+  		menger_pass.loadLights(directionalLights, pointLights, spotLights);
+  		menger_pass.loadLightColor(glm::vec4(5.0f, 1.5f, 1.5f, 1.0f));
+
+  		menger_pass.setup();
+  		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
+  		// <<<Render Menger>>>
+
+  		// <<<Render Floor>>>
+  		floor_pass.setup();
+  		CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
+  		// <<<Render Floor>>>
+
+  				// <<<Scene>>>
+  				if (showMeshes){
+  					//tree lights
+  					treelight->render();
+  					treelight2->render();
+  					treelight3->render();
+  					treelight4->render();
+  					treelight5->render();
+  					treelight6->render();
+  					treelight7->render();
+  					treelight8->render();
+  					treelight9->render();
+  					treelight10->render();
+  					// ==========
+  					cone->render();
+  					sphere->render();
+  					sphere2->render();
+  					cylinder->render();
+  					torus->render();
+  					monkey->render();
+
+  					cat->render();
+  					dog->render();
+  					deer->render();
+
+  					building->render();
+  					grass->render();
+  					wall->render();
+  					wall2->render();
+  					wall3->render();
+  					wall4->render();
+  				}
+  				// <<<Scene>>>
+  		// End of geometry pass ====================================================
+      //glAccum(GL_ACCUM, 0.25);
+    }
+		// 2. now blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, msaa_framebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, geometry_framebuffer);
+    glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 
-			if (g_menger && g_menger->is_dirty()) {
-			  	g_menger->generate_geometry(menger_vertices, menger_normals, menger_faces, menger_pos);
-				g_menger->set_clean();
-			}
+		//glAccum(GL_RETURN, 1);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-			// <<<Render Menger>>>
-			RenderDataInput menger_pass_input;
-			menger_pass_input.assign(0, "vertex_position", menger_vertices.data(), menger_vertices.size(), 4, GL_FLOAT);
-			menger_pass_input.assign(1, "normal", menger_normals.data(), menger_normals.size(), 4, GL_FLOAT);
-			menger_pass_input.assign_index(menger_faces.data(), menger_faces.size(), 3);
-			RenderPass menger_pass(-1,
-					menger_pass_input,
-					{ vertex_shader, NULL, fragment_shader},
-					{ menger_model, std_view, std_proj, std_light, std_view_position },
-					{ "fragment_color" }
-					);
-
-			menger_pass.loadLights(directionalLights, pointLights, spotLights);
-			menger_pass.loadLightColor(glm::vec4(5.0f, 1.5f, 1.5f, 1.0f));
-
-			menger_pass.setup();
-			CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, menger_faces.size() * 3, GL_UNSIGNED_INT, 0));
-			// <<<Render Menger>>>
-
-			// <<<Render Floor>>>
-			floor_pass.setup();
-			CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
-			// <<<Render Floor>>>
-
-					// <<<Scene>>>
-					if (showMeshes){
-						//tree lights
-						treelight->render();
-						treelight2->render();
-						treelight3->render();
-						treelight4->render();
-						treelight5->render();
-						treelight6->render();
-						treelight7->render();
-						treelight8->render();
-						treelight9->render();
-						treelight10->render();
-						// ==========
-						cone->render();
-						sphere->render();
-						sphere2->render();
-						cylinder->render();
-						torus->render();
-						monkey->render();
-
-						cat->render();
-						dog->render();
-						deer->render();
-
-						building->render();
-						grass->render();
-						wall->render();
-						wall2->render();
-						wall3->render();
-						wall4->render();
-					}
-					// <<<Scene>>>
-
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-			// End of geometry pass ====================================================
-
+		if (drunkMode){
 			// Use our post processing programs ========================================
-			// downsampling pass for lensflair effect
-			glBindFramebuffer(GL_FRAMEBUFFER, downsample_framebuffer);
-			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-			// clear all relevant buffers
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			CHECK_GL_ERROR(glUseProgram(screen_downsample_program_id));
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
-
-			glBindVertexArray(quadVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-			// lensflair effect pass
-			glBindFramebuffer(GL_FRAMEBUFFER, lensflare_framebuffer);
-			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-			// clear all relevant buffers
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, downsample_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_1D, lens_color_texture);
-
-			glBindVertexArray(quadVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
-
 			// post lensflair blur pass
 			glBindFramebuffer(GL_FRAMEBUFFER, blur_framebuffer);
 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
@@ -1650,12 +1669,29 @@ int main(int argc, char* argv[])
 
 			CHECK_GL_ERROR(glUseProgram(screen_blur_program_id));
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, lensflare_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+			glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
 
 			glBindVertexArray(quadVAO);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
+			// HDR pass between geometry pass and final pass, (not dependent on lensflair passes)
+			glBindFramebuffer(GL_FRAMEBUFFER, hdr_framebuffer);
+			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+			// clear all relevant buffers
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+			CHECK_GL_ERROR(glUseProgram(screen_hdr_program_id));
+
+			// Adjust exposure for controls
+			glUniform1f(glGetUniformLocation(screen_hdr_program_id, "exposure"), exposure);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, blur_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+			glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		} else {
 			// HDR pass between geometry pass and final pass, (not dependent on lensflair passes)
 			glBindFramebuffer(GL_FRAMEBUFFER, hdr_framebuffer);
 			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
@@ -1673,67 +1709,114 @@ int main(int argc, char* argv[])
 
 			glBindVertexArray(quadVAO);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
-
-			// brightness pass which extracts brightness and color into two outputs
-			glBindFramebuffer(GL_FRAMEBUFFER, brightness_framebuffer);
-			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-			// clear all relevant buffers
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			CHECK_GL_ERROR(glUseProgram(screen_brightness_program_id));
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, hdr_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
-
-			glBindVertexArray(quadVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
-			// blur 2 multi pass
-			// 2. blur bright fragments with two-pass Gaussian Blur
-			// --------------------------------------------------
-			bool horizontal = true, first_iteration = true;
-			unsigned int amount = 20;
-			CHECK_GL_ERROR(glUseProgram(screen_blur2_program_id));
-			for (unsigned int i = 0; i < amount; i++)
-			{
-					glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
-					glUniform1i(glGetUniformLocation(screen_blur2_program_id, "horizontal"), horizontal);
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(
-						GL_TEXTURE_2D, first_iteration ? brightness_colorBuffers[1] : pingpongBuffer[!horizontal]
-					);
-					//glBindTexture(GL_TEXTURE_2D, brightness_colorBuffers[1]);	// use the color attachment texture as the texture of the quad plane
-					glBindVertexArray(quadVAO);
-					glDrawArrays(GL_TRIANGLES, 0, 6);
-					horizontal = !horizontal;
-					if (first_iteration){
-						first_iteration = false;
-					}
-			}
-
-			// Final default pass to create final screen quad
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
-			// clear all relevant buffers
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			CHECK_GL_ERROR(glUseProgram(screen_default_program_id));
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, brightness_colorBuffers[0]);	// use the color attachment texture as the texture of the quad plane
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, pingpongBuffer[0]);	// use the color attachment texture as the texture of the quad plane
-			glActiveTexture(GL_TEXTURE2);
-			if (lensEffects){
-					glBindTexture(GL_TEXTURE_2D, blur_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
-			} else {
-					glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
-			}
-
-			glBindVertexArray(quadVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
+
+		// downsampling pass for lensflair effect
+		glBindFramebuffer(GL_FRAMEBUFFER, downsample_framebuffer);
+		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+		// clear all relevant buffers
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		CHECK_GL_ERROR(glUseProgram(screen_downsample_program_id));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+		glBindVertexArray(quadVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+		// lensflair effect pass
+		glBindFramebuffer(GL_FRAMEBUFFER, lensflare_framebuffer);
+		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+		// clear all relevant buffers
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		CHECK_GL_ERROR(glUseProgram(screen_lensflare_program_id));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, downsample_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_1D, lens_color_texture);
+
+		glBindVertexArray(quadVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+		// post lensflair blur pass
+		glBindFramebuffer(GL_FRAMEBUFFER, blur_framebuffer);
+		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+		// clear all relevant buffers
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		CHECK_GL_ERROR(glUseProgram(screen_blur_program_id));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, lensflare_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+		glBindVertexArray(quadVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		// brightness pass which extracts brightness and color into two outputs
+		glBindFramebuffer(GL_FRAMEBUFFER, brightness_framebuffer);
+		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+		// clear all relevant buffers
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		CHECK_GL_ERROR(glUseProgram(screen_brightness_program_id));
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, hdr_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+
+		glBindVertexArray(quadVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		// blur 2 multi pass
+		// 2. blur bright fragments with two-pass Gaussian Blur
+		// --------------------------------------------------
+		bool horizontal = true, first_iteration = true;
+		unsigned int amount = 20;
+		CHECK_GL_ERROR(glUseProgram(screen_blur2_program_id));
+		for (unsigned int i = 0; i < amount; i++)
+		{
+				glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+				glUniform1i(glGetUniformLocation(screen_blur2_program_id, "horizontal"), horizontal);
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(
+					GL_TEXTURE_2D, first_iteration ? brightness_colorBuffers[1] : pingpongBuffer[!horizontal]
+				);
+				//glBindTexture(GL_TEXTURE_2D, brightness_colorBuffers[1]);	// use the color attachment texture as the texture of the quad plane
+				glBindVertexArray(quadVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+				horizontal = !horizontal;
+				if (first_iteration){
+					first_iteration = false;
+				}
+		}
+
+		// Final default pass to create final screen quad
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+		// clear all relevant buffers
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessery actually, since we won't be able to see behind the quad anyways)
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		CHECK_GL_ERROR(glUseProgram(screen_default_program_id));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, brightness_colorBuffers[0]);	// use the color attachment texture as the texture of the quad plane
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, pingpongBuffer[0]);	// use the color attachment texture as the texture of the quad plane
+		glActiveTexture(GL_TEXTURE2);
+		if (lensEffects){
+				glBindTexture(GL_TEXTURE_2D, blur_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+		} else {
+				glBindTexture(GL_TEXTURE_2D, geometry_textureColorBuffer);	// use the color attachment texture as the texture of the quad plane
+		}
+
+		glBindVertexArray(quadVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		if (captureImage){
       //  color id pass
@@ -1825,12 +1908,6 @@ int main(int argc, char* argv[])
 			// end of color id pass ===========================================================
     }
 
-		// Compute the projection matrix.
-		aspect = static_cast<float>(window_width) / window_height;
-		projection_matrix =
-			glm::perspective(glm::radians(45.0f), aspect, 0.0001f, 1000.0f);
-
-		view_matrix = g_camera->get_view_matrix();
 		// Render GUI
 		if (showGui){
 			gui->render();
