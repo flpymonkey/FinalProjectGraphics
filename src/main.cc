@@ -49,8 +49,8 @@ glm::mat4 model_matrix;
 
 float aspect = 0.0f;
 
-int window_width = 2560;
-int window_height = 1440;
+int window_width = 1080;
+int window_height = 720;
 
 // Used to brighten hdr exposure shader as described in this tutorial:
 // https://learnopengl.com/Advanced-Lighting/HDR
@@ -76,7 +76,7 @@ void
 choose_photo_object() {
 	std::random_device rd;
 	std::mt19937 rng(rd());
-	std::uniform_int_distribution<int> uni(0, photo_objects.size() - 1); 
+	std::uniform_int_distribution<int> uni(0, photo_objects.size() - 1);
 	int i = uni(rng);
 	object_goal = photo_objects[i]->name;
 	goal_id = photo_objects[i]->object_id;
